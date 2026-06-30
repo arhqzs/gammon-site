@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Gammon — Theme Gallery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#0d1411; --surface:#16271f; --line:rgba(233,222,196,.10); --line-2:rgba(233,222,196,.18);
+    --cream:#f4eedf; --muted:#93a89b; --gold:#e0ad4e; --gold-2:#f0c873; --radius:16px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:
+      radial-gradient(1100px 600px at 85% -10%, rgba(224,173,78,.10), transparent 60%),
+      radial-gradient(900px 500px at -5% 8%, rgba(63,157,109,.07), transparent 55%), var(--bg);
+    color:var(--cream);font-family:"Inter",system-ui,sans-serif;-webkit-font-smoothing:antialiased;}
+  a{color:inherit;text-decoration:none}
+  h1,h2,h3{font-family:"Fraunces",Georgia,serif;font-weight:600;letter-spacing:-.01em;margin:0;line-height:1.08}
+  .wrap{max-width:1320px;margin:0 auto;padding:0 28px}
+
+  header{padding:56px 0 30px;text-align:center}
+  .brand{display:inline-flex;align-items:center;gap:11px;font-family:"Fraunces";font-weight:700;font-size:21px;margin-bottom:26px}
+  .brand .logo{width:32px;height:32px}
+  .brand b{color:var(--gold)}
+  .eyebrow{display:inline-flex;align-items:center;gap:9px;font-weight:600;font-size:12.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+  .eyebrow::before,.eyebrow::after{content:"";width:24px;height:1.5px;background:linear-gradient(90deg,transparent,var(--gold))}
+  .eyebrow::after{background:linear-gradient(90deg,var(--gold),transparent)}
+  header h1{font-size:clamp(34px,5vw,54px);margin:18px 0 0}
+  header h1 em{font-style:italic;color:var(--gold)}
+  header p{color:var(--muted);max-width:640px;margin:18px auto 0;font-size:17px;line-height:1.6}
+  .hint{margin-top:22px;font-size:13.5px;color:var(--muted);display:inline-flex;align-items:center;gap:9px;border:1px solid var(--line-2);padding:8px 16px;border-radius:999px}
+
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:28px;padding:40px 0 90px}
+  @media (min-width:1100px){.grid{grid-template-columns:repeat(3,1fr)}}
+
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;
+    transition:transform .3s cubic-bezier(.22,.61,.36,1),border-color .3s,box-shadow .3s;display:flex;flex-direction:column}
+  .card:hover{transform:translateY(-6px);border-color:var(--line-2);box-shadow:0 28px 60px -28px rgba(0,0,0,.7)}
+
+  .thumb{position:relative;aspect-ratio:16/10.5;overflow:hidden;background:#0a100d;border-bottom:1px solid var(--line)}
+  .thumb iframe{position:absolute;top:0;left:0;width:1320px;height:866px;border:0;transform:scale(.3636);transform-origin:top left;pointer-events:none}
+  .thumb .badge{position:absolute;top:12px;left:12px;z-index:3;font-size:11.5px;font-weight:700;letter-spacing:.04em;
+    background:rgba(13,20,17,.82);backdrop-filter:blur(6px);border:1px solid var(--line-2);color:var(--gold);padding:5px 11px;border-radius:999px}
+  .thumb .open{position:absolute;inset:0;z-index:4;display:grid;place-items:center;opacity:0;transition:opacity .25s;
+    background:linear-gradient(180deg,rgba(13,20,17,.1),rgba(13,20,17,.6))}
+  .card:hover .thumb .open{opacity:1}
+  .thumb .open span{display:inline-flex;align-items:center;gap:9px;font-weight:700;font-size:14.5px;color:#241804;
+    background:linear-gradient(180deg,var(--gold-2),var(--gold));padding:11px 20px;border-radius:999px;box-shadow:0 14px 30px -12px rgba(224,173,78,.8)}
+
+  .meta{padding:20px 22px 22px}
+  .meta h3{font-size:20px}
+  .meta p{color:var(--muted);font-size:14px;line-height:1.55;margin:9px 0 0}
+  .meta .links{display:flex;gap:14px;margin-top:16px}
+  .meta .links a{font-size:13.5px;font-weight:600;color:var(--gold);display:inline-flex;align-items:center;gap:6px}
+  .meta .links a.sec{color:var(--muted)}
+  .meta .links a svg{transition:transform .2s}
+  .meta .links a:hover svg{transform:translateX(3px)}
+  .soon{opacity:.55}
+  .soon .thumb{display:grid;place-items:center}
+  .soon .thumb .pending{font-size:13px;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:12px}
+  .spinner{width:26px;height:26px;border:2.5px solid var(--line-2);border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  footer{border-top:1px solid var(--line);padding:30px 0;text-align:center;color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="1.5" y="1.5" width="37" height="37" rx="9" fill="#12241b" stroke="#e0ad4e" stroke-width="2"/>
+        <path d="M7 7 L13 7 L10 21 Z" fill="#e0ad4e"/><path d="M15 7 L21 7 L18 21 Z" fill="#b9492f"/><path d="M23 7 L29 7 L26 21 Z" fill="#e0ad4e"/>
+        <circle cx="32" cy="29" r="5" fill="#f4eedf"/><circle cx="32" cy="29" r="1.3" fill="#12241b"/>
+      </svg>
+      Gammon<b>.</b>
+    </div>
+    <span class="eyebrow">Design Gallery</span>
+    <h1>12 looks for the <em>same</em> site.</h1>
+    <p>Every theme below is the full landing page with identical content — just a different visual identity. Open each one full-screen, then pick the direction you want to take to the team.</p>
+    <div class="hint">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+      Hover a tile and click <b style="color:var(--cream)">&nbsp;Open full&nbsp;</b> to view it live
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="grid" id="grid"></div>
+</div>
+
+<footer>Gammon · internal design exploration · 12 themes</footer>
+
+<script>
+  const themes = [
+    {n:"01", file:"../index.html", title:"Heritage Club", desc:"Deep felt-green & gold, heritage serif, board-points motif. Warm, premium, members'-club feel."},
+    {n:"02", file:"../themes/theme-02-light-clean.html", title:"Light & Clean", desc:"Bright chess.com-style light mode. Green primary, airy whitespace, modern sans. Mass-market & trustworthy."},
+    {n:"03", file:"../themes/theme-03-wood-leather.html", title:"Classic Wood & Leather", desc:"Walnut wood-grain, parchment & brass. Old-world gentleman's-club luxury and craft."},
+    {n:"04", file:"../themes/theme-04-midnight-neon.html", title:"Midnight Esports", desc:"Near-black with electric cyan/magenta glows. Competitive, futuristic, ranked-play energy."},
+    {n:"05", file:"../themes/theme-05-editorial-luxury.html", title:"Editorial Luxury", desc:"Black & gold magazine layout, oversized serif, big numerals. Vogue-spread sophistication."},
+    {n:"06", file:"../themes/theme-06-parchment-minimal.html", title:"Parchment Minimal", desc:"Warm off-white, clay accent, Swiss-calm grid. Premium through restraint and air."},
+    {n:"07", file:"../themes/theme-07-royal-burgundy.html", title:"Royal Burgundy", desc:"Wine & gold, velvet spotlights. High-stakes casino glamour — coins, prizes, big events."},
+    {n:"08", file:"../themes/theme-08-modern-saas.html", title:"Modern SaaS Glass", desc:"Indigo→violet gradients, glassmorphism, auroras. Sleek Linear/Vercel-grade software feel."},
+    {n:"09", file:"../themes/theme-09-art-deco.html", title:"Art Deco Gatsby", desc:"Emerald & gold geometric deco — chevrons, sunbursts, symmetry. Retro-glam ceremony."},
+    {n:"10", file:"../themes/theme-10-soft-pastel.html", title:"Soft & Approachable", desc:"Cream with coral/teal pastels, rounded shapes. Friendly, welcoming to new players."},
+    {n:"11", file:"../themes/theme-11-monochrome.html", title:"Monochrome Premium", desc:"Near-monochrome, one disciplined accent. Apple-grade precision and restraint."},
+    {n:"12", file:"../themes/theme-12-retro-poster.html", title:"Retro Travel Poster", desc:"Mustard, teal & navy mid-century poster. Bold, illustrative, full of character."},
+  ];
+
+  const grid = document.getElementById('grid');
+  themes.forEach(t => {
+    const a = document.createElement('a');
+    a.className = 'card';
+    a.href = t.file; a.target = '_blank'; a.rel = 'noopener';
+    a.innerHTML = `
+      <div class="thumb">
+        <span class="badge">${t.n}</span>
+        <iframe src="${t.file}" loading="lazy" scrolling="no" title="${t.title}"></iframe>
+        <div class="open"><span>Open full
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M7 17 17 7M9 7h8v8"/></svg>
+        </span></div>
+      </div>
+      <div class="meta">
+        <h3>${t.title}</h3>
+        <p>${t.desc}</p>
+        <div class="links">
+          <a href="${t.file}" target="_blank" rel="noopener">Open full
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+        </div>
+      </div>`;
+    grid.appendChild(a);
+  });
+</script>
+</body>
+</html>

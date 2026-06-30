@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Gammon — The Home of Worldwide Backgammon</title>
+<meta name="description" content="Play, learn, compete and run clubs on one platform. A world-class backgammon engine, live play, puzzles from real grandmaster mistakes, lessons and tournaments — all in one place." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:        #0d1411;
+    --bg-2:      #101b16;
+    --felt:      #12241b;
+    --surface:   #16271f;
+    --surface-2: #1b2f25;
+    --line:      rgba(233,222,196,.10);
+    --line-2:    rgba(233,222,196,.18);
+    --cream:     #f4eedf;
+    --cream-dim: #c9c3b3;
+    --muted:     #93a89b;
+    --gold:      #e0ad4e;
+    --gold-2:    #f0c873;
+    --rust:      #b9492f;
+    --rust-2:    #d65f43;
+    --green:     #3f9d6d;
+    --radius:    16px;
+    --maxw:      1180px;
+    --shadow:    0 24px 60px -24px rgba(0,0,0,.65);
+    --ease:      cubic-bezier(.22,.61,.36,1);
+  }
+
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;
+    background:
+      radial-gradient(1200px 700px at 80% -8%, rgba(224,173,78,.10), transparent 60%),
+      radial-gradient(900px 600px at -5% 12%, rgba(63,157,109,.08), transparent 55%),
+      var(--bg);
+    color:var(--cream);
+    font-family:"Inter",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    font-size:17px;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  h1,h2,h3,h4{font-family:"Fraunces",Georgia,serif;font-weight:600;line-height:1.08;letter-spacing:-.01em;margin:0}
+  p{margin:0}
+  a{color:inherit;text-decoration:none}
+  img{max-width:100%}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 26px}
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:9px;
+    font-family:"Inter";font-weight:600;font-size:12.5px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--gold);
+  }
+  .eyebrow::before{content:"";width:22px;height:1.5px;background:linear-gradient(90deg,var(--gold),transparent)}
+  .muted{color:var(--muted)}
+
+  /* buttons */
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:9px;
+    font-weight:600;font-size:15.5px;letter-spacing:.01em;
+    padding:13px 22px;border-radius:999px;border:1px solid transparent;
+    cursor:pointer;transition:transform .25s var(--ease),box-shadow .25s var(--ease),background .25s,color .25s,border-color .25s;
+    white-space:nowrap;
+  }
+  .btn-primary{
+    background:linear-gradient(180deg,var(--gold-2),var(--gold));
+    color:#241804;box-shadow:0 12px 26px -12px rgba(224,173,78,.7);
+  }
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 18px 34px -12px rgba(224,173,78,.8)}
+  .btn-ghost{background:rgba(244,238,223,.04);color:var(--cream);border-color:var(--line-2)}
+  .btn-ghost:hover{background:rgba(244,238,223,.09);transform:translateY(-2px)}
+  .btn-sm{padding:10px 18px;font-size:14.5px}
+
+  /* nav */
+  header.nav{position:sticky;top:0;z-index:50;transition:background .3s,border-color .3s,backdrop-filter .3s;border-bottom:1px solid transparent}
+  header.nav.scrolled{background:rgba(10,17,14,.82);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+  .nav-inner{display:flex;align-items:center;justify-content:space-between;height:74px}
+  .brand{display:flex;align-items:center;gap:12px;font-family:"Fraunces";font-weight:700;font-size:23px;letter-spacing:.005em}
+  .brand .logo{width:34px;height:34px;flex:none}
+  .brand b{color:var(--gold)}
+  .nav-links{display:flex;align-items:center;gap:30px}
+  .nav-links a.link{font-size:15px;color:var(--cream-dim);font-weight:500;position:relative;padding:4px 0}
+  .nav-links a.link:hover{color:var(--cream)}
+  .nav-links a.link::after{content:"";position:absolute;left:0;bottom:-2px;height:1.5px;width:0;background:var(--gold);transition:width .25s var(--ease)}
+  .nav-links a.link:hover::after{width:100%}
+  .nav-cta{display:flex;align-items:center;gap:14px}
+  .nav-toggle{display:none;background:none;border:1px solid var(--line-2);border-radius:10px;width:42px;height:40px;cursor:pointer;color:var(--cream)}
+
+  /* hero */
+  .hero{position:relative;padding:64px 0 70px}
+  .hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:54px;align-items:center}
+  .hero h1{font-size:clamp(40px,5.6vw,68px);font-weight:600}
+  .hero h1 em{font-style:italic;color:var(--gold)}
+  .hero .lead{font-size:19px;color:var(--cream-dim);margin-top:22px;max-width:540px}
+  .hero-cta{display:flex;gap:14px;margin-top:32px;flex-wrap:wrap}
+  .hero-note{margin-top:18px;font-size:14px;color:var(--muted);display:flex;align-items:center;gap:9px}
+  .hero-note svg{flex:none}
+  .pill{
+    display:inline-flex;align-items:center;gap:9px;padding:7px 15px;border-radius:999px;
+    border:1px solid var(--line-2);background:rgba(244,238,223,.03);
+    font-size:13px;font-weight:600;color:var(--cream-dim);letter-spacing:.02em;margin-bottom:24px;
+  }
+  .pill .dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 0 4px rgba(63,157,109,.18)}
+
+  /* board visual */
+  .board-stage{position:relative}
+  .board-card{
+    background:linear-gradient(180deg,var(--surface),var(--bg-2));
+    border:1px solid var(--line-2);border-radius:22px;padding:16px;box-shadow:var(--shadow);
+    position:relative;overflow:hidden;
+  }
+  .board-card svg{display:block;width:100%;height:auto;border-radius:12px}
+  .float-badge{
+    position:absolute;background:rgba(13,20,17,.9);backdrop-filter:blur(8px);
+    border:1px solid var(--line-2);border-radius:14px;padding:12px 15px;box-shadow:var(--shadow);
+    display:flex;align-items:center;gap:11px;font-size:13.5px;font-weight:600;
+  }
+  .float-badge .ic{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;flex:none}
+  .fb-1{top:30px;left:-26px}
+  .fb-2{bottom:34px;right:-22px}
+  .fb-3{bottom:-18px;left:40px}
+  .float-badge small{display:block;color:var(--muted);font-weight:500;font-size:12px}
+
+  /* dice */
+  @keyframes tumble{0%{transform:rotate(-8deg) translateY(0)}50%{transform:rotate(6deg) translateY(-4px)}100%{transform:rotate(-8deg) translateY(0)}}
+
+  /* marquee / trust */
+  .trust{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:rgba(244,238,223,.015)}
+  .trust-inner{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:26px 0;flex-wrap:wrap}
+  .stat{display:flex;flex-direction:column;gap:2px}
+  .stat b{font-family:"Fraunces";font-size:30px;font-weight:600;color:var(--cream)}
+  .stat span{font-size:13px;color:var(--muted);letter-spacing:.03em}
+  .stat-div{width:1px;height:42px;background:var(--line)}
+
+  /* sections */
+  section{position:relative}
+  .section{padding:96px 0}
+  .section-head{max-width:660px;margin-bottom:54px}
+  .section-head.center{margin-left:auto;margin-right:auto;text-align:center}
+  .section-head h2{font-size:clamp(30px,4vw,46px);margin-top:16px}
+  .section-head p{margin-top:18px;font-size:18px;color:var(--cream-dim)}
+
+  /* product grid */
+  .products{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+  .card{
+    position:relative;background:linear-gradient(180deg,var(--surface),var(--bg-2));
+    border:1px solid var(--line);border-radius:var(--radius);padding:30px 28px 28px;
+    transition:transform .3s var(--ease),border-color .3s,box-shadow .3s;overflow:hidden;
+  }
+  .card::before{content:"";position:absolute;inset:0;background:radial-gradient(420px 160px at 50% -30%,rgba(224,173,78,.10),transparent 70%);opacity:0;transition:opacity .35s}
+  .card:hover{transform:translateY(-6px);border-color:var(--line-2);box-shadow:var(--shadow)}
+  .card:hover::before{opacity:1}
+  .card .ic-lg{width:54px;height:54px;border-radius:13px;display:grid;place-items:center;margin-bottom:20px;
+    background:rgba(224,173,78,.10);border:1px solid rgba(224,173,78,.22);color:var(--gold)}
+  .card h3{font-size:23px;font-weight:600}
+  .card p{margin-top:11px;color:var(--cream-dim);font-size:15.5px}
+  .card .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .tag{font-size:12.5px;font-weight:600;color:var(--cream-dim);background:rgba(244,238,223,.05);border:1px solid var(--line);padding:5px 11px;border-radius:999px}
+  .card .more{display:inline-flex;align-items:center;gap:7px;margin-top:20px;color:var(--gold);font-weight:600;font-size:14.5px}
+  .card .more svg{transition:transform .25s var(--ease)}
+  .card:hover .more svg{transform:translateX(4px)}
+  .card.wide{grid-column:span 1}
+
+  /* feature split */
+  .feature{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center}
+  .feature.rev .feature-media{order:-1}
+  .feature h2{font-size:clamp(28px,3.6vw,42px);margin-top:16px}
+  .feature p.lead{margin-top:18px;font-size:18px;color:var(--cream-dim)}
+  .feature .checklist{margin-top:26px;display:flex;flex-direction:column;gap:14px}
+  .feature .checklist li{list-style:none;display:flex;gap:13px;align-items:flex-start;font-size:15.5px;color:var(--cream-dim)}
+  .feature .checklist .ck{flex:none;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:rgba(63,157,109,.16);color:#7fd6a6;margin-top:1px}
+  .feature ul{padding:0;margin:0}
+
+  .media-frame{
+    background:linear-gradient(180deg,var(--surface),var(--bg-2));border:1px solid var(--line-2);
+    border-radius:20px;padding:18px;box-shadow:var(--shadow);position:relative;overflow:hidden;
+  }
+  .phone{
+    margin:0 auto;width:240px;background:#070b09;border:2px solid #2a3a31;border-radius:34px;padding:12px;
+    box-shadow:0 30px 60px -28px rgba(0,0,0,.8);position:relative;
+  }
+  .phone .notch{width:74px;height:6px;background:#33453a;border-radius:99px;margin:2px auto 10px}
+  .phone-screen{background:var(--felt);border-radius:22px;overflow:hidden;border:1px solid var(--line)}
+  .phone-top{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:1px solid var(--line);font-size:11px;color:var(--muted);font-weight:600}
+  .phone-body{padding:14px}
+  .eval-row{display:flex;align-items:center;justify-content:space-between;font-size:12px;padding:9px 11px;border-radius:9px;margin-bottom:8px;border:1px solid var(--line)}
+  .eval-row b{font-family:"Fraunces";font-weight:600}
+  .eval-row.best{background:rgba(63,157,109,.14);border-color:rgba(63,157,109,.3)}
+  .eval-row.best .pl{color:#7fd6a6}
+  .eval-row .pl{font-weight:700}
+  .scan-cta{margin-top:6px;display:flex;align-items:center;gap:9px;justify-content:center;background:linear-gradient(180deg,var(--gold-2),var(--gold));color:#241804;font-weight:700;font-size:12px;padding:10px;border-radius:11px}
+
+  /* clubs banner */
+  .clubs-band{
+    background:
+      linear-gradient(180deg,rgba(185,73,47,.10),transparent),
+      linear-gradient(180deg,var(--surface),var(--bg-2));
+    border:1px solid var(--line-2);border-radius:24px;padding:50px;position:relative;overflow:hidden;
+  }
+  .clubs-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:48px;align-items:center;position:relative;z-index:2}
+  .mini-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .mini{background:rgba(13,20,17,.55);border:1px solid var(--line);border-radius:13px;padding:18px}
+  .mini .ic{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;background:rgba(224,173,78,.1);color:var(--gold);margin-bottom:12px}
+  .mini h4{font-family:"Inter";font-weight:700;font-size:15px}
+  .mini p{font-size:13.5px;color:var(--muted);margin-top:5px}
+
+  /* pricing */
+  .price-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:880px;margin:0 auto}
+  .price{position:relative;background:linear-gradient(180deg,var(--surface),var(--bg-2));border:1px solid var(--line);border-radius:20px;padding:34px 32px}
+  .price.feat{border-color:rgba(224,173,78,.4);box-shadow:0 30px 70px -34px rgba(224,173,78,.4)}
+  .price .ribbon{position:absolute;top:20px;right:20px;font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#241804;background:linear-gradient(180deg,var(--gold-2),var(--gold));padding:5px 12px;border-radius:999px}
+  .price h3{font-size:22px}
+  .price .amt{font-family:"Fraunces";font-size:46px;font-weight:600;margin:14px 0 2px;display:flex;align-items:baseline;gap:8px}
+  .price .amt small{font-family:"Inter";font-size:15px;font-weight:500;color:var(--muted)}
+  .price .sub{color:var(--muted);font-size:14.5px;min-height:42px}
+  .price ul{list-style:none;padding:0;margin:22px 0 26px;display:flex;flex-direction:column;gap:12px}
+  .price li{display:flex;gap:11px;font-size:15px;color:var(--cream-dim)}
+  .price li .ck{flex:none;color:var(--gold)}
+  .price .btn{width:100%}
+
+  /* mission */
+  .mission{text-align:center;max-width:820px;margin:0 auto}
+  .mission h2{font-size:clamp(30px,4.4vw,52px)}
+  .mission h2 em{font-style:italic;color:var(--gold)}
+  .mission p{margin-top:22px;font-size:19px;color:var(--cream-dim)}
+
+  /* cta band */
+  .cta-final{
+    background:
+      radial-gradient(700px 300px at 50% 0%,rgba(224,173,78,.16),transparent 70%),
+      linear-gradient(180deg,var(--surface-2),var(--bg-2));
+    border:1px solid var(--line-2);border-radius:26px;padding:64px 40px;text-align:center;position:relative;overflow:hidden;
+  }
+  .cta-final h2{font-size:clamp(30px,4.4vw,48px)}
+  .cta-final p{margin:18px auto 0;max-width:520px;font-size:18px;color:var(--cream-dim)}
+  .cta-final .hero-cta{justify-content:center;margin-top:30px}
+
+  /* footer */
+  footer{border-top:1px solid var(--line);margin-top:96px;padding:64px 0 40px}
+  .foot-grid{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:40px}
+  .foot-brand p{color:var(--muted);font-size:14.5px;margin-top:16px;max-width:300px}
+  .foot-col h5{font-family:"Inter";font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:16px}
+  .foot-col a{display:block;color:var(--cream-dim);font-size:15px;margin-bottom:11px;transition:color .2s}
+  .foot-col a:hover{color:var(--cream)}
+  .foot-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:48px;padding-top:26px;border-top:1px solid var(--line);color:var(--muted);font-size:13.5px;flex-wrap:wrap;gap:14px}
+
+  /* reveal */
+  .reveal{opacity:0;transform:translateY(22px);transition:opacity .7s var(--ease),transform .7s var(--ease)}
+  .reveal.in{opacity:1;transform:none}
+
+  /* responsive */
+  @media (max-width:980px){
+    .hero-grid{grid-template-columns:1fr;gap:46px}
+    .board-stage{max-width:480px;margin:0 auto}
+    .products{grid-template-columns:1fr 1fr}
+    .feature{grid-template-columns:1fr;gap:36px}
+    .feature.rev .feature-media{order:0}
+    .clubs-grid{grid-template-columns:1fr;gap:34px}
+    .foot-grid{grid-template-columns:1fr 1fr;gap:32px}
+  }
+  @media (max-width:680px){
+    body{font-size:16px}
+    .nav-links{display:none}
+    .nav-toggle{display:grid;place-items:center}
+    .nav-links.open{
+      display:flex;position:absolute;top:74px;left:0;right:0;flex-direction:column;align-items:flex-start;gap:18px;
+      background:rgba(10,17,14,.97);backdrop-filter:blur(14px);padding:24px 26px;border-bottom:1px solid var(--line);
+    }
+    .nav-cta .btn-ghost{display:none}
+    .products{grid-template-columns:1fr}
+    .price-grid{grid-template-columns:1fr}
+    .trust-inner{justify-content:center;text-align:center}
+    .stat-div{display:none}
+    .clubs-band{padding:32px 24px}
+    .cta-final{padding:46px 22px}
+    .float-badge{display:none}
+    .section{padding:72px 0}
+    .foot-grid{grid-template-columns:1fr 1fr}
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<header class="nav" id="nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="#top">
+      <svg class="logo" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <rect x="1.5" y="1.5" width="37" height="37" rx="9" fill="#12241b" stroke="#e0ad4e" stroke-width="2"/>
+        <path d="M7 7 L13 7 L10 21 Z" fill="#e0ad4e"/>
+        <path d="M15 7 L21 7 L18 21 Z" fill="#b9492f"/>
+        <path d="M23 7 L29 7 L26 21 Z" fill="#e0ad4e"/>
+        <path d="M7 33 L13 33 L10 19 Z" fill="#b9492f"/>
+        <path d="M15 33 L21 33 L18 19 Z" fill="#e0ad4e"/>
+        <path d="M23 33 L29 33 L26 19 Z" fill="#b9492f"/>
+        <circle cx="32" cy="29" r="5" fill="#f4eedf"/>
+        <circle cx="32" cy="29" r="1.3" fill="#12241b"/>
+      </svg>
+      Gammon<b>.</b>
+    </a>
+    <nav class="nav-links" id="navLinks">
+      <a class="link" href="#products">Products</a>
+      <a class="link" href="#engine">Engine</a>
+      <a class="link" href="#clubs">Clubs</a>
+      <a class="link" href="#pricing">Membership</a>
+      <a class="link" href="#community">Community</a>
+    </nav>
+    <div class="nav-cta">
+      <a class="btn btn-ghost btn-sm" href="#">Log in</a>
+      <a class="btn btn-primary btn-sm" href="#pricing">Start free</a>
+      <button class="nav-toggle" id="navToggle" aria-label="Menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<a id="top"></a>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div class="hero-copy reveal in">
+      <span class="pill"><span class="dot"></span> Free for the first 3,000 members · 1 year on us</span>
+      <h1>The home of <em>worldwide</em> backgammon.</h1>
+      <p class="lead">Play, learn, compete and run your own club — powered by a world-class engine that fits in your pocket. One platform for everyone who loves the game.</p>
+      <div class="hero-cta">
+        <a class="btn btn-primary" href="#pricing">Claim your free year
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+        <a class="btn btn-ghost" href="#products">Explore the platform</a>
+      </div>
+      <div class="hero-note">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7fd6a6" stroke-width="2.2"><path d="M20 6 9 17l-5-5"/></svg>
+        No card required · Engine, play, lessons &amp; puzzles included
+      </div>
+    </div>
+
+    <div class="hero-visual reveal in">
+      <div class="board-stage">
+        <div class="board-card">
+          <!-- Backgammon board SVG -->
+          <svg viewBox="0 0 520 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Backgammon board">
+            <defs>
+              <linearGradient id="wood" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#1d3328"/><stop offset="1" stop-color="#16271f"/>
+              </linearGradient>
+              <radialGradient id="chW" cx="35%" cy="30%" r="75%">
+                <stop offset="0" stop-color="#fbf7ec"/><stop offset="1" stop-color="#d9d0b8"/>
+              </radialGradient>
+              <radialGradient id="chR" cx="35%" cy="30%" r="75%">
+                <stop offset="0" stop-color="#d65f43"/><stop offset="1" stop-color="#9c3a23"/>
+              </radialGradient>
+            </defs>
+            <rect x="0" y="0" width="520" height="360" rx="12" fill="url(#wood)"/>
+            <rect x="14" y="14" width="492" height="332" rx="6" fill="#0f1d16" stroke="rgba(233,222,196,.12)"/>
+            <!-- center bar -->
+            <rect x="250" y="14" width="20" height="332" fill="#1d3328"/>
+
+            <!-- top points -->
+            <g>
+              <!-- left half (6 points) -->
+              <path d="M20 18 L58 18 L39 168 Z" fill="#c9b489" opacity=".9"/>
+              <path d="M58 18 L96 18 L77 168 Z" fill="#b9492f" opacity=".85"/>
+              <path d="M96 18 L134 18 L115 168 Z" fill="#c9b489" opacity=".9"/>
+              <path d="M134 18 L172 18 L153 168 Z" fill="#b9492f" opacity=".85"/>
+              <path d="M172 18 L210 18 L191 168 Z" fill="#c9b489" opacity=".9"/>
+              <path d="M210 18 L248 18 L229 168 Z" fill="#b9492f" opacity=".85"/>
+              <!-- right half -->
+              <path d="M272 18 L310 18 L291 168 Z" fill="#c9b489" opacity=".9"/>
+              <path d="M310 18 L348 18 L329 168 Z" fill="#b9492f" opacity=".85"/>
+              <path d="M348 18 L386 18 L367 168 Z" fill="#c9b489" opacity=".9"/>
+              <path d="M386 18 L424 18 L405 168 Z" fill="#b9492f" opacity=".85"/>
+              <path d="M424 18 L462 18 L443 168 Z" fill="#c9b489" opacity=".9"/>
+              <path d="M462 18 L500 18 L481 168 Z" fill="#b9492f" opacity=".85"/>
+            </g>
+            <!-- bottom points (mirrored) -->
+            <g>
+              <path d="M20 342 L58 342 L39 192 Z" fill="#b9492f" opacity=".85"/>
+              <path d="M58 342 L96 342 L77 192 Z" fill="#c9b489" opacity=".9"/>
+              <path d="M96 342 L134 342 L115 192 Z" fill="#b9492f" opacity=".85"/>
+              <path d="M134 342 L172 342 L153 192 Z" fill="#c9b489" opacity=".9"/>
+              <path d="M172 342 L210 342 L191 192 Z" fill="#b9492f" opacity=".85"/>
+              <path d="M210 342 L248 342 L229 192 Z" fill="#c9b489" opacity=".9"/>
+              <path d="M272 342 L310 342 L291 192 Z" fill="#b9492f" opacity=".85"/>
+              <path d="M310 342 L348 342 L329 192 Z" fill="#c9b489" opacity=".9"/>
+              <path d="M348 342 L386 342 L367 192 Z" fill="#b9492f" opacity=".85"/>
+              <path d="M386 342 L424 342 L405 192 Z" fill="#c9b489" opacity=".9"/>
+              <path d="M424 342 L462 342 L443 192 Z" fill="#b9492f" opacity=".85"/>
+              <path d="M462 342 L500 342 L481 192 Z" fill="#c9b489" opacity=".9"/>
+            </g>
+
+            <!-- checkers -->
+            <g>
+              <circle cx="39" cy="40" r="16" fill="url(#chW)"/>
+              <circle cx="39" cy="72" r="16" fill="url(#chW)"/>
+              <circle cx="481" cy="40" r="16" fill="url(#chR)"/>
+              <circle cx="481" cy="320" r="16" fill="url(#chW)"/>
+              <circle cx="481" cy="288" r="16" fill="url(#chW)"/>
+              <circle cx="229" cy="320" r="16" fill="url(#chR)"/>
+              <circle cx="229" cy="288" r="16" fill="url(#chR)"/>
+              <circle cx="115" cy="320" r="16" fill="url(#chW)"/>
+            </g>
+
+            <!-- dice -->
+            <g transform="translate(300 250)">
+              <rect x="0" y="0" width="40" height="40" rx="9" fill="#f4eedf" transform="rotate(-9 20 20)"/>
+              <g transform="rotate(-9 20 20)" fill="#16271f">
+                <circle cx="12" cy="12" r="3.4"/><circle cx="28" cy="12" r="3.4"/>
+                <circle cx="12" cy="28" r="3.4"/><circle cx="28" cy="28" r="3.4"/>
+              </g>
+              <rect x="52" y="6" width="40" height="40" rx="9" fill="#f4eedf" transform="rotate(7 72 26)"/>
+              <g transform="rotate(7 72 26)" fill="#16271f">
+                <circle cx="64" cy="18" r="3.4"/><circle cx="80" cy="18" r="3.4"/>
+                <circle cx="72" cy="26" r="3.4"/>
+                <circle cx="64" cy="34" r="3.4"/><circle cx="80" cy="34" r="3.4"/>
+              </g>
+            </g>
+          </svg>
+        </div>
+
+        <div class="float-badge fb-1">
+          <span class="ic" style="background:rgba(63,157,109,.16);color:#7fd6a6">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>
+          </span>
+          <span>+0.000 best play<small>Engine confidence 99.4%</small></span>
+        </div>
+        <div class="float-badge fb-2">
+          <span class="ic" style="background:rgba(224,173,78,.16);color:var(--gold)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1.4" fill="currentColor"/><circle cx="16" cy="16" r="1.4" fill="currentColor"/><circle cx="16" cy="8" r="1.4" fill="currentColor"/><circle cx="8" cy="16" r="1.4" fill="currentColor"/></svg>
+          </span>
+          <span>Snap &amp; analyze<small>Photo → live position</small></span>
+        </div>
+        <div class="float-badge fb-3">
+          <span class="ic" style="background:rgba(185,73,47,.18);color:var(--rust-2)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </span>
+          <span>Chouette table<small>3 playing live</small></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TRUST -->
+<div class="trust">
+  <div class="wrap trust-inner reveal">
+    <div class="stat"><b>1 engine</b><span>XG-class strength, on your phone</span></div>
+    <div class="stat-div"></div>
+    <div class="stat"><b>6 products</b><span>One membership, one login</span></div>
+    <div class="stat-div"></div>
+    <div class="stat"><b>10k+</b><span>Grandmaster mistakes turned into puzzles</span></div>
+    <div class="stat-div"></div>
+    <div class="stat"><b>∞</b><span>Clubs, chouettes &amp; tournaments</span></div>
+  </div>
+</div>
+
+<!-- PRODUCTS -->
+<section class="section" id="products">
+  <div class="wrap">
+    <div class="section-head center reveal">
+      <span class="eyebrow">Everything backgammon</span>
+      <h2>One platform. Every way to love the game.</h2>
+      <p>From world-class analysis to live money games, lessons and your own club — it all lives under one roof, and one membership unlocks the lot.</p>
+    </div>
+
+    <div class="products">
+      <!-- Engine -->
+      <a href="#engine" class="card reveal">
+        <span class="ic-lg"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/><circle cx="12" cy="12" r="4"/></svg></span>
+        <h3>The Engine</h3>
+        <p>An XG-class neural engine the team cracked to run fast — on your phone, the desktop or our servers. Rollouts, equity and best-play in seconds.</p>
+        <div class="tags"><span class="tag">Snap &amp; analyze</span><span class="tag">Pip count</span><span class="tag">Position editor</span></div>
+        <span class="more">Meet the engine <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+      </a>
+
+      <!-- Play -->
+      <a href="#" class="card reveal">
+        <span class="ic-lg"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.6" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.6" fill="currentColor"/></svg></span>
+        <h3>Play Online</h3>
+        <p>Live matches against players worldwide or the engine. Money games, chouettes and quick games — fair, fast and beautifully smooth.</p>
+        <div class="tags"><span class="tag">Chouettes</span><span class="tag">Matches</span><span class="tag">Money games</span></div>
+        <span class="more">Start playing <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+      </a>
+
+      <!-- Puzzles -->
+      <a href="#" class="card reveal">
+        <span class="ic-lg"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M9 11a3 3 0 1 1 4 2.8c-.8.4-1 .8-1 1.7v.5"/><circle cx="12" cy="19" r="1" fill="currentColor"/></svg></span>
+        <h3>Beat the Grandmaster</h3>
+        <p>We analyzed thousands of real matches and built a library of the mistakes the best players actually made. Find the move they missed.</p>
+        <div class="tags"><span class="tag">Daily puzzles</span><span class="tag">Real games</span><span class="tag">Skill rating</span></div>
+        <span class="more">Try a puzzle <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+      </a>
+
+      <!-- University -->
+      <a href="#" class="card reveal">
+        <span class="ic-lg"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c0 1 3 3 6 3s6-2 6-3v-5"/></svg></span>
+        <h3>Gammon University</h3>
+        <p>Connect with world-class instructors for one-on-one lessons, or teach and grow your own students. Learning, matched to your level.</p>
+        <div class="tags"><span class="tag">Find a coach</span><span class="tag">Teach</span><span class="tag">Lessons</span></div>
+        <span class="more">Enroll <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+      </a>
+
+      <!-- Clubs -->
+      <a href="#clubs" class="card reveal">
+        <span class="ic-lg"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/></svg></span>
+        <h3>Run a Club</h3>
+        <p>Launch your own backgammon club, run tournaments, manage coins and accounting, and keep what you earn. We give you the tools — you keep the community.</p>
+        <div class="tags"><span class="tag">Coins</span><span class="tag">Tournaments</span><span class="tag">Live director</span></div>
+        <span class="more">Open a club <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+      </a>
+
+      <!-- Recording -->
+      <a href="#" class="card reveal">
+        <span class="ic-lg"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="2" y="6" width="14" height="12" rx="3"/><path d="m16 10 6-3v10l-6-3"/></svg></span>
+        <h3>Record &amp; Stream</h3>
+        <p>Capture over-the-board matches with a wide-angle setup and stream them live. Bring real tournaments to a worldwide audience.</p>
+        <div class="tags"><span class="tag">Wide-angle</span><span class="tag">Live stream</span><span class="tag">Auto-record</span></div>
+        <span class="more">See it live <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ENGINE FEATURE -->
+<section class="section" id="engine" style="padding-top:30px">
+  <div class="wrap">
+    <div class="feature">
+      <div class="feature-copy reveal">
+        <span class="eyebrow">The Engine</span>
+        <h2>Point your camera at the board. Get the answer.</h2>
+        <p class="lead">Take a photo of any position — over the board or on screen — and our engine reads it, sets it up, and tells you the best play and the pip count instantly. The strength of a top engine, in your pocket.</p>
+        <ul class="checklist">
+          <li><span class="ck"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></span> Snap a picture and the position uploads itself — no fiddly setup.</li>
+          <li><span class="ck"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></span> XG-class evaluation built on a tuned GNU core — fast on phone <em>and</em> server.</li>
+          <li><span class="ck"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></span> Pip counter built right in — calibrate the board once, count from your tablet.</li>
+          <li><span class="ck"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></span> A clean position editor for setting up and sharing studies in seconds.</li>
+        </ul>
+        <div class="hero-cta">
+          <a class="btn btn-primary" href="#pricing">Get the engine free</a>
+          <a class="btn btn-ghost" href="#">Watch a 60-sec demo</a>
+        </div>
+      </div>
+
+      <div class="feature-media reveal">
+        <div class="media-frame">
+          <div class="phone">
+            <div class="notch"></div>
+            <div class="phone-screen">
+              <div class="phone-top"><span>● Analysis</span><span>Match · 7pt</span></div>
+              <div class="phone-body">
+                <div class="eval-row best"><span><b>1.</b> 24/18 13/11</span><span class="pl">+0.000</span></div>
+                <div class="eval-row"><span><b>2.</b> 24/18 24/22</span><span class="pl muted">−0.014</span></div>
+                <div class="eval-row"><span><b>3.</b> 13/7</span><span class="pl muted">−0.061</span></div>
+                <div class="eval-row"><span><b>4.</b> 13/11 13/7</span><span class="pl muted">−0.088</span></div>
+                <div class="scan-cta">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 9V6a2 2 0 0 1 2-2h3M16 4h3a2 2 0 0 1 2 2v3M21 15v3a2 2 0 0 1-2 2h-3M8 20H5a2 2 0 0 1-2-2v-3"/></svg>
+                  Scan a board
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PLAY FEATURE -->
+<section class="section" style="padding-top:30px">
+  <div class="wrap">
+    <div class="feature rev">
+      <div class="feature-copy reveal">
+        <span class="eyebrow">Play online</span>
+        <h2>Matches, money games and chouettes — live.</h2>
+        <p class="lead">Sit down at a real table from anywhere. Play a serious match, jump into a money game, or run a chouette where a captain takes on the box while the field rotates in. The action never stops.</p>
+        <ul class="checklist">
+          <li><span class="ck"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></span> Full chouette support — captain, box and rotating field, scored automatically.</li>
+          <li><span class="ck"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></span> Ranked matches and casual money games with fair, verifiable dice.</li>
+          <li><span class="ck"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></span> Play the world or play the engine to sharpen up between games.</li>
+          <li><span class="ck"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></span> Earn and spend coins to enter bigger events across every club.</li>
+        </ul>
+        <div class="hero-cta">
+          <a class="btn btn-primary" href="#pricing">Play now</a>
+        </div>
+      </div>
+
+      <div class="feature-media reveal">
+        <div class="media-frame">
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:rgba(13,20,17,.5);border:1px solid var(--line);border-radius:13px">
+              <div style="display:flex;align-items:center;gap:12px"><span style="width:38px;height:38px;border-radius:50%;background:url('data:image/svg+xml;utf8,') ,linear-gradient(135deg,#d65f43,#9c3a23);display:grid;place-items:center;font-weight:700;color:#fff;font-size:14px">A</span><div><div style="font-weight:700;font-size:14.5px">Chouette · Table 7</div><div style="font-size:12px;color:var(--muted)">Captain vs the Box · 3 in field</div></div></div>
+              <span class="tag" style="color:#7fd6a6;border-color:rgba(63,157,109,.3);background:rgba(63,157,109,.12)">LIVE</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:rgba(13,20,17,.5);border:1px solid var(--line);border-radius:13px">
+              <div style="display:flex;align-items:center;gap:12px"><span style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#e0ad4e,#a9781f);display:grid;place-items:center;font-weight:700;color:#241804;font-size:14px">M</span><div><div style="font-weight:700;font-size:14.5px">Money game · $5/pt</div><div style="font-size:12px;color:var(--muted)">Jacoby · Beavers on</div></div></div>
+              <span class="tag">Join</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:rgba(13,20,17,.5);border:1px solid var(--line);border-radius:13px">
+              <div style="display:flex;align-items:center;gap:12px"><span style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#3f9d6d,#1f5d3f);display:grid;place-items:center;font-weight:700;color:#fff;font-size:14px">7</span><div><div style="font-weight:700;font-size:14.5px">Ranked match · to 7</div><div style="font-size:12px;color:var(--muted)">Waiting for opponent…</div></div></div>
+              <span class="tag">Sit down</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CLUBS -->
+<section class="section" id="clubs">
+  <div class="wrap">
+    <div class="clubs-band reveal">
+      <div class="clubs-grid">
+        <div>
+          <span class="eyebrow">For club owners</span>
+          <h2 style="font-size:clamp(28px,3.6vw,40px);margin-top:16px">Run your own club. Keep what you build.</h2>
+          <p style="margin-top:18px;color:var(--cream-dim);font-size:17px">Whether you're growing a local community or running events worldwide, Gammon gives you the software to do it — tournaments, coins, accounting and a live tournament director, all in one place. Legitimate community clubs get the tools for next to nothing.</p>
+          <div class="hero-cta" style="margin-top:26px">
+            <a class="btn btn-primary" href="#">Start a club</a>
+            <a class="btn btn-ghost" href="#">Talk to us</a>
+          </div>
+        </div>
+        <div class="mini-grid">
+          <div class="mini">
+            <span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+            <h4>Live director</h4>
+            <p>Run online tournaments in real time — draws, rounds and results, automated.</p>
+          </div>
+          <div class="mini">
+            <span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="8"/><path d="M9.5 9.5a2.5 2.5 0 0 1 5 0c0 2.5-3 1.7-3 4M12 17h.01"/></svg></span>
+            <h4>Coins &amp; payouts</h4>
+            <p>Members buy coins, you handle entries and accounting — and keep the upside.</p>
+          </div>
+          <div class="mini">
+            <span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M8 21h8M12 17v4M5 4h14v7a7 7 0 0 1-14 0V4Z"/><path d="M5 7H3v2a3 3 0 0 0 2 2M19 7h2v2a3 3 0 0 1-2 2"/></svg></span>
+            <h4>Your tournaments</h4>
+            <p>Create your own events with custom formats, fees and prizes.</p>
+          </div>
+          <div class="mini">
+            <span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg></span>
+            <h4>One community</h4>
+            <p>Every member can join the main club's open events — and find yours.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="section" id="pricing">
+  <div class="wrap">
+    <div class="section-head center reveal">
+      <span class="eyebrow">Membership</span>
+      <h2>Free to get started. Built to grow with you.</h2>
+      <p>The first 3,000 members get a full year free — engine, play, lessons and puzzles included. Upgrade only when you want more.</p>
+    </div>
+
+    <div class="price-grid">
+      <div class="price reveal">
+        <h3>Free Member</h3>
+        <div class="amt">$0<small>/ first year</small></div>
+        <p class="sub">For the first 3,000 members. Everything you need to play and improve, on us.</p>
+        <ul>
+          <li><span class="ck"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg></span> Full engine — analysis, scan &amp; pip count</li>
+          <li><span class="ck"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg></span> Online play: matches, money games &amp; chouettes</li>
+          <li><span class="ck"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg></span> Daily grandmaster puzzles</li>
+          <li><span class="ck"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg></span> Join open community tournaments</li>
+        </ul>
+        <a class="btn btn-ghost" href="#">Claim your free year</a>
+      </div>
+
+      <div class="price feat reveal">
+        <span class="ribbon">Most popular</span>
+        <h3>Premium</h3>
+        <div class="amt">$1<small>/ month to start</small></div>
+        <p class="sub">Everything in Free, plus the extras for serious players and competitors.</p>
+        <ul>
+          <li><span class="ck"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg></span> Unlimited deep rollouts &amp; match analysis</li>
+          <li><span class="ck"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg></span> Entry to premium tournaments &amp; bigger events</li>
+          <li><span class="ck"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg></span> Gammon University lessons &amp; coaching tools</li>
+          <li><span class="ck"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg></span> Record &amp; live-stream your matches</li>
+        </ul>
+        <a class="btn btn-primary" href="#">Go Premium</a>
+      </div>
+    </div>
+    <p class="muted reveal" style="text-align:center;margin-top:24px;font-size:14px">Coins for events sold separately · Cancel anytime · Early members help us shape the product</p>
+  </div>
+</section>
+
+<!-- MISSION -->
+<section class="section" id="community">
+  <div class="wrap">
+    <div class="mission reveal">
+      <span class="eyebrow" style="justify-content:center">Our mission</span>
+      <h2 style="margin-top:18px">Building the backgammon community of the <em>future</em> — measured in millions, not hundreds.</h2>
+      <p>We're bringing the whole game together: the engine, the play, the teaching, the clubs and the events — in one place that's the central home for everything backgammon. Wherever you are in the world, this is where the game lives.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="wrap" style="padding-bottom:20px">
+  <div class="cta-final reveal">
+    <span class="eyebrow" style="justify-content:center">Join the table</span>
+    <h2 style="margin-top:16px">Your first year is on us.</h2>
+    <p>Claim a free membership, fire up the engine, and play your first match today. The board's set — it's your roll.</p>
+    <div class="hero-cta">
+      <a class="btn btn-primary" href="#">Claim your free year
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+      <a class="btn btn-ghost" href="#products">Explore the platform</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a class="brand" href="#top">
+          <svg class="logo" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect x="1.5" y="1.5" width="37" height="37" rx="9" fill="#12241b" stroke="#e0ad4e" stroke-width="2"/>
+            <path d="M7 7 L13 7 L10 21 Z" fill="#e0ad4e"/><path d="M15 7 L21 7 L18 21 Z" fill="#b9492f"/><path d="M23 7 L29 7 L26 21 Z" fill="#e0ad4e"/>
+            <path d="M7 33 L13 33 L10 19 Z" fill="#b9492f"/><path d="M15 33 L21 33 L18 19 Z" fill="#e0ad4e"/><path d="M23 33 L29 33 L26 19 Z" fill="#b9492f"/>
+            <circle cx="32" cy="29" r="5" fill="#f4eedf"/><circle cx="32" cy="29" r="1.3" fill="#12241b"/>
+          </svg>
+          Gammon<b>.</b>
+        </a>
+        <p>The home of worldwide backgammon. Play, learn, compete and run clubs — all in one place.</p>
+      </div>
+      <div class="foot-col">
+        <h5>Products</h5>
+        <a href="#engine">The Engine</a>
+        <a href="#">Play Online</a>
+        <a href="#">Beat the Grandmaster</a>
+        <a href="#">Gammon University</a>
+        <a href="#">Record &amp; Stream</a>
+      </div>
+      <div class="foot-col">
+        <h5>Community</h5>
+        <a href="#clubs">Run a Club</a>
+        <a href="#">Tournaments</a>
+        <a href="#">Chouettes</a>
+        <a href="#pricing">Membership</a>
+        <a href="#">Coins</a>
+      </div>
+      <div class="foot-col">
+        <h5>Company</h5>
+        <a href="#community">Our mission</a>
+        <a href="#">About</a>
+        <a href="#">Blog</a>
+        <a href="#">Contact</a>
+        <a href="#">Support</a>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 Gammon. All rights reserved.</span>
+      <span>Privacy · Terms · Responsible play</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // nav scroll state
+  const nav = document.getElementById('nav');
+  const onScroll = () => nav.classList.toggle('scrolled', window.scrollY > 20);
+  onScroll(); window.addEventListener('scroll', onScroll, {passive:true});
+
+  // mobile menu
+  const toggle = document.getElementById('navToggle');
+  const links = document.getElementById('navLinks');
+  toggle.addEventListener('click', () => links.classList.toggle('open'));
+  links.querySelectorAll('a').forEach(a => a.addEventListener('click', () => links.classList.remove('open')));
+
+  // reveal on scroll
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, {threshold:.12, rootMargin:'0px 0px -40px 0px'});
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+</script>
+</body>
+</html>

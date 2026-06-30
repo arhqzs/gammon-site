@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Gammon — The home of worldwide backgammon</title>
+<meta name="description" content="Gammon is the home of worldwide backgammon. Play, learn, compete and run clubs — all powered by a pocket-sized neural engine." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --parchment:#f6f1e7;
+    --parchment-2:#efe8d8;
+    --paper:#fbf8f1;
+    --ink:#2b2823;
+    --ink-2:#5a554c;
+    --ink-3:#8b857a;
+    --line:#e0d8c6;
+    --line-2:#d2c8b2;
+    --clay:#b5532e;
+    --clay-2:#9d4525;
+    --clay-soft:#f0d9cd;
+    --sage:#6f7d63;
+    --sage-soft:#dfe4d6;
+    --shadow:0 1px 2px rgba(43,40,35,.04), 0 12px 30px -18px rgba(43,40,35,.18);
+    --shadow-lg:0 30px 60px -30px rgba(43,40,35,.28);
+    --radius:14px;
+    --radius-lg:22px;
+    --maxw:1180px;
+    --ease:cubic-bezier(.22,.61,.36,1);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'Inter',system-ui,-apple-system,sans-serif;
+    background:var(--parchment);
+    color:var(--ink);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+    overflow-x:hidden;
+  }
+  h1,h2,h3{font-family:'Fraunces',Georgia,serif;font-weight:500;line-height:1.08;letter-spacing:-.01em;color:var(--ink)}
+  a{color:inherit;text-decoration:none}
+  img,svg{display:block;max-width:100%}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 28px}
+  .eyebrow{font-size:.72rem;letter-spacing:.22em;text-transform:uppercase;color:var(--clay);font-weight:600}
+  .muted{color:var(--ink-2)}
+  .divider{height:1px;background:var(--line);width:100%}
+
+  /* Buttons */
+  .btn{
+    display:inline-flex;align-items:center;gap:.5em;
+    font-weight:600;font-size:.95rem;
+    padding:.72em 1.3em;border-radius:999px;
+    border:1px solid transparent;cursor:pointer;
+    transition:transform .25s var(--ease),background .25s var(--ease),box-shadow .25s var(--ease),color .25s var(--ease),border-color .25s var(--ease);
+    white-space:nowrap;
+  }
+  .btn-primary{background:var(--clay);color:#fff;box-shadow:0 8px 20px -10px rgba(181,83,46,.6)}
+  .btn-primary:hover{background:var(--clay-2);transform:translateY(-2px);box-shadow:0 14px 28px -12px rgba(181,83,46,.7)}
+  .btn-ghost{background:transparent;color:var(--ink);border-color:var(--line-2)}
+  .btn-ghost:hover{border-color:var(--ink);transform:translateY(-2px)}
+  .btn-soft{background:var(--paper);color:var(--ink);border-color:var(--line);box-shadow:var(--shadow)}
+  .btn-soft:hover{transform:translateY(-2px);border-color:var(--line-2)}
+  .link-arrow{display:inline-flex;align-items:center;gap:.4em;font-weight:600;color:var(--clay);font-size:.92rem}
+  .link-arrow svg{transition:transform .25s var(--ease)}
+  .link-arrow:hover svg{transform:translateX(4px)}
+
+  /* Nav */
+  header.nav{
+    position:sticky;top:0;z-index:80;
+    transition:background .3s var(--ease),box-shadow .3s var(--ease),border-color .3s var(--ease);
+    border-bottom:1px solid transparent;
+  }
+  header.nav.scrolled{
+    background:rgba(246,241,231,.82);
+    backdrop-filter:saturate(1.3) blur(14px);
+    -webkit-backdrop-filter:saturate(1.3) blur(14px);
+    border-bottom-color:var(--line);
+  }
+  .nav-inner{display:flex;align-items:center;justify-content:space-between;height:74px}
+  .logo{display:flex;align-items:center;gap:.6em;font-family:'Fraunces',serif;font-weight:600;font-size:1.35rem;letter-spacing:-.02em}
+  .logo .mark{width:34px;height:34px;flex:none}
+  .nav-links{display:flex;align-items:center;gap:2rem;list-style:none}
+  .nav-links a{font-size:.93rem;font-weight:500;color:var(--ink-2);position:relative;transition:color .2s var(--ease)}
+  .nav-links a::after{content:"";position:absolute;left:0;bottom:-6px;width:0;height:1.5px;background:var(--clay);transition:width .28s var(--ease)}
+  .nav-links a:hover{color:var(--ink)}
+  .nav-links a:hover::after{width:100%}
+  .nav-cta{display:flex;align-items:center;gap:.7rem}
+  .nav-cta .login{font-size:.93rem;font-weight:600;padding:.5em .4em;color:var(--ink)}
+  .nav-cta .login:hover{color:var(--clay)}
+  .burger{display:none;background:none;border:1px solid var(--line-2);border-radius:10px;width:44px;height:44px;cursor:pointer;align-items:center;justify-content:center}
+  .burger svg{width:22px;height:22px}
+
+  /* Mobile menu */
+  .mobile-menu{
+    position:fixed;inset:0 0 0 auto;width:min(86vw,340px);
+    background:var(--paper);z-index:100;
+    transform:translateX(100%);transition:transform .4s var(--ease);
+    box-shadow:var(--shadow-lg);padding:26px;display:flex;flex-direction:column;
+    border-left:1px solid var(--line);
+  }
+  .mobile-menu.open{transform:translateX(0)}
+  .mm-overlay{position:fixed;inset:0;background:rgba(43,40,35,.32);z-index:99;opacity:0;visibility:hidden;transition:opacity .35s var(--ease),visibility .35s}
+  .mm-overlay.open{opacity:1;visibility:visible}
+  .mm-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:30px}
+  .mm-close{background:none;border:none;cursor:pointer;width:42px;height:42px;display:flex;align-items:center;justify-content:center;border-radius:10px}
+  .mm-close:hover{background:var(--parchment-2)}
+  .mobile-menu nav{display:flex;flex-direction:column;gap:2px}
+  .mobile-menu nav a{padding:14px 6px;font-size:1.05rem;font-weight:500;border-bottom:1px solid var(--line);color:var(--ink)}
+  .mobile-menu .mm-actions{margin-top:auto;display:flex;flex-direction:column;gap:12px}
+  .mobile-menu .btn{justify-content:center}
+
+  /* Hero */
+  .hero{position:relative;padding:64px 0 40px;overflow:hidden}
+  .hero::before{content:"";position:absolute;top:-160px;right:-120px;width:520px;height:520px;border-radius:50%;background:radial-gradient(circle,rgba(181,83,46,.07),transparent 70%);pointer-events:none}
+  .hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:64px;align-items:center}
+  .pill{
+    display:inline-flex;align-items:center;gap:.6em;
+    background:var(--clay-soft);color:var(--clay-2);
+    font-size:.8rem;font-weight:600;padding:.5em 1em;border-radius:999px;margin-bottom:24px;
+    border:1px solid rgba(181,83,46,.18);
+  }
+  .pill .dot{width:7px;height:7px;border-radius:50%;background:var(--clay);flex:none;animation:pulse 2.4s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  .hero h1{font-size:clamp(2.6rem,5.4vw,4.4rem);margin-bottom:22px}
+  .hero h1 em{font-style:italic;color:var(--clay)}
+  .hero p.sub{font-size:1.13rem;color:var(--ink-2);max-width:34ch;margin-bottom:32px}
+  .hero-actions{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+  .hero-note{margin-top:22px;font-size:.85rem;color:var(--ink-3);display:flex;align-items:center;gap:.5em}
+  .hero-note svg{width:16px;height:16px;color:var(--sage)}
+
+  /* Board card */
+  .board-card{
+    background:var(--paper);border:1px solid var(--line);border-radius:var(--radius-lg);
+    padding:22px;box-shadow:var(--shadow-lg);position:relative;
+  }
+  .board-card .bc-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;font-size:.78rem;color:var(--ink-3);font-weight:500}
+  .board-card .bc-top b{color:var(--ink);font-weight:600}
+  .board-svg{width:100%;height:auto;border-radius:12px;display:block}
+  .bc-foot{display:flex;justify-content:space-between;align-items:center;margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+  .bc-eq{font-size:.82rem;color:var(--ink-2)}
+  .bc-eq b{color:var(--sage);font-weight:600}
+  .bc-best{font-size:.8rem;font-weight:600;color:var(--clay);display:flex;align-items:center;gap:.4em}
+
+  /* Stats strip */
+  .stats{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--parchment-2)}
+  .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0}
+  .stat{padding:34px 24px;text-align:center;border-right:1px solid var(--line)}
+  .stat:last-child{border-right:none}
+  .stat .num{font-family:'Fraunces',serif;font-size:2.2rem;font-weight:600;color:var(--ink);letter-spacing:-.02em}
+  .stat .lbl{font-size:.8rem;color:var(--ink-2);letter-spacing:.04em;margin-top:4px}
+
+  /* Section heading */
+  section{position:relative}
+  .sec{padding:96px 0}
+  .sec-head{max-width:62ch;margin-bottom:54px}
+  .sec-head.center{margin-left:auto;margin-right:auto;text-align:center}
+  .sec-head h2{font-size:clamp(2rem,3.6vw,2.9rem);margin:14px 0}
+  .sec-head p{font-size:1.08rem;color:var(--ink-2)}
+
+  /* Products grid */
+  .products{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--radius-lg);overflow:hidden}
+  .card{background:var(--paper);padding:34px 30px;transition:background .3s var(--ease),transform .3s var(--ease);position:relative}
+  .card:hover{background:#fff;transform:translateY(-3px);z-index:2;box-shadow:var(--shadow)}
+  .card .ic{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:var(--clay-soft);color:var(--clay);margin-bottom:20px}
+  .card.sage .ic{background:var(--sage-soft);color:var(--sage)}
+  .card .ic svg{width:24px;height:24px}
+  .card h3{font-size:1.32rem;margin-bottom:10px}
+  .card p{font-size:.94rem;color:var(--ink-2);margin-bottom:16px}
+  .card ul{list-style:none;display:flex;flex-direction:column;gap:8px;margin-bottom:18px}
+  .card ul li{font-size:.86rem;color:var(--ink-2);display:flex;gap:.6em;align-items:flex-start}
+  .card ul li svg{width:15px;height:15px;color:var(--sage);flex:none;margin-top:4px}
+  .card .kicker{font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+
+  /* Feature splits */
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center}
+  .split.rev .split-media{order:-1}
+  .split h2{font-size:clamp(1.8rem,3.2vw,2.6rem);margin:14px 0 18px}
+  .split p.lead{font-size:1.06rem;color:var(--ink-2);margin-bottom:24px}
+  .check-list{list-style:none;display:flex;flex-direction:column;gap:14px;margin-bottom:30px}
+  .check-list li{display:flex;gap:.8em;align-items:flex-start;font-size:.97rem;color:var(--ink)}
+  .check-list li .ck{width:24px;height:24px;border-radius:7px;background:var(--sage-soft);color:var(--sage);display:flex;align-items:center;justify-content:center;flex:none}
+  .check-list li .ck svg{width:14px;height:14px}
+  .check-list li b{font-weight:600}
+  .check-list li span{color:var(--ink-2);font-weight:400}
+
+  /* Phone mock */
+  .phone{
+    width:min(300px,82%);margin:0 auto;background:var(--ink);border-radius:38px;padding:12px;
+    box-shadow:var(--shadow-lg);position:relative;
+  }
+  .phone::before{content:"";position:absolute;top:20px;left:50%;transform:translateX(-50%);width:90px;height:6px;background:#444;border-radius:99px}
+  .phone-screen{background:var(--paper);border-radius:28px;overflow:hidden;padding:26px 18px 18px}
+  .ps-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+  .ps-head .t{font-size:.78rem;font-weight:600;color:var(--ink-3)}
+  .ps-head .live{font-size:.66rem;font-weight:700;color:var(--clay);background:var(--clay-soft);padding:.25em .6em;border-radius:99px}
+  .ps-card{background:var(--parchment);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:12px}
+  .ps-card .scan{font-size:.7rem;color:var(--ink-3);margin-bottom:8px;display:flex;align-items:center;gap:.4em}
+  .ps-card .scan svg{width:13px;height:13px;color:var(--sage)}
+  .move-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}
+  .move-row:last-child{border-bottom:none}
+  .move-row .mv{font-size:.84rem;font-weight:600;font-feature-settings:"tnum";color:var(--ink)}
+  .move-row .eq{font-size:.78rem;font-feature-settings:"tnum"}
+  .move-row.best{position:relative}
+  .move-row.best .mv{color:var(--clay)}
+  .move-row.best .badge{font-size:.6rem;font-weight:700;background:var(--clay);color:#fff;padding:.15em .5em;border-radius:99px;margin-left:.5em;vertical-align:middle}
+  .eq.pos{color:var(--sage)}
+  .eq.neg{color:var(--ink-3)}
+
+  /* Lobby mock */
+  .lobby{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius-lg);padding:22px;box-shadow:var(--shadow)}
+  .lobby-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+  .lobby-head h4{font-family:'Fraunces',serif;font-size:1.05rem;font-weight:600}
+  .lobby-tabs{display:flex;gap:6px}
+  .lobby-tabs span{font-size:.74rem;font-weight:600;padding:.35em .8em;border-radius:99px;color:var(--ink-3);border:1px solid var(--line)}
+  .lobby-tabs span.on{background:var(--clay);color:#fff;border-color:var(--clay)}
+  .match{display:flex;align-items:center;gap:14px;padding:13px;border:1px solid var(--line);border-radius:12px;margin-bottom:10px;transition:border-color .25s var(--ease),transform .25s var(--ease)}
+  .match:hover{border-color:var(--line-2);transform:translateX(3px)}
+  .match .av{width:38px;height:38px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;color:#fff;background:var(--sage)}
+  .match .av.c2{background:var(--clay)}
+  .match .av.c3{background:var(--ink)}
+  .match .info{flex:1;min-width:0}
+  .match .info .nm{font-size:.9rem;font-weight:600}
+  .match .info .meta{font-size:.74rem;color:var(--ink-3)}
+  .match .stk{font-size:.78rem;font-weight:600;color:var(--sage);font-feature-settings:"tnum"}
+  .match .join{font-size:.74rem;font-weight:600;color:var(--clay)}
+
+  /* Clubs band */
+  .clubs{background:var(--ink);color:var(--paper);position:relative;overflow:hidden}
+  .clubs::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 80% 10%,rgba(181,83,46,.18),transparent 45%),radial-gradient(circle at 10% 90%,rgba(111,125,99,.16),transparent 45%)}
+  .clubs .wrap{position:relative}
+  .clubs h2{color:var(--paper);font-size:clamp(2rem,3.6vw,2.9rem)}
+  .clubs .eyebrow{color:#e8a884}
+  .clubs p{color:rgba(251,248,241,.75)}
+  .clubs-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:60px;align-items:center}
+  .club-feats{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:34px}
+  .cf{display:flex;flex-direction:column;gap:8px}
+  .cf .ic{width:40px;height:40px;border-radius:11px;background:rgba(251,248,241,.08);border:1px solid rgba(251,248,241,.14);display:flex;align-items:center;justify-content:center;color:#e8a884}
+  .cf .ic svg{width:20px;height:20px}
+  .cf h4{font-family:'Fraunces',serif;font-size:1.08rem;font-weight:600;color:var(--paper)}
+  .cf p{font-size:.86rem;color:rgba(251,248,241,.62);line-height:1.5}
+  .director{background:rgba(251,248,241,.04);border:1px solid rgba(251,248,241,.12);border-radius:var(--radius-lg);padding:24px}
+  .director .dh{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+  .director .dh .t{font-size:.8rem;font-weight:600;color:#e8a884;letter-spacing:.08em;text-transform:uppercase}
+  .director .dh .st{font-size:.72rem;color:rgba(251,248,241,.5)}
+  .bracket-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid rgba(251,248,241,.08);font-size:.82rem}
+  .bracket-row:last-child{border-bottom:none}
+  .bracket-row .p{color:var(--paper);font-weight:500}
+  .bracket-row .sc{font-feature-settings:"tnum";color:#e8a884;font-weight:600}
+  .bracket-row .vs{color:rgba(251,248,241,.4);font-size:.74rem}
+
+  /* Pricing */
+  .pricing-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:880px;margin:0 auto}
+  .price-card{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius-lg);padding:38px 34px;position:relative;transition:transform .3s var(--ease),box-shadow .3s var(--ease)}
+  .price-card:hover{transform:translateY(-4px);box-shadow:var(--shadow)}
+  .price-card.featured{border-color:var(--clay);box-shadow:0 30px 60px -34px rgba(181,83,46,.4)}
+  .price-card .tag{position:absolute;top:-13px;left:34px;background:var(--clay);color:#fff;font-size:.68rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:.4em 1em;border-radius:99px}
+  .price-card .ttl{font-family:'Fraunces',serif;font-size:1.4rem;font-weight:600;margin-bottom:6px}
+  .price-card .desc{font-size:.88rem;color:var(--ink-3);margin-bottom:20px;min-height:40px}
+  .price-card .amt{display:flex;align-items:baseline;gap:.3em;margin-bottom:6px}
+  .price-card .amt .big{font-family:'Fraunces',serif;font-size:2.6rem;font-weight:600;letter-spacing:-.02em}
+  .price-card .amt .per{font-size:.9rem;color:var(--ink-3)}
+  .price-card .free-note{font-size:.82rem;color:var(--sage);font-weight:600;margin-bottom:24px}
+  .price-card .btn{width:100%;justify-content:center;margin-bottom:24px}
+  .price-card ul{list-style:none;display:flex;flex-direction:column;gap:12px}
+  .price-card ul li{display:flex;gap:.7em;align-items:flex-start;font-size:.9rem;color:var(--ink-2)}
+  .price-card ul li svg{width:16px;height:16px;color:var(--sage);flex:none;margin-top:4px}
+
+  /* Mission */
+  .mission{text-align:center}
+  .mission .wrap{max-width:820px}
+  .mission .big-quote{font-family:'Fraunces',serif;font-size:clamp(1.7rem,3.4vw,2.6rem);font-weight:400;line-height:1.25;letter-spacing:-.01em;margin:22px 0 0}
+  .mission .big-quote em{font-style:italic;color:var(--clay)}
+
+  /* Final CTA */
+  .final{padding:0 0 96px}
+  .final-band{
+    background:linear-gradient(135deg,var(--clay),var(--clay-2));
+    color:#fff;border-radius:var(--radius-lg);padding:64px 48px;text-align:center;position:relative;overflow:hidden;
+  }
+  .final-band::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 20% 20%,rgba(255,255,255,.12),transparent 40%)}
+  .final-band > *{position:relative}
+  .final-band h2{color:#fff;font-size:clamp(2rem,4vw,3rem);margin-bottom:16px}
+  .final-band p{color:rgba(255,255,255,.85);font-size:1.08rem;max-width:50ch;margin:0 auto 30px}
+  .final-band .btn-primary{background:#fff;color:var(--clay);box-shadow:0 14px 30px -12px rgba(0,0,0,.3)}
+  .final-band .btn-primary:hover{background:var(--paper)}
+  .final-band .btn-ghost{border-color:rgba(255,255,255,.5);color:#fff}
+  .final-band .btn-ghost:hover{border-color:#fff;background:rgba(255,255,255,.1)}
+  .final-actions{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+
+  /* Footer */
+  footer{background:var(--parchment-2);border-top:1px solid var(--line);padding:64px 0 32px}
+  .foot-grid{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:40px;margin-bottom:48px}
+  .foot-brand .logo{margin-bottom:14px}
+  .foot-brand p{font-size:.9rem;color:var(--ink-2);max-width:30ch}
+  .foot-col h5{font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin-bottom:16px}
+  .foot-col ul{list-style:none;display:flex;flex-direction:column;gap:10px}
+  .foot-col ul li a{font-size:.9rem;color:var(--ink-2);transition:color .2s var(--ease)}
+  .foot-col ul li a:hover{color:var(--clay)}
+  .foot-bot{display:flex;justify-content:space-between;align-items:center;padding-top:26px;border-top:1px solid var(--line);font-size:.84rem;color:var(--ink-3);flex-wrap:wrap;gap:14px}
+  .foot-bot .socials{display:flex;gap:14px}
+  .foot-bot .socials a{width:34px;height:34px;border:1px solid var(--line-2);border-radius:50%;display:flex;align-items:center;justify-content:center;transition:border-color .2s,color .2s}
+  .foot-bot .socials a:hover{border-color:var(--clay);color:var(--clay)}
+  .foot-bot .socials svg{width:16px;height:16px}
+
+  /* Reveal */
+  .reveal{opacity:0;transform:translateY(26px);transition:opacity .8s var(--ease),transform .8s var(--ease)}
+  .reveal.in{opacity:1;transform:none}
+  .reveal.d1{transition-delay:.08s}
+  .reveal.d2{transition-delay:.16s}
+  .reveal.d3{transition-delay:.24s}
+  .reveal.d4{transition-delay:.32s}
+  .reveal.d5{transition-delay:.4s}
+
+  @media(max-width:980px){
+    .hero-grid{grid-template-columns:1fr;gap:44px}
+    .hero p.sub{max-width:48ch}
+    .products{grid-template-columns:repeat(2,1fr)}
+    .split,.clubs-grid{grid-template-columns:1fr;gap:40px}
+    .split.rev .split-media{order:0}
+    .club-feats{grid-template-columns:1fr 1fr}
+  }
+  @media(max-width:760px){
+    .nav-links,.nav-cta{display:none}
+    .burger{display:flex}
+    .stats-grid{grid-template-columns:1fr 1fr}
+    .stat:nth-child(2){border-right:none}
+    .stat:nth-child(1),.stat:nth-child(2){border-bottom:1px solid var(--line)}
+    .products{grid-template-columns:1fr}
+    .pricing-grid{grid-template-columns:1fr}
+    .club-feats{grid-template-columns:1fr}
+    .sec{padding:70px 0}
+    .wrap{padding:0 20px}
+    .foot-grid{grid-template-columns:1fr 1fr;gap:30px}
+    .foot-brand{grid-column:1/-1}
+    .final-band{padding:44px 24px}
+  }
+  @media(max-width:440px){
+    .foot-grid{grid-template-columns:1fr}
+    .hero-actions{flex-direction:column;align-items:stretch}
+    .hero-actions .btn{justify-content:center}
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<header class="nav" id="nav">
+  <div class="wrap nav-inner">
+    <a href="#" class="logo" aria-label="Gammon home">
+      <svg class="mark" viewBox="0 0 34 34" fill="none" aria-hidden="true">
+        <rect x="1" y="1" width="32" height="32" rx="8" fill="#2b2823"/>
+        <path d="M9 7 L13 22 L17 7 Z" fill="#b5532e"/>
+        <path d="M17 27 L21 12 L25 27 Z" fill="#6f7d63"/>
+        <circle cx="9" cy="25.5" r="2.3" fill="#f6f1e7"/>
+        <circle cx="25" cy="8.5" r="2.3" fill="#f6f1e7"/>
+      </svg>
+      Gammon
+    </a>
+    <ul class="nav-links">
+      <li><a href="#products">Products</a></li>
+      <li><a href="#engine">Engine</a></li>
+      <li><a href="#clubs">Clubs</a></li>
+      <li><a href="#membership">Membership</a></li>
+      <li><a href="#community">Community</a></li>
+    </ul>
+    <div class="nav-cta">
+      <a href="#" class="login">Log in</a>
+      <a href="#membership" class="btn btn-primary">Start free</a>
+    </div>
+    <button class="burger" id="burger" aria-label="Open menu" aria-expanded="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+    </button>
+  </div>
+</header>
+
+<!-- MOBILE MENU -->
+<div class="mm-overlay" id="mmOverlay"></div>
+<aside class="mobile-menu" id="mobileMenu" aria-hidden="true">
+  <div class="mm-head">
+    <span class="logo" style="font-size:1.2rem">Gammon</span>
+    <button class="mm-close" id="mmClose" aria-label="Close menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </div>
+  <nav>
+    <a href="#products" class="mm-link">Products</a>
+    <a href="#engine" class="mm-link">Engine</a>
+    <a href="#clubs" class="mm-link">Clubs</a>
+    <a href="#membership" class="mm-link">Membership</a>
+    <a href="#community" class="mm-link">Community</a>
+  </nav>
+  <div class="mm-actions">
+    <a href="#" class="btn btn-ghost">Log in</a>
+    <a href="#membership" class="btn btn-primary">Start free</a>
+  </div>
+</aside>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div class="hero-copy reveal">
+      <span class="pill"><span class="dot"></span>Free for the first 3,000 members · 1 year on us</span>
+      <h1>The home of <em>worldwide</em> backgammon</h1>
+      <p class="sub">Play, learn, compete and run clubs — all powered by a neural engine that lives in your pocket.</p>
+      <div class="hero-actions">
+        <a href="#membership" class="btn btn-primary">Claim your free year
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+        <a href="#products" class="btn btn-soft">Explore the platform</a>
+      </div>
+      <p class="hero-note">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+        No credit card · Cancel anytime · Full engine included
+      </p>
+    </div>
+
+    <div class="board-card reveal d2">
+      <div class="bc-top"><span>Analysis · <b>Move 14</b></span><span>Match to 7 · 2-away / 3-away</span></div>
+      <!-- Inline SVG backgammon board -->
+      <svg class="board-svg" viewBox="0 0 480 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Backgammon board with checkers and dice">
+        <defs>
+          <linearGradient id="felt" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#efe8d8"/><stop offset="1" stop-color="#e6dcc6"/>
+          </linearGradient>
+        </defs>
+        <rect x="0" y="0" width="480" height="320" rx="12" fill="#2b2823"/>
+        <rect x="10" y="10" width="460" height="300" rx="6" fill="url(#felt)"/>
+        <!-- center bar -->
+        <rect x="226" y="10" width="28" height="300" fill="#2b2823"/>
+        <!-- top points -->
+        <g>
+          <path d="M22 12 L52 12 L37 150 Z" fill="#b5532e" opacity=".85"/>
+          <path d="M58 12 L88 12 L73 150 Z" fill="#cdbf9f"/>
+          <path d="M94 12 L124 12 L109 150 Z" fill="#b5532e" opacity=".85"/>
+          <path d="M130 12 L160 12 L145 150 Z" fill="#cdbf9f"/>
+          <path d="M166 12 L196 12 L181 150 Z" fill="#b5532e" opacity=".85"/>
+          <path d="M202 12 L226 12 L214 150 Z" fill="#cdbf9f"/>
+          <path d="M254 12 L278 12 L266 150 Z" fill="#b5532e" opacity=".85"/>
+          <path d="M284 12 L314 12 L299 150 Z" fill="#cdbf9f"/>
+          <path d="M320 12 L350 12 L335 150 Z" fill="#b5532e" opacity=".85"/>
+          <path d="M356 12 L386 12 L371 150 Z" fill="#cdbf9f"/>
+          <path d="M392 12 L422 12 L407 150 Z" fill="#b5532e" opacity=".85"/>
+          <path d="M428 12 L458 12 L443 150 Z" fill="#cdbf9f"/>
+        </g>
+        <!-- bottom points -->
+        <g>
+          <path d="M22 308 L52 308 L37 170 Z" fill="#cdbf9f"/>
+          <path d="M58 308 L88 308 L73 170 Z" fill="#6f7d63" opacity=".85"/>
+          <path d="M94 308 L124 308 L109 170 Z" fill="#cdbf9f"/>
+          <path d="M130 308 L160 308 L145 170 Z" fill="#6f7d63" opacity=".85"/>
+          <path d="M166 308 L196 308 L181 170 Z" fill="#cdbf9f"/>
+          <path d="M202 308 L226 308 L214 170 Z" fill="#6f7d63" opacity=".85"/>
+          <path d="M254 308 L278 308 L266 170 Z" fill="#cdbf9f"/>
+          <path d="M284 308 L314 308 L299 170 Z" fill="#6f7d63" opacity=".85"/>
+          <path d="M320 308 L350 308 L335 170 Z" fill="#cdbf9f"/>
+          <path d="M356 308 L386 308 L371 170 Z" fill="#6f7d63" opacity=".85"/>
+          <path d="M392 308 L422 308 L407 170 Z" fill="#cdbf9f"/>
+          <path d="M428 308 L458 308 L443 170 Z" fill="#6f7d63" opacity=".85"/>
+        </g>
+        <!-- checkers (top point 1) -->
+        <g>
+          <circle cx="37" cy="26" r="13" fill="#2b2823" stroke="#1d1a16" stroke-width="1"/>
+          <circle cx="37" cy="52" r="13" fill="#2b2823" stroke="#1d1a16" stroke-width="1"/>
+          <circle cx="37" cy="78" r="13" fill="#2b2823" stroke="#1d1a16" stroke-width="1"/>
+        </g>
+        <!-- checkers point 12 (top right) -->
+        <g>
+          <circle cx="443" cy="26" r="13" fill="#faf6ec" stroke="#cdbf9f" stroke-width="1"/>
+          <circle cx="443" cy="52" r="13" fill="#faf6ec" stroke="#cdbf9f" stroke-width="1"/>
+        </g>
+        <!-- checkers bottom left -->
+        <g>
+          <circle cx="37" cy="294" r="13" fill="#faf6ec" stroke="#cdbf9f" stroke-width="1"/>
+          <circle cx="37" cy="268" r="13" fill="#faf6ec" stroke="#cdbf9f" stroke-width="1"/>
+          <circle cx="37" cy="242" r="13" fill="#faf6ec" stroke="#cdbf9f" stroke-width="1"/>
+          <circle cx="37" cy="216" r="13" fill="#faf6ec" stroke="#cdbf9f" stroke-width="1"/>
+        </g>
+        <!-- checkers bottom right -->
+        <g>
+          <circle cx="443" cy="294" r="13" fill="#2b2823" stroke="#1d1a16" stroke-width="1"/>
+          <circle cx="443" cy="268" r="13" fill="#2b2823" stroke="#1d1a16" stroke-width="1"/>
+        </g>
+        <!-- midboard checker -->
+        <circle cx="145" cy="294" r="13" fill="#2b2823" stroke="#1d1a16" stroke-width="1"/>
+        <circle cx="335" cy="26" r="13" fill="#faf6ec" stroke="#cdbf9f" stroke-width="1"/>
+        <!-- dice -->
+        <g transform="translate(150 130)">
+          <rect x="0" y="0" width="44" height="44" rx="9" fill="#faf6ec" stroke="#cdbf9f"/>
+          <circle cx="13" cy="13" r="3.4" fill="#b5532e"/><circle cx="31" cy="13" r="3.4" fill="#b5532e"/>
+          <circle cx="13" cy="31" r="3.4" fill="#b5532e"/><circle cx="31" cy="31" r="3.4" fill="#b5532e"/>
+        </g>
+        <g transform="translate(284 130)">
+          <rect x="0" y="0" width="44" height="44" rx="9" fill="#faf6ec" stroke="#cdbf9f"/>
+          <circle cx="13" cy="13" r="3.4" fill="#6f7d63"/><circle cx="22" cy="22" r="3.4" fill="#6f7d63"/>
+          <circle cx="31" cy="31" r="3.4" fill="#6f7d63"/>
+        </g>
+      </svg>
+      <div class="bc-foot">
+        <span class="bc-eq">Best play equity <b>+0.184</b></span>
+        <span class="bc-best">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h7l-1 8 10-12h-7z"/></svg>
+          Engine recommended
+        </span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<section class="stats">
+  <div class="wrap">
+    <div class="stats-grid">
+      <div class="stat reveal"><div class="num" data-count="142">142k</div><div class="lbl">Matches analyzed weekly</div></div>
+      <div class="stat reveal d1"><div class="num">99.4%</div><div class="lbl">Engine play accuracy</div></div>
+      <div class="stat reveal d2"><div class="num">5,800+</div><div class="lbl">Players online now</div></div>
+      <div class="stat reveal d3"><div class="num">120+</div><div class="lbl">Clubs worldwide</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- PRODUCTS -->
+<section class="sec" id="products">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">One platform</span>
+      <h2>Everything backgammon, in one place</h2>
+      <p>Six products that work together — from a grandmaster-level engine in your pocket to the tools that let a local club run a world-class tournament.</p>
+    </div>
+    <div class="products">
+      <!-- Engine -->
+      <article class="card reveal">
+        <span class="kicker">Flagship</span>
+        <div class="ic">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="5" width="14" height="14" rx="2"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M1 9h3M1 15h3M20 9h3M20 15h3"/><circle cx="12" cy="12" r="2.5"/></svg>
+        </div>
+        <h3>The Engine</h3>
+        <p>An XG-class neural engine, cracked to run fast on phone, desktop and server. Rollouts, equity and best-play at your fingertips.</p>
+        <ul>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Snap a photo of the board → auto position</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Built-in pip count</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Full position editor</li>
+        </ul>
+        <a href="#engine" class="link-arrow">Meet the engine <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      </article>
+      <!-- Play -->
+      <article class="card sage reveal d1">
+        <span class="kicker">Live</span>
+        <div class="ic">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14 14 0 000 20M12 2a14 14 0 010 20M2 12h20"/></svg>
+        </div>
+        <h3>Play Online</h3>
+        <p>Live matches against the world or the engine. Money games and chouettes — captain, box and a rotating field. Provably fair dice.</p>
+        <ul>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Matches vs. world or engine</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Money games & chouettes</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Cryptographically fair dice</li>
+        </ul>
+        <a href="#play" class="link-arrow">Find a game <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      </article>
+      <!-- Beat the Grandmaster -->
+      <article class="card reveal d2">
+        <span class="kicker">Train</span>
+        <div class="ic">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 5 5.6.6-4 4 1 5.4L12 19l-5 3 1-5.4-4-4 5.6-.6z"/></svg>
+        </div>
+        <h3>Beat the Grandmaster</h3>
+        <p>Puzzles built from a database of real mistakes top players made in analyzed matches. Find the move they missed.</p>
+        <ul>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Real positions from real matches</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Ranked by difficulty & theme</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Daily streaks & leaderboards</li>
+        </ul>
+        <a href="#" class="link-arrow">Start a puzzle <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      </article>
+      <!-- University -->
+      <article class="card sage reveal">
+        <span class="kicker">Learn</span>
+        <div class="ic">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/></svg>
+        </div>
+        <h3>Gammon University</h3>
+        <p>The place where instructors meet students. Structured lessons and one-on-one coaching from the world's best.</p>
+        <ul>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Verified instructor marketplace</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Lessons, courses & live coaching</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Reviewed matches with feedback</li>
+        </ul>
+        <a href="#" class="link-arrow">Browse coaches <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      </article>
+      <!-- Run a Club -->
+      <article class="card reveal d1">
+        <span class="kicker">Organize</span>
+        <div class="ic">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+        </div>
+        <h3>Run a Club</h3>
+        <p>Start your own club, run tournaments, manage coins and accounting — and keep your earnings. Live tournament director software included.</p>
+        <ul>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Coins, accounting & payouts</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Live tournament director</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Keep your own earnings</li>
+        </ul>
+        <a href="#clubs" class="link-arrow">Open a club <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      </article>
+      <!-- Record & Stream -->
+      <article class="card sage reveal d2">
+        <span class="kicker">Broadcast</span>
+        <div class="ic">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+        </div>
+        <h3>Record & Stream</h3>
+        <p>Capture over-the-board matches with a wide-angle camera and broadcast them live — with engine analysis layered on top.</p>
+        <ul>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Wide-angle OTB capture</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>One-tap live streaming</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Auto match recording & export</li>
+        </ul>
+        <a href="#" class="link-arrow">Set up a stream <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      </article>
+    </div>
+  </div>
+</section>
+
+<div class="wrap"><div class="divider"></div></div>
+
+<!-- ENGINE SPLIT -->
+<section class="sec" id="engine">
+  <div class="wrap split">
+    <div class="split-copy reveal">
+      <span class="eyebrow">The Engine</span>
+      <h2>Point your camera at the board, get the answer</h2>
+      <p class="lead">No more typing positions by hand. Snap a photo of any board — physical or on screen — and the engine reconstructs it, counts the pips and tells you the best play in under a second.</p>
+      <ul class="check-list">
+        <li><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span><span><b>Photo to position.</b> Computer vision detects every checker, the cube and the dice automatically.</span></li>
+        <li><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span><span><b>Rollouts on demand.</b> XG-class evaluations and full rollouts that used to need a desktop, now on your phone.</span></li>
+        <li><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span><span><b>Equity & best play.</b> Ranked move lists with equity and error margins for every candidate.</span></li>
+        <li><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span><span><b>Pip count & editor.</b> Instant pip count plus a full position editor when you want to tweak.</span></li>
+      </ul>
+      <a href="#membership" class="btn btn-primary">Try the engine free
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+    </div>
+
+    <div class="split-media reveal d2">
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="ps-head"><span class="t">Engine analysis</span><span class="live">0.4s</span></div>
+          <div class="ps-card">
+            <div class="scan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2"/></svg>Position scanned from photo · 31</div>
+            <div class="move-row best"><span class="mv">24/23 13/8 <span class="badge">BEST</span></span><span class="eq pos">+0.184</span></div>
+            <div class="move-row"><span class="mv">24/18 13/12</span><span class="eq neg">−0.021</span></div>
+            <div class="move-row"><span class="mv">13/8 13/12</span><span class="eq neg">−0.067</span></div>
+            <div class="move-row"><span class="mv">24/23 24/18</span><span class="eq neg">−0.112</span></div>
+          </div>
+          <div class="ps-card" style="margin-bottom:0">
+            <div style="display:flex;justify-content:space-between;font-size:.8rem">
+              <span style="color:var(--ink-3)">Pip count</span>
+              <span style="font-weight:600;font-feature-settings:'tnum'">You 158 · Opp 162</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PLAY SPLIT -->
+<section class="sec" id="play" style="background:var(--parchment-2)">
+  <div class="wrap split rev">
+    <div class="split-media reveal">
+      <div class="lobby">
+        <div class="lobby-head">
+          <h4>Open tables</h4>
+          <div class="lobby-tabs"><span class="on">Money</span><span>Matches</span><span>Chouette</span></div>
+        </div>
+        <div class="match">
+          <div class="av">A</div>
+          <div class="info"><div class="nm">Arda · 1842</div><div class="meta">Chouette · captain seat open · 4 in box</div></div>
+          <span class="stk">5/pt</span>
+        </div>
+        <div class="match">
+          <div class="av c2">M</div>
+          <div class="info"><div class="nm">Mochy_clone · 2105</div><div class="meta">Money game · auto-doubles on</div></div>
+          <span class="stk">10/pt</span>
+        </div>
+        <div class="match">
+          <div class="av c3">G</div>
+          <div class="info"><div class="nm">The Engine</div><div class="meta">Match to 7 · world-class</div></div>
+          <span class="join">Join →</span>
+        </div>
+        <div class="match">
+          <div class="av">R</div>
+          <div class="info"><div class="nm">Rotterdam Club</div><div class="meta">Rotating field · 7 waiting</div></div>
+          <span class="stk">2/pt</span>
+        </div>
+      </div>
+    </div>
+    <div class="split-copy reveal d2">
+      <span class="eyebrow">Play Online</span>
+      <h2>Real games, real stakes, fair dice</h2>
+      <p class="lead">Sit down at a live table against the world or test yourself against the engine. Run a classic chouette with a captain, a box and a rotating field — or set up a money game and let the cube fly.</p>
+      <ul class="check-list">
+        <li><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span><span><b>Chouettes done right.</b> Captain, box and rotating field with automatic settlement.</span></li>
+        <li><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span><span><b>Money games.</b> Set your stake, auto-doubles and the Jacoby rule — settle in club coins.</span></li>
+        <li><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span><span><b>Provably fair dice.</b> Cryptographic rolls anyone can verify — no more dice arguments.</span></li>
+      </ul>
+      <a href="#play" class="link-arrow">See open tables <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+    </div>
+  </div>
+</section>
+
+<!-- CLUBS BAND -->
+<section class="sec clubs" id="clubs">
+  <div class="wrap clubs-grid">
+    <div class="reveal">
+      <span class="eyebrow">Run a Club</span>
+      <h2>Run your club like a world tour stop</h2>
+      <p style="font-size:1.06rem;margin-top:14px;max-width:46ch">Whether you host eight friends or eight hundred, Gammon gives you the same software the pros use — coins, accounting and a live tournament director. Legitimate community clubs get these tools cheaply, and you keep your earnings.</p>
+      <div class="club-feats">
+        <div class="cf">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 9.5h4.5a2 2 0 010 4H9"/></svg></div>
+          <h4>Coins & accounting</h4>
+          <p>Track buy-ins, payouts and balances automatically. Clean books, every event.</p>
+        </div>
+        <div class="cf">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l3-4 3 3 5-7"/></svg></div>
+          <h4>Live director</h4>
+          <p>Seed brackets, manage rounds and post results in real time as matches finish.</p>
+        </div>
+        <div class="cf">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
+          <h4>Keep your earnings</h4>
+          <p>Your club, your revenue. We take a fair platform fee — the rest is yours.</p>
+        </div>
+        <div class="cf">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg></div>
+          <h4>Members & chat</h4>
+          <p>Roles, member lists and built-in chat keep your community in one home.</p>
+        </div>
+      </div>
+      <div style="margin-top:34px"><a href="#membership" class="btn btn-primary">Start a club</a></div>
+    </div>
+
+    <div class="reveal d2">
+      <div class="director">
+        <div class="dh"><span class="t">Live Director</span><span class="st">Round 3 of 5 · in progress</span></div>
+        <div class="bracket-row"><span class="p">Kenji M.</span><span class="sc">7</span><span class="vs">def.</span><span class="p">Lila R.</span><span class="sc">5</span></div>
+        <div class="bracket-row"><span class="p">Ahmet K.</span><span class="sc">7</span><span class="vs">def.</span><span class="p">Sven O.</span><span class="sc">2</span></div>
+        <div class="bracket-row"><span class="p">Bianca V.</span><span class="sc">4</span><span class="vs">vs.</span><span class="p">Tomás G.</span><span class="sc">4</span></div>
+        <div class="bracket-row"><span class="p">Noor A.</span><span class="sc">6</span><span class="vs">vs.</span><span class="p">Priya S.</span><span class="sc">3</span></div>
+        <div class="bracket-row" style="border-top:1px solid rgba(251,248,241,.18);margin-top:6px;padding-top:14px"><span class="p" style="color:#e8a884">Prize pool</span><span class="vs" style="margin-left:auto">payout to top 4</span><span class="sc">2,400 ©</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MEMBERSHIP / PRICING -->
+<section class="sec" id="membership">
+  <div class="wrap">
+    <div class="sec-head center reveal">
+      <span class="eyebrow">Membership</span>
+      <h2>Join free. Stay because it's worth it.</h2>
+      <p>The first 3,000 members get a full year on us — engine included. After that, premium is about the price of a coffee.</p>
+    </div>
+    <div class="pricing-grid">
+      <div class="price-card reveal">
+        <div class="ttl">Free</div>
+        <div class="desc">For the first 3,000 members — one full year, on the house.</div>
+        <div class="amt"><span class="big">$0</span><span class="per">/ year for early members</span></div>
+        <div class="free-note">First 3,000 members · 1 year free</div>
+        <a href="#" class="btn btn-soft">Claim your free year</a>
+        <ul>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>The full neural engine</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Play online — world & engine</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Beat the Grandmaster puzzles</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Pip count, position editor & photo scan</li>
+        </ul>
+      </div>
+      <div class="price-card featured reveal d1">
+        <span class="tag">Most popular</span>
+        <div class="ttl">Premium</div>
+        <div class="desc">For the serious player who wants the deepest analysis and everything Gammon offers.</div>
+        <div class="amt"><span class="big">$1</span><span class="per">/ month to start</span></div>
+        <div class="free-note">Everything in Free, plus —</div>
+        <a href="#" class="btn btn-primary">Go Premium</a>
+        <ul>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Deep rollouts & unlimited analysis</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Premium tournaments & events</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Gammon University access</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Recording & live streaming tools</li>
+        </ul>
+      </div>
+    </div>
+    <p class="muted" style="text-align:center;margin-top:24px;font-size:.86rem">Building a legitimate community club? <a href="#clubs" style="color:var(--clay);font-weight:600">Club tools are available at a steep discount.</a></p>
+  </div>
+</section>
+
+<!-- MISSION -->
+<section class="sec mission" id="community" style="background:var(--parchment-2)">
+  <div class="wrap reveal">
+    <span class="eyebrow">Our mission</span>
+    <p class="big-quote">Building the backgammon community of the future — <em>millions, not hundreds.</em> One central home for everything backgammon, so the oldest game in the world finally gets the platform it deserves.</p>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="final">
+  <div class="wrap">
+    <div class="final-band reveal">
+      <h2>The board is set. Take your seat.</h2>
+      <p>Claim your free year while early-member spots last and bring the engine, the games and your whole club along with you.</p>
+      <div class="final-actions">
+        <a href="#" class="btn btn-primary">Claim your free year</a>
+        <a href="#products" class="btn btn-ghost">Explore the platform</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a href="#" class="logo">
+          <svg class="mark" viewBox="0 0 34 34" fill="none" aria-hidden="true">
+            <rect x="1" y="1" width="32" height="32" rx="8" fill="#2b2823"/>
+            <path d="M9 7 L13 22 L17 7 Z" fill="#b5532e"/>
+            <path d="M17 27 L21 12 L25 27 Z" fill="#6f7d63"/>
+            <circle cx="9" cy="25.5" r="2.3" fill="#f6f1e7"/>
+            <circle cx="25" cy="8.5" r="2.3" fill="#f6f1e7"/>
+          </svg>
+          Gammon
+        </a>
+        <p>The home of worldwide backgammon. Play, learn, compete and run clubs — powered by a pocket engine.</p>
+      </div>
+      <div class="foot-col">
+        <h5>Products</h5>
+        <ul>
+          <li><a href="#engine">The Engine</a></li>
+          <li><a href="#play">Play Online</a></li>
+          <li><a href="#">Beat the Grandmaster</a></li>
+          <li><a href="#">Gammon University</a></li>
+          <li><a href="#clubs">Run a Club</a></li>
+          <li><a href="#">Record & Stream</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h5>Platform</h5>
+        <ul>
+          <li><a href="#membership">Membership</a></li>
+          <li><a href="#community">Community</a></li>
+          <li><a href="#">Leaderboards</a></li>
+          <li><a href="#">Download apps</a></li>
+          <li><a href="#">Status</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h5>Company</h5>
+        <ul>
+          <li><a href="#community">Our mission</a></li>
+          <li><a href="#">About</a></li>
+          <li><a href="#">Careers</a></li>
+          <li><a href="#">Press</a></li>
+          <li><a href="#">Contact</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bot">
+      <span>© 2026 Gammon. All rights reserved. · <a href="#" style="color:inherit">Privacy</a> · <a href="#" style="color:inherit">Terms</a></span>
+      <div class="socials">
+        <a href="#" aria-label="X / Twitter"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 2H22l-7.1 8.1L23.3 22h-6.6l-5.2-6.8L5.5 22H2.4l7.6-8.7L1 2h6.8l4.7 6.2L18.9 2zm-1.2 18h1.8L7.2 3.9H5.3L17.7 20z"/></svg></a>
+        <a href="#" aria-label="YouTube"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M23 12s0-3.3-.4-4.9a2.6 2.6 0 00-1.8-1.8C19.1 5 12 5 12 5s-7.1 0-8.8.4A2.6 2.6 0 001.4 7.1C1 8.7 1 12 1 12s0 3.3.4 4.9a2.6 2.6 0 001.8 1.8C4.9 19 12 19 12 19s7.1 0 8.8-.4a2.6 2.6 0 001.8-1.8C23 15.3 23 12 23 12zM10 15.5v-7l6 3.5-6 3.5z"/></svg></a>
+        <a href="#" aria-label="Discord"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 4.5A18 18 0 0015.5 3l-.3.5a14 14 0 014 2 16 16 0 00-13.4 0 14 14 0 014-2L9.5 3A18 18 0 005 4.5C2 9 1.2 13.4 1.6 17.7A18 18 0 007 20.5l.9-1.3a11 11 0 01-1.8-.9l.4-.3a13 13 0 0011 0l.4.3a11 11 0 01-1.8.9l.9 1.3a18 18 0 005.4-2.8c.5-5-.8-9.4-3.4-13.2zM9 15c-.9 0-1.6-.8-1.6-1.8S8.1 11.4 9 11.4s1.7.8 1.6 1.8S9.9 15 9 15zm6 0c-.9 0-1.6-.8-1.6-1.8s.7-1.8 1.6-1.8 1.7.8 1.6 1.8S15.9 15 15 15z"/></svg></a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  // Sticky nav scrolled state
+  var nav = document.getElementById('nav');
+  function onScroll(){ nav.classList.toggle('scrolled', window.scrollY > 16); }
+  onScroll(); window.addEventListener('scroll', onScroll, {passive:true});
+
+  // Mobile menu
+  var burger = document.getElementById('burger');
+  var menu = document.getElementById('mobileMenu');
+  var overlay = document.getElementById('mmOverlay');
+  var closeBtn = document.getElementById('mmClose');
+  function openMenu(){ menu.classList.add('open'); overlay.classList.add('open'); burger.setAttribute('aria-expanded','true'); menu.setAttribute('aria-hidden','false'); document.body.style.overflow='hidden'; }
+  function closeMenu(){ menu.classList.remove('open'); overlay.classList.remove('open'); burger.setAttribute('aria-expanded','false'); menu.setAttribute('aria-hidden','true'); document.body.style.overflow=''; }
+  burger.addEventListener('click', openMenu);
+  closeBtn.addEventListener('click', closeMenu);
+  overlay.addEventListener('click', closeMenu);
+  Array.prototype.forEach.call(document.querySelectorAll('.mm-link'), function(l){ l.addEventListener('click', closeMenu); });
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeMenu(); });
+
+  // Scroll reveal
+  var els = document.querySelectorAll('.reveal');
+  if('IntersectionObserver' in window){
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){ if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); } });
+    }, {threshold:.12, rootMargin:'0px 0px -8% 0px'});
+    els.forEach(function(el){ io.observe(el); });
+  } else {
+    els.forEach(function(el){ el.classList.add('in'); });
+  }
+
+  // Count-up for stat with data-count
+  var counter = document.querySelector('[data-count]');
+  if(counter && 'IntersectionObserver' in window){
+    var target = parseInt(counter.getAttribute('data-count'),10);
+    var seen = false;
+    var co = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if(en.isIntersecting && !seen){
+          seen = true; var start = 0, dur = 1200, t0 = performance.now();
+          function step(now){
+            var p = Math.min((now - t0)/dur, 1);
+            var val = Math.floor((1 - Math.pow(1-p,3)) * target);
+            counter.textContent = val + 'k';
+            if(p < 1) requestAnimationFrame(step);
+          }
+          requestAnimationFrame(step);
+        }
+      });
+    }, {threshold:.6});
+    co.observe(counter);
+  }
+})();
+</script>
+</body>
+</html>
