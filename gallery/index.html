@@ -3,137 +3,353 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Gammon — Theme Gallery</title>
+<title>Gammon — Theme Studio</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 <style>
   :root{
-    --bg:#0d1411; --surface:#16271f; --line:rgba(233,222,196,.10); --line-2:rgba(233,222,196,.18);
-    --cream:#f4eedf; --muted:#93a89b; --gold:#e0ad4e; --gold-2:#f0c873; --radius:16px;
+    --bg:#0b110e; --chrome:#101b16; --chrome-2:#16241d;
+    --line:rgba(233,222,196,.12); --line-2:rgba(233,222,196,.22);
+    --cream:#f4eedf; --muted:#93a89b; --gold:#e0ad4e; --gold-2:#f0c873;
+    --like:#43b581; --dislike:#e0574c; --bar:60px; --pills:52px;
   }
   *{box-sizing:border-box}
-  body{margin:0;background:
-      radial-gradient(1100px 600px at 85% -10%, rgba(224,173,78,.10), transparent 60%),
-      radial-gradient(900px 500px at -5% 8%, rgba(63,157,109,.07), transparent 55%), var(--bg);
-    color:var(--cream);font-family:"Inter",system-ui,sans-serif;-webkit-font-smoothing:antialiased;}
+  html,body{height:100%}
+  body{margin:0;background:var(--bg);color:var(--cream);font-family:"Inter",system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;display:flex;flex-direction:column;overflow:hidden}
   a{color:inherit;text-decoration:none}
-  h1,h2,h3{font-family:"Fraunces",Georgia,serif;font-weight:600;letter-spacing:-.01em;margin:0;line-height:1.08}
-  .wrap{max-width:1320px;margin:0 auto;padding:0 28px}
+  button{font-family:inherit;cursor:pointer}
 
-  header{padding:56px 0 30px;text-align:center}
-  .brand{display:inline-flex;align-items:center;gap:11px;font-family:"Fraunces";font-weight:700;font-size:21px;margin-bottom:26px}
-  .brand .logo{width:32px;height:32px}
+  /* ===== top chrome ===== */
+  header{flex:none;background:linear-gradient(180deg,var(--chrome),var(--chrome-2));border-bottom:1px solid var(--line);z-index:20}
+  .row1{height:var(--bar);display:flex;align-items:center;gap:16px;padding:0 16px}
+  .brand{display:flex;align-items:center;gap:10px;font-family:"Fraunces";font-weight:700;font-size:18px;white-space:nowrap}
+  .brand .logo{width:28px;height:28px;flex:none}
   .brand b{color:var(--gold)}
-  .eyebrow{display:inline-flex;align-items:center;gap:9px;font-weight:600;font-size:12.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
-  .eyebrow::before,.eyebrow::after{content:"";width:24px;height:1.5px;background:linear-gradient(90deg,transparent,var(--gold))}
-  .eyebrow::after{background:linear-gradient(90deg,var(--gold),transparent)}
-  header h1{font-size:clamp(34px,5vw,54px);margin:18px 0 0}
-  header h1 em{font-style:italic;color:var(--gold)}
-  header p{color:var(--muted);max-width:640px;margin:18px auto 0;font-size:17px;line-height:1.6}
-  .hint{margin-top:22px;font-size:13.5px;color:var(--muted);display:inline-flex;align-items:center;gap:9px;border:1px solid var(--line-2);padding:8px 16px;border-radius:999px}
+  .brand small{font-family:"Inter";font-weight:600;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-left:2px}
 
-  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:28px;padding:40px 0 90px}
-  @media (min-width:1100px){.grid{grid-template-columns:repeat(3,1fr)}}
+  .nav-current{display:flex;align-items:center;gap:12px;margin-left:6px;min-width:0}
+  .arrow{width:34px;height:34px;border-radius:9px;border:1px solid var(--line-2);background:rgba(244,238,223,.03);color:var(--cream);
+    display:grid;place-items:center;transition:.2s;flex:none}
+  .arrow:hover{background:rgba(244,238,223,.1);border-color:var(--gold)}
+  .cur{min-width:0}
+  .cur .name{font-family:"Fraunces";font-weight:600;font-size:16px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cur .sub{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cur .idx{color:var(--gold)}
 
-  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;
-    transition:transform .3s cubic-bezier(.22,.61,.36,1),border-color .3s,box-shadow .3s;display:flex;flex-direction:column}
-  .card:hover{transform:translateY(-6px);border-color:var(--line-2);box-shadow:0 28px 60px -28px rgba(0,0,0,.7)}
+  .spacer{flex:1}
 
-  .thumb{position:relative;aspect-ratio:16/10.5;overflow:hidden;background:#0a100d;border-bottom:1px solid var(--line)}
-  .thumb iframe{position:absolute;top:0;left:0;width:1320px;height:866px;border:0;transform:scale(.3636);transform-origin:top left;pointer-events:none}
-  .thumb .badge{position:absolute;top:12px;left:12px;z-index:3;font-size:11.5px;font-weight:700;letter-spacing:.04em;
-    background:rgba(13,20,17,.82);backdrop-filter:blur(6px);border:1px solid var(--line-2);color:var(--gold);padding:5px 11px;border-radius:999px}
-  .thumb .open{position:absolute;inset:0;z-index:4;display:grid;place-items:center;opacity:0;transition:opacity .25s;
-    background:linear-gradient(180deg,rgba(13,20,17,.1),rgba(13,20,17,.6))}
-  .card:hover .thumb .open{opacity:1}
-  .thumb .open span{display:inline-flex;align-items:center;gap:9px;font-weight:700;font-size:14.5px;color:#241804;
-    background:linear-gradient(180deg,var(--gold-2),var(--gold));padding:11px 20px;border-radius:999px;box-shadow:0 14px 30px -12px rgba(224,173,78,.8)}
+  .verdict{display:flex;align-items:center;gap:8px}
+  .vbtn{display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 15px;border-radius:999px;
+    border:1px solid var(--line-2);background:rgba(244,238,223,.03);color:var(--cream);font-weight:600;font-size:14px;transition:.18s}
+  .vbtn svg{width:17px;height:17px}
+  .vbtn.like:hover{border-color:var(--like);color:var(--like)}
+  .vbtn.dislike:hover{border-color:var(--dislike);color:var(--dislike)}
+  .vbtn.like.on{background:var(--like);border-color:var(--like);color:#06231a}
+  .vbtn.dislike.on{background:var(--dislike);border-color:var(--dislike);color:#2a0906}
 
-  .meta{padding:20px 22px 22px}
-  .meta h3{font-size:20px}
-  .meta p{color:var(--muted);font-size:14px;line-height:1.55;margin:9px 0 0}
-  .meta .links{display:flex;gap:14px;margin-top:16px}
-  .meta .links a{font-size:13.5px;font-weight:600;color:var(--gold);display:inline-flex;align-items:center;gap:6px}
-  .meta .links a.sec{color:var(--muted)}
-  .meta .links a svg{transition:transform .2s}
-  .meta .links a:hover svg{transform:translateX(3px)}
-  .soon{opacity:.55}
-  .soon .thumb{display:grid;place-items:center}
-  .soon .thumb .pending{font-size:13px;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:12px}
-  .spinner{width:26px;height:26px;border:2.5px solid var(--line-2);border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite}
-  @keyframes spin{to{transform:rotate(360deg)}}
+  .tool{width:38px;height:38px;border-radius:10px;border:1px solid var(--line-2);background:rgba(244,238,223,.03);color:var(--cream);display:grid;place-items:center;transition:.18s}
+  .tool:hover{background:rgba(244,238,223,.1);border-color:var(--gold)}
+  .picks-btn{width:auto;padding:0 15px;gap:8px;display:inline-flex;align-items:center;font-weight:600;font-size:14px}
+  .picks-btn .badge{background:var(--gold);color:#241804;border-radius:999px;font-size:11px;font-weight:700;min-width:18px;height:18px;padding:0 5px;display:grid;place-items:center}
 
-  footer{border-top:1px solid var(--line);padding:30px 0;text-align:center;color:var(--muted);font-size:13px}
+  /* ===== pills strip ===== */
+  .row2{height:var(--pills);display:flex;align-items:center;gap:8px;padding:0 16px 8px;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin}
+  .row2::-webkit-scrollbar{height:6px}.row2::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:99px}
+  .pill{flex:none;display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 13px;border-radius:999px;
+    border:1px solid var(--line);background:rgba(244,238,223,.03);color:var(--cream);font-size:13px;font-weight:600;white-space:nowrap;transition:.18s;position:relative}
+  .pill:hover{border-color:var(--line-2);background:rgba(244,238,223,.07)}
+  .pill.active{border-color:var(--gold);background:rgba(224,173,78,.14);color:var(--gold-2)}
+  .pill .sw{width:13px;height:13px;border-radius:4px;flex:none;box-shadow:inset 0 0 0 1px rgba(0,0,0,.25)}
+  .pill .num{opacity:.55;font-variant-numeric:tabular-nums}
+  .pill .mark{width:15px;height:15px;border-radius:50%;display:none;place-items:center;font-size:10px;font-weight:800}
+  .pill.liked .mark{display:grid;background:var(--like);color:#06231a}
+  .pill.disliked .mark{display:grid;background:var(--dislike);color:#2a0906}
+
+  /* ===== stage ===== */
+  .stage{flex:1;min-height:0;position:relative;background:#0a100d}
+  .stage iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#0a100d}
+  .stage iframe:not(.show){display:none}
+  .loading{position:absolute;inset:0;display:grid;place-items:center;z-index:5;pointer-events:none;transition:opacity .3s}
+  .loading.hide{opacity:0}
+  .spin{width:34px;height:34px;border:3px solid var(--line-2);border-top-color:var(--gold);border-radius:50%;animation:sp 1s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+
+  .hint{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);z-index:6;font-size:12px;color:var(--muted);
+    background:rgba(11,17,14,.82);backdrop-filter:blur(8px);border:1px solid var(--line);padding:7px 14px;border-radius:999px;
+    display:flex;gap:12px;align-items:center;transition:opacity .4s}
+  .hint kbd{background:rgba(244,238,223,.1);border:1px solid var(--line-2);border-radius:5px;padding:1px 6px;font-family:inherit;font-size:11px}
+  .hint.gone{opacity:0;pointer-events:none}
+
+  /* ===== picks overlay ===== */
+  .overlay{position:fixed;inset:0;z-index:60;background:rgba(6,10,8,.72);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:24px}
+  .overlay.open{display:flex}
+  .panel{width:min(680px,100%);max-height:86vh;overflow:auto;background:linear-gradient(180deg,var(--chrome-2),var(--chrome));
+    border:1px solid var(--line-2);border-radius:18px;box-shadow:0 40px 90px -30px #000}
+  .panel-head{position:sticky;top:0;background:var(--chrome-2);display:flex;align-items:center;justify-content:space-between;padding:22px 24px 16px;border-bottom:1px solid var(--line)}
+  .panel-head h2{font-family:"Fraunces";font-weight:600;font-size:22px;margin:0}
+  .panel-head .x{width:34px;height:34px;border-radius:9px;border:1px solid var(--line-2);background:none;color:var(--cream);display:grid;place-items:center}
+  .panel-body{padding:18px 24px 24px}
+  .pcol h3{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:18px 0 10px;display:flex;align-items:center;gap:8px}
+  .pcol:first-child h3{margin-top:0}
+  .prow{display:flex;align-items:center;gap:12px;padding:9px 12px;border:1px solid var(--line);border-radius:11px;margin-bottom:8px;transition:.15s}
+  .prow:hover{border-color:var(--line-2);background:rgba(244,238,223,.03)}
+  .prow .sw{width:20px;height:20px;border-radius:6px;flex:none;box-shadow:inset 0 0 0 1px rgba(0,0,0,.3)}
+  .prow .pn{flex:1;min-width:0}
+  .prow .pn b{font-weight:600;font-size:15px}
+  .prow .pn span{display:block;font-size:12px;color:var(--muted)}
+  .prow .go{font-size:12.5px;font-weight:600;color:var(--gold);border:1px solid var(--line-2);border-radius:8px;padding:6px 11px;background:none}
+  .empty{color:var(--muted);font-size:14px;font-style:italic;padding:2px 0 6px}
+  .panel-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px;padding-top:18px;border-top:1px solid var(--line)}
+  .pa{display:inline-flex;align-items:center;gap:8px;font-weight:600;font-size:14px;padding:11px 16px;border-radius:10px;border:1px solid var(--line-2);background:rgba(244,238,223,.03);color:var(--cream)}
+  .pa.primary{background:linear-gradient(180deg,var(--gold-2),var(--gold));color:#241804;border-color:transparent}
+  .pa.danger:hover{border-color:var(--dislike);color:var(--dislike)}
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);z-index:80;background:var(--gold);color:#241804;
+    font-weight:700;font-size:14px;padding:11px 20px;border-radius:999px;opacity:0;transition:.3s;pointer-events:none}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  @media (max-width:720px){
+    :root{--bar:56px}
+    .brand small,.cur .sub{display:none}
+    .vbtn{padding:0 12px}.vbtn span.lbl{display:none}
+    .picks-btn span.lbl{display:none}
+    .hint{display:none}
+  }
 </style>
 </head>
 <body>
 <header>
-  <div class="wrap">
-    <div class="brand">
+  <div class="row1">
+    <a class="brand" href="../index.html" title="Back to live homepage">
       <svg class="logo" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
         <rect x="1.5" y="1.5" width="37" height="37" rx="9" fill="#12241b" stroke="#e0ad4e" stroke-width="2"/>
         <path d="M7 7 L13 7 L10 21 Z" fill="#e0ad4e"/><path d="M15 7 L21 7 L18 21 Z" fill="#b9492f"/><path d="M23 7 L29 7 L26 21 Z" fill="#e0ad4e"/>
         <circle cx="32" cy="29" r="5" fill="#f4eedf"/><circle cx="32" cy="29" r="1.3" fill="#12241b"/>
       </svg>
-      Gammon<b>.</b>
+      Gammon<b>.</b><small>Theme&nbsp;Studio</small>
+    </a>
+
+    <div class="nav-current">
+      <button class="arrow" id="prev" title="Previous (left arrow)">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <button class="arrow" id="next" title="Next (right arrow)">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+      <div class="cur">
+        <div class="name"><span class="idx" id="curIdx">01</span> · <span id="curName">Heritage Club</span></div>
+        <div class="sub" id="curSub">Felt-green &amp; gold, heritage serif</div>
+      </div>
     </div>
-    <span class="eyebrow">Design Gallery</span>
-    <h1>12 looks for the <em>same</em> site.</h1>
-    <p>Every theme below is the full landing page with identical content — just a different visual identity. Open each one full-screen, then pick the direction you want to take to the team.</p>
-    <div class="hint">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-      Hover a tile and click <b style="color:var(--cream)">&nbsp;Open full&nbsp;</b> to view it live
+
+    <div class="spacer"></div>
+
+    <div class="verdict">
+      <button class="vbtn like" id="likeBtn" title="Like (L)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 10v11M2 13v6a2 2 0 0 0 2 2h13.5a2 2 0 0 0 2-1.7l1.2-8A2 2 0 0 0 19.7 9H14V5a2.5 2.5 0 0 0-4.8-1L7 10"/></svg>
+        <span class="lbl">Like</span>
+      </button>
+      <button class="vbtn dislike" id="dislikeBtn" title="Dislike (D)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 14V3M22 11V5a2 2 0 0 0-2-2H6.5a2 2 0 0 0-2 1.7l-1.2 8A2 2 0 0 0 5.3 15H11v4a2.5 2.5 0 0 0 4.8 1L17 14"/></svg>
+        <span class="lbl">Nope</span>
+      </button>
     </div>
+
+    <button class="tool picks-btn" id="picksBtn" title="My picks (P)">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      <span class="lbl">My picks</span><span class="badge" id="picksBadge">0</span>
+    </button>
   </div>
+
+  <div class="row2" id="pills"></div>
 </header>
 
-<div class="wrap">
-  <div class="grid" id="grid"></div>
+<div class="stage" id="stage">
+  <div class="loading" id="loading"><div class="spin"></div></div>
+  <div class="hint" id="hint">
+    <span><kbd>&larr;</kbd> <kbd>&rarr;</kbd> switch</span><span><kbd>L</kbd> like</span><span><kbd>D</kbd> dislike</span>
+  </div>
 </div>
 
-<footer>Gammon · internal design exploration · 12 themes</footer>
+<!-- picks overlay -->
+<div class="overlay" id="overlay">
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Your picks</h2>
+      <button class="x" id="closePicks"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="panel-body" id="picksBody"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
 
 <script>
-  const themes = [
-    {n:"01", file:"../index.html", title:"Heritage Club", desc:"Deep felt-green & gold, heritage serif, board-points motif. Warm, premium, members'-club feel."},
-    {n:"02", file:"../themes/theme-02-light-clean.html", title:"Light & Clean", desc:"Bright chess.com-style light mode. Green primary, airy whitespace, modern sans. Mass-market & trustworthy."},
-    {n:"03", file:"../themes/theme-03-wood-leather.html", title:"Classic Wood & Leather", desc:"Walnut wood-grain, parchment & brass. Old-world gentleman's-club luxury and craft."},
-    {n:"04", file:"../themes/theme-04-midnight-neon.html", title:"Midnight Esports", desc:"Near-black with electric cyan/magenta glows. Competitive, futuristic, ranked-play energy."},
-    {n:"05", file:"../themes/theme-05-editorial-luxury.html", title:"Editorial Luxury", desc:"Black & gold magazine layout, oversized serif, big numerals. Vogue-spread sophistication."},
-    {n:"06", file:"../themes/theme-06-parchment-minimal.html", title:"Parchment Minimal", desc:"Warm off-white, clay accent, Swiss-calm grid. Premium through restraint and air."},
-    {n:"07", file:"../themes/theme-07-royal-burgundy.html", title:"Royal Burgundy", desc:"Wine & gold, velvet spotlights. High-stakes casino glamour — coins, prizes, big events."},
-    {n:"08", file:"../themes/theme-08-modern-saas.html", title:"Modern SaaS Glass", desc:"Indigo→violet gradients, glassmorphism, auroras. Sleek Linear/Vercel-grade software feel."},
-    {n:"09", file:"../themes/theme-09-art-deco.html", title:"Art Deco Gatsby", desc:"Emerald & gold geometric deco — chevrons, sunbursts, symmetry. Retro-glam ceremony."},
-    {n:"10", file:"../themes/theme-10-soft-pastel.html", title:"Soft & Approachable", desc:"Cream with coral/teal pastels, rounded shapes. Friendly, welcoming to new players."},
-    {n:"11", file:"../themes/theme-11-monochrome.html", title:"Monochrome Premium", desc:"Near-monochrome, one disciplined accent. Apple-grade precision and restraint."},
-    {n:"12", file:"../themes/theme-12-retro-poster.html", title:"Retro Travel Poster", desc:"Mustard, teal & navy mid-century poster. Bold, illustrative, full of character."},
-  ];
+const THEMES = [
+  {n:"01", file:"../index.html",                          title:"Heritage Club",       sub:"Felt-green & gold, heritage serif",   sw:"#e0ad4e"},
+  {n:"02", file:"../themes/theme-02-light-clean.html",    title:"Light & Clean",       sub:"Bright chess.com-style, mass-market", sw:"#2e9d63"},
+  {n:"03", file:"../themes/theme-03-wood-leather.html",   title:"Wood & Leather",      sub:"Walnut, parchment & brass",           sw:"#a56b31"},
+  {n:"04", file:"../themes/theme-04-midnight-neon.html",  title:"Midnight Esports",    sub:"Dark + electric neon, competitive",   sw:"#22d3ee"},
+  {n:"05", file:"../themes/theme-05-editorial-luxury.html",title:"Editorial Luxury",   sub:"Black & gold magazine spread",        sw:"#d4af37"},
+  {n:"06", file:"../themes/theme-06-parchment-minimal.html",title:"Parchment Minimal", sub:"Warm Swiss-calm restraint",           sw:"#c06a4d"},
+  {n:"07", file:"../themes/theme-07-royal-burgundy.html", title:"Royal Burgundy",      sub:"Wine & gold casino glamour",          sw:"#8d1f37"},
+  {n:"08", file:"../themes/theme-08-modern-saas.html",    title:"Modern SaaS Glass",   sub:"Indigo gradients, glassmorphism",     sw:"#7c6cf0"},
+  {n:"09", file:"../themes/theme-09-art-deco.html",       title:"Art Deco Gatsby",     sub:"Emerald & gold geometric",            sw:"#0f7a58"},
+  {n:"10", file:"../themes/theme-10-soft-pastel.html",    title:"Soft & Approachable", sub:"Cream + coral/teal pastels",          sw:"#ff8a7a"},
+  {n:"11", file:"../themes/theme-11-monochrome.html",     title:"Monochrome Premium",  sub:"Apple-grade minimal, one accent",     sw:"#e8e8e8"},
+  {n:"12", file:"../themes/theme-12-retro-poster.html",   title:"Retro Travel Poster", sub:"Mustard, teal & navy mid-century",     sw:"#e0a72e"},
+];
 
-  const grid = document.getElementById('grid');
-  themes.forEach(t => {
-    const a = document.createElement('a');
-    a.className = 'card';
-    a.href = t.file; a.target = '_blank'; a.rel = 'noopener';
-    a.innerHTML = `
-      <div class="thumb">
-        <span class="badge">${t.n}</span>
-        <iframe src="${t.file}" loading="lazy" scrolling="no" title="${t.title}"></iframe>
-        <div class="open"><span>Open full
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M7 17 17 7M9 7h8v8"/></svg>
-        </span></div>
-      </div>
-      <div class="meta">
-        <h3>${t.title}</h3>
-        <p>${t.desc}</p>
-        <div class="links">
-          <a href="${t.file}" target="_blank" rel="noopener">Open full
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-          </a>
-        </div>
-      </div>`;
-    grid.appendChild(a);
+const KEY = "gammon-theme-verdicts-v1";
+let verdicts = {};
+try { verdicts = JSON.parse(localStorage.getItem(KEY)) || {}; } catch(e){ verdicts = {}; }
+const save = () => { try{ localStorage.setItem(KEY, JSON.stringify(verdicts)); }catch(e){} };
+
+let cur = 0;
+const frames = {};                       // cache: index -> iframe element
+const $ = id => document.getElementById(id);
+const stage = $("stage"), loading = $("loading"), pillsEl = $("pills");
+const markFor = id => verdicts[id]==='like' ? '✓' : (verdicts[id]==='dislike' ? '✕' : '');
+
+function buildPills(){
+  pillsEl.innerHTML = "";
+  THEMES.forEach((t,i)=>{
+    const b = document.createElement("button");
+    b.className = "pill";
+    b.dataset.i = i;
+    b.innerHTML = `<span class="sw" style="background:${t.sw}"></span><span class="num">${t.n}</span> ${t.title}
+      <span class="mark">${markFor(t.n)}</span>`;
+    b.addEventListener("click", ()=>show(i));
+    pillsEl.appendChild(b);
   });
+}
+
+function show(i){
+  cur = (i + THEMES.length) % THEMES.length;
+  const t = THEMES[cur];
+
+  // lazy-create & cache iframe so switching back is instant
+  if(!frames[cur]){
+    loading.classList.remove("hide");
+    const f = document.createElement("iframe");
+    f.title = t.title;
+    f.addEventListener("load", ()=> loading.classList.add("hide"));
+    f.src = t.file;
+    stage.appendChild(f);
+    frames[cur] = f;
+  } else {
+    loading.classList.add("hide");
+  }
+  Object.values(frames).forEach(f=>f.classList.remove("show"));
+  frames[cur].classList.add("show");
+
+  // header
+  $("curIdx").textContent = t.n;
+  $("curName").textContent = t.title;
+  $("curSub").textContent = t.sub;
+
+  // pills active + verdict state
+  [...pillsEl.children].forEach((p,idx)=>{
+    const id = THEMES[idx].n;
+    p.classList.toggle("active", idx===cur);
+    p.classList.toggle("liked", verdicts[id]==='like');
+    p.classList.toggle("disliked", verdicts[id]==='dislike');
+    p.querySelector(".mark").textContent = markFor(id);
+  });
+  const active = pillsEl.children[cur];
+  if(active) active.scrollIntoView({behavior:"smooth",block:"nearest",inline:"center"});
+
+  refreshVerdictButtons();
+  history.replaceState(null,"","#"+t.n);
+}
+
+function refreshVerdictButtons(){
+  const v = verdicts[THEMES[cur].n];
+  $("likeBtn").classList.toggle("on", v==='like');
+  $("dislikeBtn").classList.toggle("on", v==='dislike');
+  $("picksBadge").textContent = Object.values(verdicts).filter(x=>x==='like').length;
+}
+
+function setVerdict(v){
+  const id = THEMES[cur].n;
+  verdicts[id] = (verdicts[id]===v) ? undefined : v;   // toggle off if pressed again
+  if(verdicts[id]===undefined) delete verdicts[id];
+  save();
+  const p = pillsEl.children[cur];
+  p.classList.toggle("liked", verdicts[id]==='like');
+  p.classList.toggle("disliked", verdicts[id]==='dislike');
+  p.querySelector(".mark").textContent = markFor(id);
+  refreshVerdictButtons();
+}
+
+/* ---- picks panel ---- */
+function openPicks(){
+  const liked = THEMES.filter(t=>verdicts[t.n]==='like');
+  const disliked = THEMES.filter(t=>verdicts[t.n]==='dislike');
+  const undecided = THEMES.filter(t=>!verdicts[t.n]);
+  const rowHtml = t => `<div class="prow">
+      <span class="sw" style="background:${t.sw}"></span>
+      <span class="pn"><b>${t.n} &middot; ${t.title}</b><span>${t.sub}</span></span>
+      <button class="go" data-jump="${THEMES.indexOf(t)}">View</button></div>`;
+  const sec = (label,arr,color) => `<div class="pcol"><h3><span style="color:${color}">&#9679;</span> ${label} <span style="color:var(--muted)">(${arr.length})</span></h3>
+      ${arr.length? arr.map(rowHtml).join("") : '<div class="empty">Nothing here yet.</div>'}</div>`;
+  $("picksBody").innerHTML =
+      sec("Liked", liked, "var(--like)") +
+      sec("Disliked", disliked, "var(--dislike)") +
+      sec("Undecided", undecided, "var(--muted)") +
+      `<div class="panel-actions">
+        <button class="pa primary" id="copyBtn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg> Copy summary</button>
+        <button class="pa danger" id="resetBtn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg> Reset all</button>
+      </div>`;
+  $("picksBody").querySelectorAll("[data-jump]").forEach(el=>el.addEventListener("click",()=>{ show(+el.dataset.jump); closePicks(); }));
+  $("copyBtn").addEventListener("click", copySummary);
+  $("resetBtn").addEventListener("click", ()=>{ if(confirm("Clear all your likes and dislikes?")){ verdicts={}; save(); buildPills(); show(cur); openPicks(); }});
+  $("overlay").classList.add("open");
+}
+function closePicks(){ $("overlay").classList.remove("open"); }
+
+function copySummary(){
+  const line = arr => arr.length ? arr.map(x=>"  • "+x).join("\n") : "  —";
+  const liked = THEMES.filter(t=>verdicts[t.n]==='like').map(t=>`${t.n} ${t.title}`);
+  const disliked = THEMES.filter(t=>verdicts[t.n]==='dislike').map(t=>`${t.n} ${t.title}`);
+  const txt = `Gammon theme picks\n\nLIKED (${liked.length}):\n${line(liked)}\n\nDISLIKED (${disliked.length}):\n${line(disliked)}`;
+  const done = ()=>toast("Summary copied to clipboard");
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(done).catch(()=>prompt("Copy your picks:", txt));
+  } else { prompt("Copy your picks:", txt); }
+}
+let toastT;
+function toast(msg){ const el=$("toast"); el.textContent=msg; el.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove("show"),1900); }
+
+/* ---- wire up ---- */
+$("prev").addEventListener("click",()=>show(cur-1));
+$("next").addEventListener("click",()=>show(cur+1));
+$("likeBtn").addEventListener("click",()=>setVerdict('like'));
+$("dislikeBtn").addEventListener("click",()=>setVerdict('dislike'));
+$("picksBtn").addEventListener("click",openPicks);
+$("closePicks").addEventListener("click",closePicks);
+$("overlay").addEventListener("click",e=>{ if(e.target===$("overlay")) closePicks(); });
+
+document.addEventListener("keydown",e=>{
+  if($("overlay").classList.contains("open")){ if(e.key==="Escape") closePicks(); return; }
+  const k = e.key.toLowerCase();
+  if(e.key==="ArrowLeft") show(cur-1);
+  else if(e.key==="ArrowRight") show(cur+1);
+  else if(k==="l") setVerdict('like');
+  else if(k==="d") setVerdict('dislike');
+  else if(k==="p") openPicks();
+});
+
+// dismiss hint after first interaction / timeout
+["click","keydown"].forEach(ev=>window.addEventListener(ev,()=>$("hint").classList.add("gone"),{once:true}));
+setTimeout(()=>$("hint").classList.add("gone"), 6000);
+
+// init (respect #NN in URL)
+buildPills();
+const startN = (location.hash||"").replace("#","");
+const found = THEMES.findIndex(t=>t.n===startN);
+show(found===-1?0:found);
 </script>
 </body>
 </html>
