@@ -187,18 +187,39 @@
 
 <script>
 const THEMES = [
-  {n:"01", file:"../index.html",                          title:"Heritage Club",       sub:"Felt-green & gold, heritage serif",   sw:"#e0ad4e"},
-  {n:"02", file:"../themes/theme-02-light-clean.html",    title:"Light & Clean",       sub:"Bright chess.com-style, mass-market", sw:"#2e9d63"},
-  {n:"03", file:"../themes/theme-03-wood-leather.html",   title:"Wood & Leather",      sub:"Walnut, parchment & brass",           sw:"#a56b31"},
-  {n:"04", file:"../themes/theme-04-midnight-neon.html",  title:"Midnight Esports",    sub:"Dark + electric neon, competitive",   sw:"#22d3ee"},
-  {n:"05", file:"../themes/theme-05-editorial-luxury.html",title:"Editorial Luxury",   sub:"Black & gold magazine spread",        sw:"#d4af37"},
-  {n:"06", file:"../themes/theme-06-parchment-minimal.html",title:"Parchment Minimal", sub:"Warm Swiss-calm restraint",           sw:"#c06a4d"},
-  {n:"07", file:"../themes/theme-07-royal-burgundy.html", title:"Royal Burgundy",      sub:"Wine & gold casino glamour",          sw:"#8d1f37"},
-  {n:"08", file:"../themes/theme-08-modern-saas.html",    title:"Modern SaaS Glass",   sub:"Indigo gradients, glassmorphism",     sw:"#7c6cf0"},
-  {n:"09", file:"../themes/theme-09-art-deco.html",       title:"Art Deco Gatsby",     sub:"Emerald & gold geometric",            sw:"#0f7a58"},
-  {n:"10", file:"../themes/theme-10-soft-pastel.html",    title:"Soft & Approachable", sub:"Cream + coral/teal pastels",          sw:"#ff8a7a"},
-  {n:"11", file:"../themes/theme-11-monochrome.html",     title:"Monochrome Premium",  sub:"Apple-grade minimal, one accent",     sw:"#e8e8e8"},
-  {n:"12", file:"../themes/theme-12-retro-poster.html",   title:"Retro Travel Poster", sub:"Mustard, teal & navy mid-century",     sw:"#e0a72e"},
+  {n:"01", file:"../designs/theme-01-heritage.html",  title:"Heritage Club",     sw:"#d8a94f", sw2:"#c2492e"},
+  {n:"02", file:"../designs/theme-02-point.html",     title:"The Point",         sw:"#d8431f", sw2:"#e0c08a"},
+  {n:"03", file:"../designs/theme-03-editorial.html", title:"Editorial",         sw:"#8a2b2b", sw2:"#1f1c17"},
+  {n:"04", file:"../designs/theme-04-arcade.html",    title:"Arcade HUD",        sw:"#22e0ff", sw2:"#ff3df0"},
+  {n:"05", file:"../designs/theme-05-swiss.html",     title:"Swiss Minimal",     sw:"#e0231a", sw2:"#121210"},
+  {n:"06", file:"../designs/theme-06-wood.html",      title:"Wood & Leather",    sw:"#c79a52", sw2:"#9c5a2c"},
+  {n:"07", file:"../designs/theme-07-royal.html",     title:"Royal Burgundy",    sw:"#e3b54e", sw2:"#a82a44"},
+  {n:"08", file:"../designs/theme-08-deco.html",      title:"Art Deco",          sw:"#d9b25a", sw2:"#1f7a5c"},
+  {n:"09", file:"../designs/theme-09-pastel.html",    title:"Soft Pastel",       sw:"#f17a6a", sw2:"#4fb3a6"},
+  {n:"10", file:"../designs/theme-10-retro.html",     title:"Retro Poster",      sw:"#e0a32e", sw2:"#2a9d8f"},
+  {n:"11", file:"../designs/theme-11-mono.html",      title:"Monochrome",        sw:"#fafafa", sw2:"#888888"},
+  {n:"12", file:"../designs/theme-12-saas.html",      title:"Modern SaaS",       sw:"#6366f1", sw2:"#a855f7"},
+  {n:"13", file:"../designs/theme-13-terminal.html",  title:"Terminal",          sw:"#4ade80", sw2:"#9aa7b2"},
+  {n:"14", file:"../designs/theme-14-brutal.html",    title:"Brutalist",         sw:"#ffe600", sw2:"#111111"},
+  {n:"15", file:"../designs/theme-15-botanical.html", title:"Botanical",         sw:"#5a7d52", sw2:"#c98a4b"},
+  {n:"16", file:"../designs/theme-16-blueprint.html", title:"Blueprint",         sw:"#4da6ff", sw2:"#e8eef7"},
+  {n:"17", file:"../designs/theme-17-copper.html",    title:"Copper Forge",      sw:"#c9743f", sw2:"#8a8a86"},
+  {n:"18", file:"../designs/theme-18-oxblood.html",   title:"Oxblood Academia",  sw:"#7d2b34", sw2:"#b5915a"},
+  {n:"19", file:"../designs/theme-19-aurora.html",    title:"Aurora",            sw:"#5eead4", sw2:"#a78bfa"},
+  {n:"20", file:"../designs/theme-20-goldnoir.html",  title:"Gold Noir",         sw:"#d4af37", sw2:"#f5f5f5"},
+  {n:"21", file:"../designs/theme-21-cyber.html",     title:"Cyber Slate",       sw:"#3b82f6", sw2:"#22d3ee"},
+  {n:"22", file:"../designs/theme-22-vapor.html",     title:"Vaporwave",         sw:"#ff5fd2", sw2:"#5ed0ff"},
+  {n:"23", file:"../designs/theme-23-forest.html",    title:"Forest Deep",       sw:"#34d399", sw2:"#6ee7b7"},
+  {n:"24", file:"../designs/theme-24-nordic.html",    title:"Nordic Frost",      sw:"#6b9fc4", sw2:"#c3d2de"},
+  {n:"25", file:"../designs/theme-25-memphis.html",   title:"Memphis",           sw:"#ff4b3e", sw2:"#00c2b8"},
+  {n:"26", file:"../designs/theme-26-sumi.html",      title:"Sumi-e Ink",        sw:"#1a1a1a", sw2:"#c0392b"},
+  {n:"27", file:"../designs/theme-27-bauhaus.html",   title:"Bauhaus",           sw:"#e63946", sw2:"#1d5fbf"},
+  {n:"28", file:"../designs/theme-28-sandstone.html", title:"Sandstone",         sw:"#c4622d", sw2:"#d9a441"},
+  {n:"29", file:"../designs/theme-29-ivory.html",     title:"Ivory Luxe",        sw:"#b8962e", sw2:"#2a2620"},
+  {n:"30", file:"../designs/theme-30-concrete.html",  title:"Concrete",          sw:"#8a8880", sw2:"#b5b2a8"},
+  {n:"31", file:"../designs/theme-31-candy.html",     title:"Candy Pop",         sw:"#ff4fa3", sw2:"#7c5cff"},
+  {n:"32", file:"../designs/theme-32-sunrise.html",   title:"Sunrise",           sw:"#ff8a3d", sw2:"#ffc24b"},
+  {n:"33", file:"../designs/theme-33-riso.html",      title:"Risograph",         sw:"#2540ff", sw2:"#ff6f3c"},
 ];
 
 const KEY = "gammon-theme-verdicts-v1";
@@ -218,7 +239,7 @@ function buildPills(){
     const b = document.createElement("button");
     b.className = "pill";
     b.dataset.i = i;
-    b.innerHTML = `<span class="sw" style="background:${t.sw}"></span><span class="num">${t.n}</span> ${t.title}
+    b.innerHTML = `<span class="sw" style="background:linear-gradient(135deg,${t.sw} 0 50%,${t.sw2} 50% 100%)"></span><span class="num">${t.n}</span> ${t.title}
       <span class="mark">${markFor(t.n)}</span>`;
     b.addEventListener("click", ()=>show(i));
     pillsEl.appendChild(b);
@@ -247,7 +268,7 @@ function show(i){
   // header
   $("curIdx").textContent = t.n;
   $("curName").textContent = t.title;
-  $("curSub").textContent = t.sub;
+  $("curSub").textContent = t.sub || (t.n + " of " + THEMES.length + " designs");
 
   // pills active + verdict state
   [...pillsEl.children].forEach((p,idx)=>{
@@ -289,8 +310,8 @@ function openPicks(){
   const disliked = THEMES.filter(t=>verdicts[t.n]==='dislike');
   const undecided = THEMES.filter(t=>!verdicts[t.n]);
   const rowHtml = t => `<div class="prow">
-      <span class="sw" style="background:${t.sw}"></span>
-      <span class="pn"><b>${t.n} &middot; ${t.title}</b><span>${t.sub}</span></span>
+      <span class="sw" style="background:linear-gradient(135deg,${t.sw} 0 50%,${t.sw2} 50% 100%)"></span>
+      <span class="pn"><b>${t.n} &middot; ${t.title}</b><span>${t.sub||""}</span></span>
       <button class="go" data-jump="${THEMES.indexOf(t)}">View</button></div>`;
   const sec = (label,arr,color) => `<div class="pcol"><h3><span style="color:${color}">&#9679;</span> ${label} <span style="color:var(--muted)">(${arr.length})</span></h3>
       ${arr.length? arr.map(rowHtml).join("") : '<div class="empty">Nothing here yet.</div>'}</div>`;
