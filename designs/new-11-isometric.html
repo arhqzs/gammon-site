@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gammon — The home of worldwide backgammon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* Bright but sophisticated isometric palette, consistent light from upper-left */
+    --paper:#eef1fb;
+    --paper2:#e2e7f7;
+    --ink:#1c2140;
+    --muted:#5a608a;
+    --line:#cdd4ee;
+
+    --amber:#ffb43a;      --amber-side:#e08a12;   --amber-top:#ffc766;
+    --coral:#ff6b6b;      --coral-side:#d84545;   --coral-top:#ff9090;
+    --teal:#22b7a6;       --teal-side:#158577;    --teal-top:#5fd8c9;
+    --violet:#7b6cf6;     --violet-side:#5646cf;  --violet-top:#a498ff;
+    --sky:#3fa9ff;        --sky-side:#1f7fd6;     --sky-top:#79c6ff;
+    --rose:#ff8fc7;       --rose-side:#d95ea1;    --rose-top:#ffb4dc;
+
+    --board:#2b2f57;      --board2:#363b6e;
+    --grid:#d7ddf3;
+    --shadow:rgba(28,33,64,.16);
+
+    --font-disp:'Bricolage Grotesque',system-ui,sans-serif;
+    --font-body:'Hanken Grotesk',system-ui,sans-serif;
+    --iso: rotateX(55deg) rotateZ(45deg);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;font-family:var(--font-body);color:var(--ink);
+    background:
+      radial-gradient(1200px 700px at 80% -10%, #fff 0%, transparent 55%),
+      radial-gradient(900px 600px at 0% 100%, #e7ecfd 0%, transparent 60%),
+      linear-gradient(160deg,var(--paper) 0%, var(--paper2) 100%);
+    background-attachment:fixed;
+    overflow-x:hidden;-webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 26px}
+  h1,h2,h3{font-family:var(--font-disp);letter-spacing:-.025em;margin:0}
+
+  /* ---------- extruded block system: real side faces via layered shadow stack ---------- */
+  .block{position:relative;border-radius:16px;transition:transform .35s cubic-bezier(.2,.8,.25,1), box-shadow .35s}
+  .block::before{content:"";position:absolute;inset:0;border-radius:inherit;z-index:-1}
+  /* long soft directional shadow + hard extruded lower-right faces */
+
+  /* ---------- NAV ---------- */
+  header{position:sticky;top:0;z-index:60}
+  .nav{margin:14px auto;max-width:1160px;display:flex;align-items:center;justify-content:space-between;
+    background:rgba(255,255,255,.72);backdrop-filter:blur(14px);
+    border:1px solid #fff;border-radius:18px;padding:11px 16px 11px 18px;
+    box-shadow:10px 14px 0 -2px var(--paper2), 0 20px 40px -22px var(--shadow);}
+  .brand{display:flex;align-items:center;gap:11px;font-family:var(--font-disp);font-weight:800;font-size:20px;letter-spacing:-.03em}
+  .brand .cube{width:30px;height:30px;flex:none}
+  .navlinks{display:flex;gap:6px}
+  .navlinks a{font-weight:600;font-size:14.5px;color:var(--muted);padding:8px 13px;border-radius:11px;transition:.2s}
+  .navlinks a:hover{color:var(--ink);background:rgba(123,108,246,.1)}
+  .navcta{display:flex;align-items:center;gap:10px}
+  .btn{font-family:var(--font-disp);font-weight:700;font-size:14.5px;border:none;cursor:pointer;border-radius:13px;padding:10px 17px;transition:transform .2s, box-shadow .2s;display:inline-flex;align-items:center;gap:8px}
+  .btn-ghost{background:transparent;color:var(--ink)}
+  .btn-ghost:hover{background:rgba(28,33,64,.06)}
+  .btn-solid{background:var(--violet);color:#fff;box-shadow:0 5px 0 var(--violet-side), 0 12px 22px -8px rgba(123,108,246,.7)}
+  .btn-solid:hover{transform:translateY(-2px);box-shadow:0 7px 0 var(--violet-side),0 16px 26px -8px rgba(123,108,246,.8)}
+  .btn-solid:active{transform:translateY(3px);box-shadow:0 2px 0 var(--violet-side)}
+  .btn-amber{background:var(--amber);color:#3a2500;box-shadow:0 5px 0 var(--amber-side),0 12px 22px -8px rgba(255,180,58,.8)}
+  .btn-amber:hover{transform:translateY(-2px);box-shadow:0 7px 0 var(--amber-side),0 16px 26px -8px rgba(255,180,58,.9)}
+  .btn-amber:active{transform:translateY(3px);box-shadow:0 2px 0 var(--amber-side)}
+  .btn-lg{font-size:16.5px;padding:15px 26px;border-radius:15px}
+  .burger{display:none;background:#fff;border:1px solid var(--line);border-radius:11px;width:42px;height:42px;cursor:pointer;flex-direction:column;gap:5px;align-items:center;justify-content:center}
+  .burger span{width:18px;height:2px;background:var(--ink);border-radius:2px;transition:.25s}
+  .mobile{display:none;position:fixed;inset:0;z-index:55;background:rgba(238,241,251,.97);backdrop-filter:blur(6px);padding:90px 26px 26px}
+  .mobile a{display:block;font-family:var(--font-disp);font-weight:700;font-size:26px;padding:15px 0;border-bottom:1px solid var(--line)}
+  .mobile.open{display:block}
+
+  /* ---------- HERO ---------- */
+  .hero{position:relative;padding:34px 0 40px;display:grid;grid-template-columns:1fr 1fr;gap:26px;align-items:center}
+  .eyebrow{display:inline-flex;align-items:center;gap:9px;font-family:var(--font-disp);font-weight:700;font-size:13px;letter-spacing:.02em;color:var(--violet);
+    background:#fff;border:1px solid var(--line);border-radius:100px;padding:7px 14px;box-shadow:0 6px 16px -10px var(--shadow)}
+  .eyebrow .dot{width:9px;height:9px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 4px rgba(34,183,166,.2)}
+  .hero h1{font-size:clamp(40px,5.6vw,74px);line-height:.96;font-weight:800;margin:20px 0 0}
+  .hero h1 .hl{position:relative;color:var(--violet);white-space:nowrap}
+  .hero h1 .hl2{color:var(--amber-side)}
+  .hero p.sub{font-size:18.5px;line-height:1.55;color:var(--muted);max-width:490px;margin:22px 0 0;font-weight:500}
+  .hero .actions{display:flex;flex-wrap:wrap;gap:14px;margin-top:30px;align-items:center}
+  .freebadge{display:flex;align-items:center;gap:10px;margin-top:22px;font-size:14px;color:var(--muted);font-weight:600}
+  .freebadge b{color:var(--ink)}
+  .heroart{position:relative;height:520px}
+  .heroart .stage{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+  .float{animation:float 7s ease-in-out infinite}
+  .float.d1{animation-delay:-2.2s}
+  .float.d2{animation-delay:-4.4s}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
+
+  /* section titling */
+  .sec{padding:56px 0 12px}
+  .kicker{font-family:var(--font-disp);font-weight:700;font-size:13.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal)}
+  .sec h2{font-size:clamp(30px,4vw,48px);line-height:1.03;font-weight:800;margin:12px 0 0;max-width:660px}
+  .sec .lede{font-size:17px;color:var(--muted);max-width:560px;margin:16px 0 0;line-height:1.55;font-weight:500}
+
+  /* ---------- PRODUCT ISO CARDS ---------- */
+  .products{display:grid;grid-template-columns:repeat(3,1fr);gap:34px 30px;margin-top:46px;padding-bottom:20px}
+  .iso-card{position:relative;background:#fff;border-radius:20px;border:1px solid #fff;padding:26px 24px 24px;
+    transform:translateZ(0);transition:transform .4s cubic-bezier(.2,.8,.25,1), box-shadow .4s;
+    box-shadow:
+      14px 16px 0 -3px var(--paper2),
+      22px 26px 0 -6px #d3dbf3,
+      0 30px 44px -26px var(--shadow);}
+  .iso-card:hover{transform:translateY(-8px);
+    box-shadow:
+      16px 20px 0 -3px var(--paper2),
+      26px 32px 0 -6px #cdd6f2,
+      0 40px 56px -26px var(--shadow);}
+  .iso-card .num{position:absolute;top:20px;right:22px;font-family:var(--font-disp);font-weight:800;font-size:14px;color:var(--line)}
+  .iso-scene{height:132px;display:flex;align-items:flex-end;justify-content:center;margin-bottom:10px}
+  .iso-card h3{font-size:22px;font-weight:800;margin-top:6px}
+  .iso-card p{font-size:14.5px;color:var(--muted);line-height:1.5;margin:9px 0 0;font-weight:500}
+  .iso-card .go{margin-top:14px;display:inline-flex;align-items:center;gap:6px;font-family:var(--font-disp);font-weight:700;font-size:14px;color:var(--violet)}
+  .iso-card .go svg{transition:transform .25s}
+  .iso-card:hover .go svg{transform:translateX(4px)}
+
+  /* ---------- MEMBERSHIP ---------- */
+  .plans{display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-top:46px;align-items:stretch}
+  .plan{position:relative;background:#fff;border-radius:22px;padding:34px 32px;border:1px solid #fff;
+    box-shadow:16px 18px 0 -4px var(--paper2), 0 30px 50px -30px var(--shadow)}
+  .plan.prem{background:linear-gradient(165deg,#2b2f57,#3a3f7a);color:#fff;
+    box-shadow:16px 18px 0 -4px #c3cbf0, 0 34px 60px -26px rgba(43,47,87,.55)}
+  .plan .ptag{font-family:var(--font-disp);font-weight:700;font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  .plan.prem .ptag{color:var(--amber-top)}
+  .plan h3{font-size:30px;font-weight:800;margin:8px 0 2px}
+  .plan .price{font-family:var(--font-disp);font-weight:800;font-size:44px;margin:14px 0 4px;line-height:1}
+  .plan .price span{font-size:16px;font-weight:600;color:var(--muted)}
+  .plan.prem .price span{color:#bcc2ee}
+  .plan ul{list-style:none;padding:0;margin:20px 0 26px;display:flex;flex-direction:column;gap:12px}
+  .plan li{display:flex;align-items:flex-start;gap:11px;font-size:15px;font-weight:500}
+  .plan li .tick{flex:none;width:22px;height:22px;border-radius:7px;background:rgba(34,183,166,.16);color:var(--teal);display:flex;align-items:center;justify-content:center;margin-top:1px}
+  .plan.prem li .tick{background:rgba(255,180,58,.2);color:var(--amber-top)}
+  .ribbon{position:absolute;top:22px;right:-6px;background:var(--amber);color:#3a2500;font-family:var(--font-disp);font-weight:800;font-size:12px;letter-spacing:.04em;padding:7px 14px;border-radius:8px;box-shadow:0 5px 0 var(--amber-side)}
+
+  /* ---------- MISSION / CTA ---------- */
+  .mission{margin-top:64px;position:relative;background:linear-gradient(165deg,#2b2f57,#443f86);border-radius:28px;
+    padding:60px 44px;color:#fff;overflow:hidden;box-shadow:0 40px 70px -34px rgba(43,47,87,.7)}
+  .mission h2{font-size:clamp(28px,3.6vw,44px);line-height:1.06;font-weight:800;max-width:620px;position:relative;z-index:2}
+  .mission p{font-size:17px;color:#c8cdf2;max-width:560px;margin:18px 0 30px;line-height:1.6;position:relative;z-index:2;font-weight:500}
+  .mission .actions{display:flex;gap:14px;flex-wrap:wrap;position:relative;z-index:2}
+  .mission .glow{position:absolute;border-radius:50%;filter:blur(60px);opacity:.55}
+
+  /* ---------- FOOTER ---------- */
+  footer{margin:70px 0 40px}
+  .foot{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:26px;padding-top:30px;border-top:1px solid var(--line)}
+  .foot h4{font-family:var(--font-disp);font-size:14px;font-weight:700;margin:0 0 14px}
+  .foot a{display:block;color:var(--muted);font-size:14px;padding:5px 0;font-weight:500}
+  .foot a:hover{color:var(--ink)}
+  .foot p{color:var(--muted);font-size:14px;line-height:1.6;font-weight:500;margin:12px 0 0}
+  .footbot{margin-top:30px;font-size:13px;color:var(--muted);display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
+
+  /* reveal on scroll */
+  .rise{opacity:0;transform:translateY(26px);transition:opacity .7s ease, transform .7s cubic-bezier(.2,.8,.25,1)}
+  .rise.in{opacity:1;transform:none}
+
+  @media(max-width:900px){
+    .navlinks,.navcta .btn{display:none}
+    .navcta .btn.keepmobile{display:inline-flex}
+    .burger{display:flex}
+    .hero{grid-template-columns:1fr;padding-top:14px}
+    .heroart{height:380px;order:-1}
+    .products{grid-template-columns:1fr 1fr;gap:44px 24px}
+    .plans{grid-template-columns:1fr}
+    .foot{grid-template-columns:1fr 1fr}
+  }
+  @media(max-width:560px){
+    .products{grid-template-columns:1fr}
+    .foot{grid-template-columns:1fr 1fr}
+    .mission{padding:40px 24px}
+    .hero h1 .hl,.hero h1 .hl2{white-space:normal}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ NAV ============ -->
+<header>
+  <nav class="nav wrap">
+    <a class="brand" href="#top">
+      <svg class="cube" viewBox="0 0 40 46" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M20 2 38 12v22L20 44 2 34V12z" fill="var(--violet)"/>
+        <path d="M20 2 38 12 20 22 2 12z" fill="var(--violet-top)"/>
+        <path d="M20 22 38 12v22L20 44z" fill="var(--violet-side)"/>
+        <circle cx="20" cy="12" r="2.4" fill="#fff" opacity=".9"/>
+        <circle cx="29.5" cy="28" r="2.2" fill="#fff" opacity=".55"/>
+        <circle cx="24" cy="32" r="2.2" fill="#fff" opacity=".55"/>
+      </svg>
+      Gammon
+    </a>
+    <div class="navlinks">
+      <a href="#products">Products</a>
+      <a href="#products">Engine</a>
+      <a href="#membership">Clubs</a>
+      <a href="#membership">Membership</a>
+    </div>
+    <div class="navcta">
+      <a class="btn btn-ghost" href="#top">Log in</a>
+      <a class="btn btn-solid keepmobile" href="#membership">Start free</a>
+      <button class="burger" id="burger" aria-label="Menu"><span></span><span></span><span></span></button>
+    </div>
+  </nav>
+</header>
+
+<div class="mobile" id="mobile">
+  <a href="#products">Products</a>
+  <a href="#products">Engine</a>
+  <a href="#membership">Clubs</a>
+  <a href="#membership">Membership</a>
+  <a href="#top">Log in</a>
+</div>
+
+<div id="top"></div>
+
+<!-- ============ HERO ============ -->
+<section class="wrap hero">
+  <div class="herocopy">
+    <span class="eyebrow"><span class="dot"></span>Free for the first 3,000 members</span>
+    <h1>The home of<br>worldwide<br><span class="hl">backgammon</span>.</h1>
+    <p class="sub">Play, learn, compete and run your own club — all powered by a
+      <b style="color:var(--ink)">grandmaster-class engine</b> that lives in your pocket.</p>
+    <div class="actions">
+      <a class="btn btn-amber btn-lg" href="#membership">Claim your free year</a>
+      <a class="btn btn-ghost btn-lg" href="#products" style="border:1px solid var(--line)">See what's inside</a>
+    </div>
+    <div class="freebadge">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="var(--teal)"/><path d="m8 12 2.5 2.5L16 9" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span><b>Free for the first 3,000 members</b> · one year on us</span>
+    </div>
+  </div>
+
+  <!-- ISOMETRIC HERO WORLD -->
+  <div class="heroart">
+    <div class="stage">
+      <svg viewBox="0 0 620 560" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" aria-label="Isometric backgammon world">
+        <defs>
+          <linearGradient id="gridfade" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#dfe5f8" stop-opacity="0"/>
+            <stop offset="1" stop-color="#cdd5f0" stop-opacity=".9"/>
+          </linearGradient>
+          <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+            <feDropShadow dx="10" dy="20" stdDeviation="16" flood-color="#1c2140" flood-opacity="0.18"/>
+          </filter>
+        </defs>
+
+        <!-- ground plane / iso grid -->
+        <g opacity=".9">
+          <polygon points="310,120 590,290 310,460 30,290" fill="url(#gridfade)"/>
+          <g stroke="var(--grid)" stroke-width="1.4" opacity=".8">
+            <line x1="170" y1="205" x2="450" y2="375"/>
+            <line x1="240" y1="162" x2="520" y2="332"/>
+            <line x1="380" y1="162" x2="100" y2="332"/>
+            <line x1="450" y1="205" x2="170" y2="375"/>
+          </g>
+        </g>
+
+        <!-- long soft ground shadow of board -->
+        <ellipse cx="330" cy="360" rx="215" ry="96" fill="#1c2140" opacity=".12"/>
+
+        <!-- ===== ISOMETRIC BOARD (extruded) ===== -->
+        <g filter="url(#soft)">
+          <!-- board side faces -->
+          <polygon points="310,300 500,410 310,520 120,410" fill="var(--board2)"/>
+          <polygon points="120,410 310,520 310,548 120,438" fill="var(--board)"/>
+          <polygon points="310,520 500,410 500,438 310,548" fill="#20244a"/>
+          <!-- board top -->
+          <polygon points="310,268 500,378 310,488 120,378" fill="#3a3f72"/>
+          <!-- inner felt -->
+          <polygon points="310,286 476,382 310,478 144,382" fill="#2f3466"/>
+
+          <!-- points (triangles) left quadrant -->
+          <g>
+            <polygon points="180,368 214,388 197,410" fill="var(--amber)" opacity=".95"/>
+            <polygon points="214,388 248,408 231,430" fill="var(--coral)" opacity=".95"/>
+            <polygon points="248,408 282,428 265,450" fill="var(--amber)" opacity=".95"/>
+          </g>
+          <!-- points right quadrant -->
+          <g>
+            <polygon points="440,368 406,388 423,410" fill="var(--sky)" opacity=".95"/>
+            <polygon points="406,388 372,408 389,430" fill="var(--teal)" opacity=".95"/>
+            <polygon points="372,408 338,428 355,450" fill="var(--sky)" opacity=".95"/>
+          </g>
+          <!-- upper points -->
+          <g>
+            <polygon points="180,368 214,348 231,368 197,388" fill="var(--teal)" opacity=".55"/>
+            <polygon points="440,368 406,348 389,368 423,388" fill="var(--coral)" opacity=".55"/>
+          </g>
+          <!-- center bar -->
+          <polygon points="310,286 344,306 310,326 276,306" fill="#4a4f8c" opacity=".6"/>
+        </g>
+
+        <!-- ===== STACKED CHECKER CYLINDERS ===== -->
+        <g class="float">
+          <!-- amber stack -->
+          <g transform="translate(232,352)">
+            <ellipse cx="0" cy="34" rx="26" ry="13" fill="var(--amber-side)"/>
+            <rect x="-26" y="18" width="52" height="16" fill="var(--amber-side)"/>
+            <ellipse cx="0" cy="18" rx="26" ry="13" fill="var(--amber)"/>
+            <ellipse cx="0" cy="6" rx="26" ry="13" fill="var(--amber-side)"/>
+            <rect x="-26" y="-10" width="52" height="16" fill="var(--amber-side)"/>
+            <ellipse cx="0" cy="-10" rx="26" ry="13" fill="var(--amber)"/>
+            <ellipse cx="0" cy="-16" rx="18" ry="8" fill="var(--amber-top)" opacity=".8"/>
+          </g>
+        </g>
+        <g class="float d1">
+          <!-- teal stack -->
+          <g transform="translate(392,342)">
+            <ellipse cx="0" cy="46" rx="26" ry="13" fill="var(--teal-side)"/>
+            <rect x="-26" y="30" width="52" height="16" fill="var(--teal-side)"/>
+            <ellipse cx="0" cy="30" rx="26" ry="13" fill="var(--teal)"/>
+            <ellipse cx="0" cy="18" rx="26" ry="13" fill="var(--teal-side)"/>
+            <rect x="-26" y="2" width="52" height="16" fill="var(--teal-side)"/>
+            <ellipse cx="0" cy="2" rx="26" ry="13" fill="var(--teal)"/>
+            <ellipse cx="0" cy="-10" rx="26" ry="13" fill="var(--teal-side)"/>
+            <rect x="-26" y="-26" width="52" height="16" fill="var(--teal-side)"/>
+            <ellipse cx="0" cy="-26" rx="26" ry="13" fill="var(--teal)"/>
+            <ellipse cx="0" cy="-32" rx="18" ry="8" fill="var(--teal-top)" opacity=".85"/>
+          </g>
+        </g>
+
+        <!-- ===== 3D DICE CUBES ===== -->
+        <g class="float d2">
+          <g transform="translate(300,150)">
+            <!-- die 1 -->
+            <g transform="translate(-46,0)">
+              <polygon points="0,-38 40,-16 0,6 -40,-16" fill="#ffffff"/>
+              <polygon points="-40,-16 0,6 0,52 -40,30" fill="#e6ebfb"/>
+              <polygon points="0,6 40,-16 40,30 0,52" fill="#cdd5ef"/>
+              <!-- top pips (5) -->
+              <circle cx="-20" cy="-16" r="3.4" fill="var(--violet)"/>
+              <circle cx="20" cy="-16" r="3.4" fill="var(--violet)"/>
+              <circle cx="0" cy="-16" r="3.4" fill="var(--violet)"/>
+              <circle cx="-10" cy="-6" r="3.4" fill="var(--violet)"/>
+              <circle cx="10" cy="-26" r="3.4" fill="var(--violet)"/>
+              <!-- left pips (3) -->
+              <circle cx="-30" cy="6" r="3.2" fill="var(--muted)"/>
+              <circle cx="-20" cy="18" r="3.2" fill="var(--muted)"/>
+              <circle cx="-10" cy="30" r="3.2" fill="var(--muted)"/>
+              <!-- right pips (2) -->
+              <circle cx="12" cy="10" r="3.2" fill="var(--ink)" opacity=".55"/>
+              <circle cx="28" cy="22" r="3.2" fill="var(--ink)" opacity=".55"/>
+            </g>
+            <!-- die 2 -->
+            <g transform="translate(40,26)">
+              <polygon points="0,-34 36,-14 0,6 -36,-14" fill="var(--amber-top)"/>
+              <polygon points="-36,-14 0,6 0,48 -36,28" fill="var(--amber)"/>
+              <polygon points="0,6 36,-14 36,28 0,48" fill="var(--amber-side)"/>
+              <!-- top (6) -->
+              <circle cx="-16" cy="-16" r="3" fill="#fff"/><circle cx="0" cy="-16" r="3" fill="#fff"/><circle cx="16" cy="-16" r="3" fill="#fff"/>
+              <circle cx="-8" cy="-8" r="3" fill="#fff"/><circle cx="8" cy="-8" r="3" fill="#fff"/><circle cx="0" cy="-24" r="3" fill="#fff"/>
+              <!-- left (1) -->
+              <circle cx="-18" cy="17" r="3.4" fill="#fff"/>
+              <!-- right (4) -->
+              <circle cx="10" cy="6" r="3" fill="#3a2500"/><circle cx="26" cy="15" r="3" fill="#3a2500"/>
+              <circle cx="10" cy="25" r="3" fill="#3a2500"/><circle cx="26" cy="34" r="3" fill="#3a2500"/>
+            </g>
+          </g>
+        </g>
+
+        <!-- little floating equity chip -->
+        <g class="float d1" transform="translate(486,196)">
+          <rect x="-52" y="-22" width="104" height="44" rx="12" fill="#fff" filter="url(#soft)"/>
+          <text x="0" y="-2" text-anchor="middle" font-family="Bricolage Grotesque,sans-serif" font-weight="800" font-size="13" fill="var(--teal)">+0.184</text>
+          <text x="0" y="13" text-anchor="middle" font-family="Hanken Grotesk,sans-serif" font-size="9" font-weight="700" fill="var(--muted)">BEST PLAY: 24/18 13/11</text>
+        </g>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PRODUCTS ============ -->
+<section class="wrap sec" id="products">
+  <p class="kicker rise">Six rooms, one world</p>
+  <h2 class="rise">Everything the game needs — built in 3D space.</h2>
+  <p class="lede rise">Each part of Gammon is its own little building on the board: the engine machine, the club house, the university hall. Explore them.</p>
+
+  <div class="products">
+    <!-- 1 ENGINE MACHINE -->
+    <article class="iso-card rise">
+      <span class="num">01</span>
+      <div class="iso-scene">
+        <svg width="150" height="130" viewBox="0 0 150 130" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <ellipse cx="75" cy="112" rx="56" ry="14" fill="#1c2140" opacity=".1"/>
+          <!-- machine body extruded -->
+          <polygon points="75,20 120,44 75,68 30,44" fill="var(--violet-top)"/>
+          <polygon points="30,44 75,68 75,104 30,80" fill="var(--violet)"/>
+          <polygon points="75,68 120,44 120,80 75,104" fill="var(--violet-side)"/>
+          <!-- screen -->
+          <polygon points="45,54 68,67 68,86 45,73" fill="#1c2140"/>
+          <polyline points="49,66 55,70 60,62 65,74" fill="none" stroke="var(--teal-top)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <!-- camera lens (snap a photo) -->
+          <circle cx="98" cy="62" r="7" fill="#1c2140"/><circle cx="98" cy="62" r="3" fill="var(--amber)"/>
+          <!-- chimney readout -->
+          <rect x="70" y="6" width="10" height="14" rx="2" fill="var(--amber)" transform="skewX(-20)"/>
+        </svg>
+      </div>
+      <h3>The Engine</h3>
+      <p>XG-class analysis in your pocket. Snap a photo of any board, get instant equity and a live pip count.</p>
+      <span class="go">Analyze a position <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+    </article>
+
+    <!-- 2 PLAY ONLINE -->
+    <article class="iso-card rise">
+      <span class="num">02</span>
+      <div class="iso-scene">
+        <svg width="150" height="130" viewBox="0 0 150 130" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <ellipse cx="75" cy="112" rx="58" ry="14" fill="#1c2140" opacity=".1"/>
+          <!-- mini iso board -->
+          <polygon points="75,44 122,68 75,92 28,68" fill="var(--board)"/>
+          <polygon points="28,68 75,92 75,104 28,80" fill="#22264c"/>
+          <polygon points="75,92 122,68 122,80 75,104" fill="#20244a"/>
+          <polygon points="75,52 112,71 75,90 38,71" fill="#2f3466"/>
+          <polygon points="62,63 72,68 66,73" fill="var(--coral)"/>
+          <polygon points="88,63 78,68 84,73" fill="var(--sky)"/>
+          <!-- two checkers -->
+          <g transform="translate(58,50)"><ellipse cx="0" cy="6" rx="12" ry="6" fill="var(--coral-side)"/><rect x="-12" y="-2" width="24" height="8" fill="var(--coral-side)"/><ellipse cx="0" cy="-2" rx="12" ry="6" fill="var(--coral)"/></g>
+          <g transform="translate(92,50)"><ellipse cx="0" cy="6" rx="12" ry="6" fill="var(--sky-side)"/><rect x="-12" y="-2" width="24" height="8" fill="var(--sky-side)"/><ellipse cx="0" cy="-2" rx="12" ry="6" fill="var(--sky)"/></g>
+        </svg>
+      </div>
+      <h3>Play Online</h3>
+      <p>Ranked matches, money games and classic chouettes against players in every corner of the world.</p>
+      <span class="go">Find a table <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+    </article>
+
+    <!-- 3 BEAT THE GRANDMASTER -->
+    <article class="iso-card rise">
+      <span class="num">03</span>
+      <div class="iso-scene">
+        <svg width="150" height="130" viewBox="0 0 150 130" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <ellipse cx="75" cy="112" rx="52" ry="14" fill="#1c2140" opacity=".1"/>
+          <!-- trophy podium block -->
+          <polygon points="75,58 112,79 75,100 38,79" fill="var(--amber-top)"/>
+          <polygon points="38,79 75,100 75,112 38,91" fill="var(--amber)"/>
+          <polygon points="75,100 112,79 112,91 75,112" fill="var(--amber-side)"/>
+          <!-- trophy cup -->
+          <path d="M62 34h26l-3 20a10 10 0 0 1-20 0z" fill="var(--amber)"/>
+          <path d="M62 34h26l-1 7H63z" fill="var(--amber-top)"/>
+          <ellipse cx="75" cy="72" rx="10" ry="4" fill="var(--amber-side)"/>
+          <path d="M62 40c-8 0-8 12 0 12M88 40c8 0 8 12 0 12" fill="none" stroke="var(--amber-side)" stroke-width="3"/>
+          <!-- star -->
+          <path d="M75 40l2.2 4.4 4.8.7-3.5 3.4.8 4.8-4.3-2.3-4.3 2.3.8-4.8-3.5-3.4 4.8-.7z" fill="#fff"/>
+        </svg>
+      </div>
+      <h3>Beat the Grandmaster</h3>
+      <p>Daily puzzles drawn from real masters' actual mistakes. Find the play they should have made.</p>
+      <span class="go">Take today's puzzle <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+    </article>
+
+    <!-- 4 UNIVERSITY -->
+    <article class="iso-card rise">
+      <span class="num">04</span>
+      <div class="iso-scene">
+        <svg width="150" height="130" viewBox="0 0 150 130" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <ellipse cx="75" cy="112" rx="56" ry="14" fill="#1c2140" opacity=".1"/>
+          <!-- hall base -->
+          <polygon points="75,52 118,76 75,100 32,76" fill="var(--sky-top)"/>
+          <polygon points="32,76 75,100 75,112 32,88" fill="var(--sky)"/>
+          <polygon points="75,100 118,76 118,88 75,112" fill="var(--sky-side)"/>
+          <!-- columns -->
+          <g fill="#fff" opacity=".92">
+            <rect x="46" y="58" width="5" height="20" transform="skewY(30)"/>
+            <rect x="60" y="50" width="5" height="20" transform="skewY(30)"/>
+            <rect x="74" y="42" width="5" height="20" transform="skewY(30)"/>
+          </g>
+          <!-- pediment / roof -->
+          <polygon points="75,20 112,41 75,62 38,41" fill="var(--sky)"/>
+          <polygon points="75,26 100,40 75,54 50,40" fill="var(--sky-top)"/>
+          <!-- grad cap -->
+          <polygon points="75,10 92,18 75,26 58,18" fill="var(--violet)"/>
+          <rect x="73" y="18" width="4" height="10" fill="var(--violet-side)"/>
+        </svg>
+      </div>
+      <h3>Gammon University</h3>
+      <p>Structured lessons and one-on-one sessions with world-class coaches, from first double to expert play.</p>
+      <span class="go">Book a lesson <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+    </article>
+
+    <!-- 5 RUN A CLUB -->
+    <article class="iso-card rise">
+      <span class="num">05</span>
+      <div class="iso-scene">
+        <svg width="150" height="130" viewBox="0 0 150 130" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <ellipse cx="75" cy="112" rx="56" ry="14" fill="#1c2140" opacity=".1"/>
+          <!-- club building -->
+          <polygon points="75,44 116,68 75,92 34,68" fill="var(--coral-top)"/>
+          <polygon points="34,68 75,92 75,110 34,86" fill="var(--coral)"/>
+          <polygon points="75,92 116,68 116,86 75,110" fill="var(--coral-side)"/>
+          <!-- door -->
+          <polygon points="70,80 80,86 80,100 70,94" fill="#7a2a2a"/>
+          <!-- windows -->
+          <polygon points="46,74 54,79 54,87 46,82" fill="#fff" opacity=".85"/>
+          <polygon points="96,74 104,79 104,87 96,82" fill="#fff" opacity=".85"/>
+          <!-- roof -->
+          <polygon points="75,26 116,50 75,74 34,50" fill="var(--coral-side)"/>
+          <polygon points="75,32 104,49 75,66 46,49" fill="var(--coral)"/>
+          <!-- coins stacked -->
+          <g transform="translate(112,40)"><ellipse cx="0" cy="8" rx="9" ry="4.5" fill="var(--amber-side)"/><rect x="-9" y="2" width="18" height="6" fill="var(--amber-side)"/><ellipse cx="0" cy="2" rx="9" ry="4.5" fill="var(--amber)"/><ellipse cx="0" cy="-3" rx="9" ry="4.5" fill="var(--amber)"/><ellipse cx="0" cy="-3" rx="4" ry="2" fill="var(--amber-top)"/></g>
+        </svg>
+      </div>
+      <h3>Run a Club</h3>
+      <p>Host tournaments, sell coins and keep your books in order. It's your club — you keep the earnings.</p>
+      <span class="go">Open your club <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+    </article>
+
+    <!-- 6 RECORD & STREAM -->
+    <article class="iso-card rise">
+      <span class="num">06</span>
+      <div class="iso-scene">
+        <svg width="150" height="130" viewBox="0 0 150 130" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <ellipse cx="75" cy="112" rx="54" ry="14" fill="#1c2140" opacity=".1"/>
+          <!-- tripod base block -->
+          <polygon points="75,66 108,85 75,104 42,85" fill="var(--teal-top)"/>
+          <polygon points="42,85 75,104 75,112 42,93" fill="var(--teal)"/>
+          <polygon points="75,104 108,85 108,93 75,112" fill="var(--teal-side)"/>
+          <!-- camera cube -->
+          <polygon points="75,20 104,37 75,54 46,37" fill="var(--teal-top)"/>
+          <polygon points="46,37 75,54 75,74 46,57" fill="var(--teal)"/>
+          <polygon points="75,54 104,37 104,57 75,74" fill="var(--teal-side)"/>
+          <circle cx="75" cy="42" r="8" fill="#1c2140"/><circle cx="75" cy="42" r="3.5" fill="var(--sky-top)"/>
+          <!-- live dot + waves -->
+          <circle cx="102" cy="24" r="5" fill="var(--coral)"/>
+          <path d="M110 18a10 10 0 0 1 0 12M115 14a16 16 0 0 1 0 20" fill="none" stroke="var(--coral)" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h3>Record &amp; Stream</h3>
+      <p>Capture over-the-board matches move by move, then broadcast them live to your audience.</p>
+      <span class="go">Go live <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+    </article>
+  </div>
+</section>
+
+<!-- ============ MEMBERSHIP ============ -->
+<section class="wrap sec" id="membership">
+  <p class="kicker rise">Membership</p>
+  <h2 class="rise">One year free. Then about a dollar a month.</h2>
+  <p class="lede rise">We're giving the first three thousand members a full year on us. After that, Premium costs roughly the price of a coffee — once.</p>
+
+  <div class="plans">
+    <div class="plan rise">
+      <span class="ptag">Free</span>
+      <h3>Founding Member</h3>
+      <div class="price">$0<span> / first year</span></div>
+      <p style="color:var(--muted);margin:0 0 4px;font-weight:500;font-size:14.5px">For the first 3,000 members. One year on us — no card required.</p>
+      <ul>
+        <li><span class="tick"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="m6 12 4 4 8-9" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Full engine analysis &amp; snap-a-photo</li>
+        <li><span class="tick"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="m6 12 4 4 8-9" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Play online, money games &amp; chouettes</li>
+        <li><span class="tick"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="m6 12 4 4 8-9" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Daily grandmaster puzzles</li>
+        <li><span class="tick"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="m6 12 4 4 8-9" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Join a club and compete</li>
+      </ul>
+      <a class="btn btn-solid btn-lg" href="#" style="width:100%;justify-content:center">Claim your free year</a>
+    </div>
+
+    <div class="plan prem rise">
+      <span class="ribbon">BEST VALUE</span>
+      <span class="ptag">Premium</span>
+      <h3>Gammon Premium</h3>
+      <div class="price">$1<span> / month</span></div>
+      <p style="color:#c3c9f0;margin:0 0 4px;font-weight:500;font-size:14.5px">Everything in Free, forever — plus the tools for serious players and club owners.</p>
+      <ul>
+        <li><span class="tick"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="m6 12 4 4 8-9" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Deep rollouts &amp; unlimited analysis</li>
+        <li><span class="tick"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="m6 12 4 4 8-9" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>University lessons with coaches</li>
+        <li><span class="tick"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="m6 12 4 4 8-9" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Run a club &amp; keep your earnings</li>
+        <li><span class="tick"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="m6 12 4 4 8-9" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Record &amp; live-stream OTB matches</li>
+      </ul>
+      <a class="btn btn-amber btn-lg" href="#" style="width:100%;justify-content:center">Go Premium</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MISSION / CTA ============ -->
+<section class="wrap">
+  <div class="mission rise">
+    <div class="glow" style="width:320px;height:320px;background:var(--violet);top:-120px;right:-60px"></div>
+    <div class="glow" style="width:260px;height:260px;background:var(--teal);bottom:-140px;left:-40px"></div>
+    <p class="kicker" style="color:var(--amber-top)">Our mission</p>
+    <h2>Put a grandmaster in every pocket — and a whole world of backgammon on every board.</h2>
+    <p>Backgammon deserves one home: where you can learn from the best, play anyone anywhere, run your own community and never lose a great game to a lost scoresheet again. That's what we're building.</p>
+    <div class="actions">
+      <a class="btn btn-amber btn-lg" href="#membership">Claim your free year</a>
+      <a class="btn btn-ghost btn-lg" href="#products" style="color:#fff;border:1px solid rgba(255,255,255,.3)">Explore the world</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer class="wrap">
+  <div class="foot">
+    <div>
+      <a class="brand" href="#top" style="margin-bottom:12px">
+        <svg class="cube" viewBox="0 0 40 46" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M20 2 38 12v22L20 44 2 34V12z" fill="var(--violet)"/>
+          <path d="M20 2 38 12 20 22 2 12z" fill="var(--violet-top)"/>
+          <path d="M20 22 38 12v22L20 44z" fill="var(--violet-side)"/>
+        </svg>
+        Gammon
+      </a>
+      <p>The home of worldwide backgammon. Play, learn, compete and run a club — powered by a grandmaster-class engine in your pocket.</p>
+    </div>
+    <div>
+      <h4>Product</h4>
+      <a href="#products">The Engine</a>
+      <a href="#products">Play Online</a>
+      <a href="#products">Puzzles</a>
+      <a href="#products">University</a>
+    </div>
+    <div>
+      <h4>Community</h4>
+      <a href="#membership">Run a Club</a>
+      <a href="#products">Record &amp; Stream</a>
+      <a href="#membership">Membership</a>
+      <a href="#top">Log in</a>
+    </div>
+    <div>
+      <h4>Company</h4>
+      <a href="#">About</a>
+      <a href="#">Careers</a>
+      <a href="#">Contact</a>
+      <a href="#">Press</a>
+    </div>
+  </div>
+  <div class="footbot">
+    <span>© 2026 Gammon. Built in 3D space.</span>
+    <span>Privacy · Terms · Fair Play</span>
+  </div>
+</footer>
+
+<script>
+  // Mobile menu
+  const burger = document.getElementById('burger');
+  const mobile = document.getElementById('mobile');
+  burger.addEventListener('click', () => {
+    mobile.classList.toggle('open');
+    burger.classList.toggle('x');
+  });
+  mobile.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+    mobile.classList.remove('open');
+  }));
+
+  // Reveal on scroll
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+    });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.rise').forEach((el, i) => {
+    el.style.transitionDelay = (Math.min(i % 6, 5) * 0.06) + 's';
+    io.observe(el);
+  });
+
+  // Gentle parallax on the isometric hero world
+  const stage = document.querySelector('.heroart .stage');
+  if (stage && window.matchMedia('(hover:hover)').matches) {
+    window.addEventListener('pointermove', (ev) => {
+      const cx = window.innerWidth / 2, cy = window.innerHeight / 2;
+      const dx = (ev.clientX - cx) / cx, dy = (ev.clientY - cy) / cy;
+      stage.style.transform = `translate3d(${dx * 12}px, ${dy * 10}px, 0)`;
+    });
+  }
+</script>
+</body>
+</html>

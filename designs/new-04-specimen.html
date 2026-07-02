@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Gammon — The home of worldwide backgammon</title>
+<meta name="description" content="Gammon — the home of worldwide backgammon. Play, learn, compete and run a club, powered by a grandmaster-class engine in your pocket." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,100..900;1,100..900&family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --ink:#0d0d0c;
+    --paper:#f6f4ee;
+    --accent:#e4322b;
+    --rule:#0d0d0c;
+    --mute:#6f6c63;
+    --disp:"Fraunces", Georgia, serif;
+    --grot:"Archivo", "Helvetica Neue", Arial, sans-serif;
+    --mono:"JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    --gut:clamp(16px,4vw,44px);
+    --hair:1px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--grot);
+    line-height:1.15;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+  }
+  ::selection{background:var(--accent);color:var(--paper)}
+  a{color:inherit;text-decoration:none}
+  img,svg{display:block}
+
+  /* ---- shell / grid rules ---- */
+  .wrap{max-width:1500px;margin:0 auto;padding:0 var(--gut)}
+  .rule{border-top:2px solid var(--rule)}
+  .hair{border-top:var(--hair) solid var(--ink)}
+
+  /* small caps mono label used like a specimen annotation */
+  .anno{
+    font-family:var(--mono);
+    font-size:11px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    color:var(--mute);
+    font-weight:500;
+  }
+  .anno-ink{color:var(--ink)}
+  .acc{color:var(--accent)}
+  .bg-acc{background:var(--accent);color:var(--paper)}
+
+  /* ---------- NAV ---------- */
+  header.nav{
+    position:sticky;top:0;z-index:60;
+    background:var(--paper);
+    border-bottom:2px solid var(--ink);
+  }
+  .navrow{
+    display:flex;align-items:stretch;justify-content:space-between;
+    height:64px;
+  }
+  .brand{
+    display:flex;align-items:center;gap:12px;
+    font-family:var(--disp);
+    font-weight:900;
+    font-size:26px;
+    letter-spacing:-.02em;
+    line-height:1;
+  }
+  .brand .mk{
+    width:26px;height:26px;flex:0 0 auto;
+  }
+  .navlinks{display:flex;align-items:stretch}
+  .navlinks a{
+    display:flex;align-items:center;padding:0 18px;
+    font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+    border-left:var(--hair) solid var(--ink);
+    transition:background .15s,color .15s;
+  }
+  .navlinks a:hover{background:var(--ink);color:var(--paper)}
+  .navcta{display:flex;align-items:stretch}
+  .navcta a{
+    display:flex;align-items:center;padding:0 18px;
+    font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;
+    border-left:2px solid var(--ink);
+  }
+  .navcta a.solid{background:var(--ink);color:var(--paper)}
+  .navcta a.solid:hover{background:var(--accent)}
+  .navcta a.ghost:hover{background:var(--ink);color:var(--paper)}
+  .burger{
+    display:none;align-items:center;justify-content:center;
+    width:64px;border-left:2px solid var(--ink);background:none;cursor:pointer;
+  }
+  .burger span{display:block;width:24px;height:2px;background:var(--ink);position:relative}
+  .burger span::before,.burger span::after{content:"";position:absolute;left:0;width:24px;height:2px;background:var(--ink);transition:.2s}
+  .burger span::before{top:-7px}.burger span::after{top:7px}
+  .mobmenu{display:none}
+
+  @media(max-width:900px){
+    .navlinks,.navcta{display:none}
+    .burger{display:flex}
+    .mobmenu{
+      display:block;position:fixed;inset:64px 0 0 0;z-index:55;
+      background:var(--paper);border-top:2px solid var(--ink);
+      transform:translateY(-120%);transition:transform .32s cubic-bezier(.7,0,.2,1);
+      overflow:auto;
+    }
+    .mobmenu.open{transform:translateY(0)}
+    .mobmenu a{
+      display:block;padding:22px var(--gut);
+      border-bottom:var(--hair) solid var(--ink);
+      font-family:var(--disp);font-weight:800;font-size:clamp(30px,9vw,52px);letter-spacing:-.02em;
+    }
+    .mobmenu a .n{font-family:var(--mono);font-size:12px;letter-spacing:.1em;color:var(--mute);vertical-align:super;margin-right:10px}
+    .mobmenu .m-cta{display:flex}
+    .mobmenu .m-cta a{width:50%;text-align:center;font-family:var(--mono);font-size:14px;letter-spacing:.1em;text-transform:uppercase;padding:26px 0}
+    .mobmenu .m-cta a.solid{background:var(--ink);color:var(--paper);border-right:2px solid var(--ink)}
+    body.lock{overflow:hidden}
+  }
+
+  /* ---------- SPECIMEN MASTHEAD BAR ---------- */
+  .mast{
+    display:flex;justify-content:space-between;align-items:baseline;
+    padding:10px 0;flex-wrap:wrap;gap:8px 24px;
+  }
+
+  /* ---------- HERO ---------- */
+  .hero{position:relative;overflow:hidden}
+  .hero-grid{
+    display:grid;
+    grid-template-columns:1fr;
+    border-bottom:2px solid var(--ink);
+  }
+  .hero-top{
+    display:grid;grid-template-columns:minmax(0,1fr) 300px;
+  }
+  @media(max-width:1000px){.hero-top{grid-template-columns:1fr}}
+  .hero-left{padding:clamp(18px,3vw,40px) 0 clamp(24px,4vw,54px)}
+  .hero-kicker{display:flex;gap:14px;flex-wrap:wrap;align-items:baseline;margin-bottom:min(3vw,26px)}
+  .hero h1{
+    font-family:var(--disp);
+    font-weight:900;
+    font-optical-sizing:auto;
+    font-size:clamp(58px,14.5vw,232px);
+    line-height:.86;
+    letter-spacing:-.03em;
+    text-transform:none;
+  }
+  .hero h1 .li{font-weight:300;font-style:italic}
+  .hero h1 .em{color:var(--accent)}
+  .hero h1 .huge{font-size:1.06em}
+  .hero-sub-wrap{
+    border-left:2px solid var(--ink);
+    padding:clamp(18px,3vw,40px) 0 clamp(18px,3vw,40px) clamp(16px,2vw,28px);
+    display:flex;flex-direction:column;justify-content:space-between;gap:24px;
+  }
+  @media(max-width:1000px){.hero-sub-wrap{border-left:none;border-top:2px solid var(--ink);padding-left:0}}
+  .hero-sub{
+    font-family:var(--grot);font-weight:500;font-size:clamp(15px,1.15vw,18px);line-height:1.4;max-width:34ch;
+  }
+  .hero-sub b{font-weight:800}
+  .btn{
+    display:inline-flex;align-items:center;gap:12px;
+    font-family:var(--mono);font-size:13px;letter-spacing:.12em;text-transform:uppercase;font-weight:500;
+    padding:16px 22px;border:2px solid var(--ink);background:var(--ink);color:var(--paper);
+    transition:.18s;cursor:pointer;align-self:flex-start;
+  }
+  .btn:hover{background:var(--accent);border-color:var(--accent)}
+  .btn .arw{transition:transform .18s}
+  .btn:hover .arw{transform:translateX(5px)}
+  .btn.ghost{background:none;color:var(--ink)}
+  .btn.ghost:hover{background:var(--ink);color:var(--paper)}
+  .free-note{font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--mute);text-transform:uppercase;margin-top:14px}
+
+  /* giant bleeding glyph strip */
+  .bleed{
+    position:relative;border-bottom:2px solid var(--ink);
+    overflow:hidden;background:var(--ink);color:var(--paper);
+  }
+  .bleed .row{
+    display:flex;align-items:center;white-space:nowrap;
+    font-family:var(--disp);font-weight:900;
+    font-size:clamp(120px,26vw,360px);line-height:.9;
+    letter-spacing:-.02em;
+    will-change:transform;
+  }
+  .bleed .row span{padding:0 .12em}
+  .bleed .row .o{color:var(--accent)}
+  .bleed .row .hollow{color:transparent;-webkit-text-stroke:2px var(--paper);}
+  .marq-a{animation:marq 30s linear infinite}
+  @keyframes marq{to{transform:translateX(-50%)}}
+  @media(prefers-reduced-motion:reduce){.marq-a{animation:none}}
+
+  /* ---------- SIZE LADDER ---------- */
+  .section-head{
+    display:flex;justify-content:space-between;align-items:baseline;
+    padding:16px 0;border-bottom:2px solid var(--ink);flex-wrap:wrap;gap:10px;
+  }
+  .section-head h2{
+    font-family:var(--disp);font-weight:900;font-size:clamp(26px,4.4vw,60px);letter-spacing:-.02em;line-height:.95;
+  }
+  .section-head .idx{font-family:var(--mono);font-size:12px;letter-spacing:.16em;color:var(--mute);text-transform:uppercase}
+
+  .ladder{border-bottom:2px solid var(--ink)}
+  .lad{
+    display:grid;grid-template-columns:96px 1fr;align-items:baseline;
+    border-bottom:var(--hair) solid var(--ink);padding:6px 0;gap:0 18px;
+  }
+  .lad:last-child{border-bottom:none}
+  .lad .sz{font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--mute);padding-top:.6em;white-space:nowrap}
+  .lad .sample{font-family:var(--disp);font-weight:800;line-height:.92;letter-spacing:-.02em;overflow:hidden}
+  .lad.s1 .sample{font-size:clamp(44px,10vw,130px)}
+  .lad.s2 .sample{font-size:clamp(34px,6.4vw,80px);font-weight:900}
+  .lad.s3 .sample{font-size:clamp(26px,4.2vw,52px);font-weight:600}
+  .lad.s4 .sample{font-size:clamp(20px,2.6vw,30px);font-weight:500;font-family:var(--grot)}
+  .lad.s5 .sample{font-size:15px;font-family:var(--grot);font-weight:500;line-height:1.4;color:var(--ink)}
+  .lad .sample .acc{color:var(--accent)}
+
+  /* ---------- CHARACTER SET ---------- */
+  .charset{border-bottom:2px solid var(--ink);padding:clamp(18px,3vw,34px) 0}
+  .charset .glyphs{
+    font-family:var(--disp);font-weight:800;letter-spacing:.01em;line-height:1.05;
+    font-size:clamp(26px,5.6vw,72px);word-spacing:.05em;
+  }
+  .charset .glyphs .dim{color:var(--mute)}
+  .charset .glyphs .num{font-weight:900}
+  .charset .glyphs .pun{color:var(--accent);font-style:italic}
+  .charset-meta{display:flex;gap:26px;flex-wrap:wrap;margin-top:20px}
+
+  /* ---------- WEIGHTS ---------- */
+  .weights{border-bottom:2px solid var(--ink)}
+  .wt{
+    display:grid;grid-template-columns:140px 1fr 120px;align-items:baseline;
+    border-bottom:var(--hair) solid var(--ink);padding:10px 0;gap:0 18px;
+  }
+  .wt:last-child{border-bottom:none}
+  .wt .lab{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);padding-top:.5em}
+  .wt .word{font-family:var(--disp);font-size:clamp(28px,6vw,74px);line-height:.9;letter-spacing:-.02em}
+  .wt .num{font-family:var(--mono);font-size:11px;color:var(--mute);text-align:right;padding-top:.6em}
+  .wt.w1 .word{font-weight:300}
+  .wt.w2 .word{font-weight:400}
+  .wt.w3 .word{font-weight:600}
+  .wt.w4 .word{font-weight:800}
+  .wt.w5 .word{font-weight:900}
+  .wt.w5 .word{color:var(--accent)}
+  @media(max-width:640px){.wt{grid-template-columns:88px 1fr}.wt .num{display:none}}
+
+  /* ---------- PRODUCTS AS CUTS ---------- */
+  .cuts{border-bottom:2px solid var(--ink)}
+  .cut{
+    display:grid;grid-template-columns:64px minmax(0,1fr) minmax(0,1.15fr);
+    border-bottom:var(--hair) solid var(--ink);
+    align-items:stretch;
+    position:relative;
+    transition:background .2s,color .2s;
+  }
+  .cut:last-child{border-bottom:none}
+  .cut:hover{background:var(--ink);color:var(--paper)}
+  .cut:hover .cut-anno,.cut:hover .cut-desc{color:#c9c6bd}
+  .cut:hover .cut-name .acc{color:var(--paper)}
+  .cut .cut-no{
+    font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:var(--mute);
+    padding:22px 0 0 0;border-right:var(--hair) solid currentColor;
+    display:flex;justify-content:center;
+  }
+  .cut:hover .cut-no{color:#8b887f}
+  .cut .cut-main{padding:20px clamp(14px,2vw,26px) 22px}
+  .cut .cut-anno{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin-bottom:10px}
+  .cut .cut-name{
+    font-family:var(--disp);font-weight:900;font-size:clamp(30px,4.6vw,62px);line-height:.9;letter-spacing:-.02em;
+  }
+  .cut .cut-name .acc{color:var(--accent);font-style:italic;font-weight:800}
+  .cut .cut-side{
+    padding:20px clamp(14px,2vw,26px) 22px;
+    border-left:var(--hair) solid currentColor;
+    display:flex;flex-direction:column;justify-content:space-between;gap:16px;
+  }
+  .cut .cut-desc{font-family:var(--grot);font-weight:500;font-size:clamp(14px,1.05vw,16px);line-height:1.45;max-width:46ch}
+  .cut .cut-tags{display:flex;gap:8px;flex-wrap:wrap}
+  .cut .cut-tags span{
+    font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+    border:var(--hair) solid currentColor;padding:4px 8px;
+  }
+  @media(max-width:820px){
+    .cut{grid-template-columns:48px 1fr}
+    .cut .cut-side{grid-column:1/-1;border-left:none;border-top:var(--hair) solid currentColor}
+  }
+
+  /* ---------- MEMBERSHIP ---------- */
+  .members{border-bottom:2px solid var(--ink);display:grid;grid-template-columns:1fr 1fr}
+  @media(max-width:820px){.members{grid-template-columns:1fr}}
+  .plan{padding:clamp(22px,3vw,44px) clamp(16px,2vw,34px)}
+  .plan+.plan{border-left:2px solid var(--ink)}
+  @media(max-width:820px){.plan+.plan{border-left:none;border-top:2px solid var(--ink)}}
+  .plan.pre{background:var(--ink);color:var(--paper)}
+  .plan .p-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:18px}
+  .plan .p-name{font-family:var(--disp);font-weight:900;font-size:clamp(40px,7vw,96px);line-height:.85;letter-spacing:-.03em}
+  .plan.pre .p-name{color:var(--accent)}
+  .plan .p-tag{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+  .plan.pre .p-tag{color:#c9c6bd}
+  .plan .price{font-family:var(--disp);font-weight:800;font-size:clamp(30px,4vw,44px);letter-spacing:-.02em;margin:8px 0 18px}
+  .plan .price small{font-family:var(--mono);font-size:13px;font-weight:400;letter-spacing:.04em;color:var(--mute)}
+  .plan.pre .price small{color:#c9c6bd}
+  .plan ul{list-style:none;border-top:var(--hair) solid currentColor}
+  .plan li{
+    font-family:var(--grot);font-weight:500;font-size:15px;line-height:1.35;
+    padding:12px 0;border-bottom:var(--hair) solid currentColor;
+    display:flex;gap:12px;align-items:baseline;
+  }
+  .plan li .b{font-family:var(--mono);font-size:11px;color:var(--accent);flex:0 0 auto}
+  .plan.pre li .b{color:var(--accent)}
+  .plan .btn.onlight:hover{background:var(--accent);border-color:var(--accent)}
+  .plan.pre .btn{background:var(--accent);border-color:var(--accent);color:var(--paper);margin-top:22px}
+  .plan.pre .btn:hover{background:var(--paper);color:var(--ink);border-color:var(--paper)}
+  .plan .btn{margin-top:22px}
+
+  /* ---------- MISSION ---------- */
+  .mission{border-bottom:2px solid var(--ink);padding:clamp(30px,6vw,90px) 0}
+  .mission .anno{margin-bottom:22px}
+  .mission p{
+    font-family:var(--disp);font-weight:700;font-size:clamp(26px,4.4vw,58px);line-height:1.02;letter-spacing:-.02em;max-width:22ch;
+  }
+  .mission p .acc{color:var(--accent);font-style:italic}
+  .mission p .li{font-weight:300;font-style:italic}
+
+  /* ---------- FINAL CTA ---------- */
+  .final{background:var(--ink);color:var(--paper);text-align:center;padding:clamp(40px,9vw,130px) 0;position:relative;overflow:hidden}
+  .final h2{
+    font-family:var(--disp);font-weight:900;font-size:clamp(46px,13vw,190px);line-height:.86;letter-spacing:-.03em;position:relative;z-index:2;
+  }
+  .final h2 .acc{color:var(--accent)}
+  .final .sub{font-family:var(--grot);font-weight:500;font-size:clamp(15px,1.4vw,20px);margin:24px auto 8px;max-width:40ch;position:relative;z-index:2;color:#d9d6cd}
+  .final .btn{background:var(--accent);border-color:var(--accent);margin-top:20px;position:relative;z-index:2}
+  .final .btn:hover{background:var(--paper);color:var(--ink);border-color:var(--paper)}
+  .final .note{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#8b887f;margin-top:18px;position:relative;z-index:2}
+  .final .ghostG{
+    position:absolute;top:50%;left:50%;transform:translate(-50%,-46%);
+    font-family:var(--disp);font-weight:900;font-size:min(90vw,900px);line-height:1;
+    color:transparent;-webkit-text-stroke:2px rgba(246,244,238,.10);z-index:1;pointer-events:none;
+  }
+
+  /* ---------- FOOTER ---------- */
+  footer{padding:clamp(24px,4vw,52px) 0 40px}
+  .foot-top{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:26px;padding-bottom:36px;border-bottom:var(--hair) solid var(--ink)}
+  @media(max-width:820px){.foot-top{grid-template-columns:1fr 1fr}}
+  @media(max-width:500px){.foot-top{grid-template-columns:1fr}}
+  .foot-brand{font-family:var(--disp);font-weight:900;font-size:clamp(48px,10vw,120px);line-height:.82;letter-spacing:-.04em}
+  .foot-brand .acc{color:var(--accent)}
+  .foot-col h4{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin-bottom:14px}
+  .foot-col a{display:block;font-family:var(--grot);font-weight:500;font-size:15px;padding:5px 0}
+  .foot-col a:hover{color:var(--accent)}
+  .foot-bot{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;padding-top:22px;font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--mute);text-transform:uppercase}
+
+  .reveal{opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.2,1)}
+  .reveal.in{opacity:1;transform:none}
+  @media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+
+<!-- ============ NAV ============ -->
+<header class="nav">
+  <div class="wrap">
+    <div class="navrow">
+      <a class="brand" href="#top" aria-label="Gammon home">
+        <svg class="mk" viewBox="0 0 40 40" aria-hidden="true">
+          <rect x="1" y="1" width="38" height="38" fill="none" stroke="var(--ink)" stroke-width="2"/>
+          <path d="M4 4 L14 4 L9 20 Z" fill="var(--ink)"/>
+          <path d="M14 4 L24 4 L19 20 Z" fill="var(--accent)"/>
+          <path d="M4 36 L14 36 L9 20 Z" fill="var(--accent)"/>
+          <path d="M14 36 L24 36 L19 20 Z" fill="var(--ink)"/>
+          <circle cx="31" cy="12" r="4" fill="var(--ink)"/>
+          <circle cx="31" cy="24" r="4" fill="none" stroke="var(--ink)" stroke-width="2"/>
+        </svg>
+        Gammon
+      </a>
+      <nav class="navlinks" aria-label="Primary">
+        <a href="#cuts">Products</a>
+        <a href="#engine">Engine</a>
+        <a href="#clubs">Clubs</a>
+        <a href="#members">Membership</a>
+      </nav>
+      <div class="navcta">
+        <a class="ghost" href="#members">Log in</a>
+        <a class="solid" href="#final">Start free</a>
+      </div>
+      <button class="burger" id="burger" aria-label="Menu" aria-expanded="false"><span></span></button>
+    </div>
+  </div>
+</header>
+
+<div class="mobmenu" id="mobmenu">
+  <a href="#cuts"><span class="n">01</span>Products</a>
+  <a href="#engine"><span class="n">02</span>Engine</a>
+  <a href="#clubs"><span class="n">03</span>Clubs</a>
+  <a href="#members"><span class="n">04</span>Membership</a>
+  <div class="m-cta">
+    <a class="solid" href="#members">Log in</a>
+    <a href="#final">Start free</a>
+  </div>
+</div>
+
+<main id="top">
+<div class="wrap">
+
+  <!-- specimen masthead bar -->
+  <div class="mast">
+    <span class="anno anno-ink">Gammon Type Foundry — Specimen Nº 04</span>
+    <span class="anno">Display / Grotesque / Mono &nbsp;·&nbsp; Set in Fraunces &amp; Archivo</span>
+    <span class="anno">Est. worldwide &nbsp;·&nbsp; 2026</span>
+  </div>
+
+  <!-- ============ HERO ============ -->
+  <section class="hero">
+    <div class="hero-top">
+      <div class="hero-left">
+        <div class="hero-kicker">
+          <span class="anno anno-ink">A / Display Black · 232 pt</span>
+          <span class="anno">The specimen</span>
+        </div>
+        <h1>
+          The <span class="li">home</span><br/>
+          of <span class="em huge">world&shy;wide</span><br/>
+          <span class="acc">backgammon.</span>
+        </h1>
+      </div>
+      <div class="hero-sub-wrap">
+        <div>
+          <span class="anno" style="display:block;margin-bottom:14px">B / Regular · 18 pt · set 34ch</span>
+          <p class="hero-sub">
+            <b>Play, learn, compete</b> and run a club — powered by a
+            <b>grandmaster-class engine</b> that lives in your pocket.
+            One home for every board, everywhere.
+          </p>
+        </div>
+        <div>
+          <a class="btn" href="#final">Claim your free year <span class="arw">→</span></a>
+          <div class="free-note">Free for the first 3,000 members · one year on us</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div><!-- /wrap -->
+
+  <!-- bleeding glyph marquee -->
+  <div class="bleed" aria-hidden="true">
+    <div class="row marq-a">
+      <span>G</span><span class="hollow">A</span><span class="o">&amp;</span><span>M</span><span class="hollow">M</span><span>O</span><span class="o">N</span>
+      <span>G</span><span class="hollow">A</span><span class="o">&amp;</span><span>M</span><span class="hollow">M</span><span>O</span><span class="o">N</span>
+    </div>
+  </div>
+
+<div class="wrap">
+
+  <!-- ============ SIZE LADDER ============ -->
+  <section class="reveal">
+    <div class="section-head">
+      <h2>Size&nbsp;Ladder</h2>
+      <span class="idx">Sec. 01 — 144 / 72 / 48 / 24 / 12</span>
+    </div>
+    <div class="ladder">
+      <div class="lad s1"><div class="sz">144&nbsp;PT / BLACK</div><div class="sample">Roll <span class="acc">6–5</span></div></div>
+      <div class="lad s2"><div class="sz">72&nbsp;PT / BLACK</div><div class="sample">The lover’s leap</div></div>
+      <div class="lad s3"><div class="sz">48&nbsp;PT / SEMIBOLD</div><div class="sample">Double, take, and win the match</div></div>
+      <div class="lad s4"><div class="sz">24&nbsp;PT / MEDIUM</div><div class="sample">A grandmaster-class engine that fits in your pocket, ready on every board.</div></div>
+      <div class="lad s5"><div class="sz">12&nbsp;PT / MEDIUM</div><div class="sample">Cube action, pip counts, match equity, blunder rate and rollouts — read like a specimen sheet, one line at a time, from the opening roll to the final gammon.</div></div>
+    </div>
+  </section>
+
+  <!-- ============ CHARACTER SET ============ -->
+  <section class="charset reveal" id="engine">
+    <div class="section-head" style="border:none;padding-top:0">
+      <h2>Character&nbsp;Set</h2>
+      <span class="idx">Sec. 02 — The full alphabet</span>
+    </div>
+    <div class="glyphs">
+      ABCDEFGHIJKLM<br/>NOPQRSTUVWXYZ<br/>
+      <span class="num">0123456789</span> <span class="pun">&amp; · ‡ § ¶ ½ ⁶⁄₅</span><br/>
+      <span class="dim">abcdefghijklmnopqrstuvwxyz</span>
+    </div>
+    <div class="charset-meta">
+      <span class="anno anno-ink">The Engine — XG-class analysis</span>
+      <span class="anno">Snap a photo of any board</span>
+      <span class="anno">Instant pip count</span>
+    </div>
+  </section>
+
+  <!-- ============ WEIGHTS ============ -->
+  <section class="weights reveal">
+    <div class="section-head" style="border-bottom:2px solid var(--ink)">
+      <h2>Weights</h2>
+      <span class="idx">Sec. 03 — Light → Black</span>
+    </div>
+    <div class="wt w1"><div class="lab">Light · 300</div><div class="word">Backgammon</div><div class="num">300</div></div>
+    <div class="wt w2"><div class="lab">Regular · 400</div><div class="word">Backgammon</div><div class="num">400</div></div>
+    <div class="wt w3"><div class="lab">Semibold · 600</div><div class="word">Backgammon</div><div class="num">600</div></div>
+    <div class="wt w4"><div class="lab">Bold · 800</div><div class="word">Backgammon</div><div class="num">800</div></div>
+    <div class="wt w5"><div class="lab">Black · 900</div><div class="word">Backgammon</div><div class="num">900</div></div>
+  </section>
+
+  <!-- ============ PRODUCTS AS CUTS ============ -->
+  <section class="reveal" id="cuts">
+    <div class="section-head" style="border-bottom:2px solid var(--ink)">
+      <h2>The&nbsp;Cuts</h2>
+      <span class="idx">Sec. 04 — Six weights of the family</span>
+    </div>
+    <div class="cuts" id="clubs">
+
+      <article class="cut">
+        <div class="cut-no">01</div>
+        <div class="cut-main">
+          <div class="cut-anno">Display · Analytical</div>
+          <div class="cut-name">The <span class="acc">Engine</span></div>
+        </div>
+        <div class="cut-side">
+          <p class="cut-desc">XG-class analysis in your pocket. Snap a photo of any board and get an instant pip count, best move and equity read.</p>
+          <div class="cut-tags"><span>XG-class</span><span>Snap a photo</span><span>Pip count</span></div>
+        </div>
+      </article>
+
+      <article class="cut">
+        <div class="cut-no">02</div>
+        <div class="cut-main">
+          <div class="cut-anno">Roman · Competitive</div>
+          <div class="cut-name">Play <span class="acc">Online</span></div>
+        </div>
+        <div class="cut-side">
+          <p class="cut-desc">Matches, money games and chouettes against players worldwide — fast, fair and always in reach.</p>
+          <div class="cut-tags"><span>Matches</span><span>Money games</span><span>Chouettes</span></div>
+        </div>
+      </article>
+
+      <article class="cut">
+        <div class="cut-no">03</div>
+        <div class="cut-main">
+          <div class="cut-anno">Italic · Instructive</div>
+          <div class="cut-name">Beat the <span class="acc">Grandmaster</span></div>
+        </div>
+        <div class="cut-side">
+          <p class="cut-desc">Puzzles drawn from real masters’ mistakes. Find the move they missed and sharpen your own judgment.</p>
+          <div class="cut-tags"><span>Real puzzles</span><span>Master errors</span><span>Daily</span></div>
+        </div>
+      </article>
+
+      <article class="cut">
+        <div class="cut-no">04</div>
+        <div class="cut-main">
+          <div class="cut-anno">Text · Educational</div>
+          <div class="cut-name">Gammon <span class="acc">University</span></div>
+        </div>
+        <div class="cut-side">
+          <p class="cut-desc">Structured lessons with real coaches — from your first prime to advanced cube theory, at your own pace.</p>
+          <div class="cut-tags"><span>Coaches</span><span>Lessons</span><span>All levels</span></div>
+        </div>
+      </article>
+
+      <article class="cut">
+        <div class="cut-no">05</div>
+        <div class="cut-main">
+          <div class="cut-anno">Condensed · Organizational</div>
+          <div class="cut-name">Run a <span class="acc">Club</span></div>
+        </div>
+        <div class="cut-side">
+          <p class="cut-desc">Host tournaments, issue coins, and keep your earnings. The full toolkit for running a backgammon community.</p>
+          <div class="cut-tags"><span>Tournaments</span><span>Coins</span><span>Keep earnings</span></div>
+        </div>
+      </article>
+
+      <article class="cut">
+        <div class="cut-no">06</div>
+        <div class="cut-main">
+          <div class="cut-anno">Poster · Broadcast</div>
+          <div class="cut-name">Record &amp; <span class="acc">Stream</span></div>
+        </div>
+        <div class="cut-side">
+          <p class="cut-desc">Capture over-the-board play and stream it live. Turn any table into a broadcast, moment by moment.</p>
+          <div class="cut-tags"><span>OTB capture</span><span>Live stream</span><span>Replay</span></div>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- ============ MEMBERSHIP ============ -->
+  <section class="reveal" id="members">
+    <div class="section-head" style="border-bottom:2px solid var(--ink)">
+      <h2>Membership</h2>
+      <span class="idx">Sec. 05 — Two cuts of access</span>
+    </div>
+    <div class="members">
+      <div class="plan">
+        <div class="p-top">
+          <div class="p-name">Free</div>
+          <div class="p-tag">Founding member</div>
+        </div>
+        <div class="price">$0 <small>/ one full year</small></div>
+        <ul>
+          <li><span class="b">→</span> First 3,000 members, one year completely on us</li>
+          <li><span class="b">→</span> Full access to the Engine &amp; pip count</li>
+          <li><span class="b">→</span> Play online: matches, money games, chouettes</li>
+          <li><span class="b">→</span> Daily Beat-the-Grandmaster puzzles</li>
+        </ul>
+        <a class="btn onlight ghost" href="#final">Claim your free year <span class="arw">→</span></a>
+      </div>
+      <div class="plan pre">
+        <div class="p-top">
+          <div class="p-name">Premium</div>
+          <div class="p-tag">After year one</div>
+        </div>
+        <div class="price">~$1 <small>/ month</small></div>
+        <ul>
+          <li><span class="b">→</span> Everything in Free, forever</li>
+          <li><span class="b">→</span> Gammon University with real coaches</li>
+          <li><span class="b">→</span> Run a Club: tournaments, coins, keep earnings</li>
+          <li><span class="b">→</span> Record &amp; Stream over-the-board play</li>
+        </ul>
+        <a class="btn" href="#final">Go Premium <span class="arw">→</span></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ MISSION ============ -->
+  <section class="mission reveal">
+    <span class="anno anno-ink">Sec. 06 — The mission / Colophon</span>
+    <p>
+      One <span class="acc">home</span> for worldwide backgammon —
+      where a beginner and a <span class="li">grandmaster</span>
+      share the same board, the same engine, and the same
+      <span class="acc">love of the game.</span>
+    </p>
+  </section>
+
+</div><!-- /wrap -->
+
+  <!-- ============ FINAL CTA ============ -->
+  <section class="final" id="final">
+    <div class="ghostG" aria-hidden="true">G</div>
+    <div class="wrap">
+      <h2>Claim your<br/><span class="acc">free year.</span></h2>
+      <p class="sub">Join the first 3,000 founding members. Play, learn, compete and run your club — one year on us.</p>
+      <a class="btn" href="#top">Start free — one year on us <span class="arw">→</span></a>
+      <div class="note">Free for the first 3,000 members · then ~$1 / month</div>
+    </div>
+  </section>
+
+<div class="wrap">
+  <!-- ============ FOOTER ============ -->
+  <footer>
+    <div class="foot-top">
+      <div class="foot-brand">Gam<span class="acc">mon</span></div>
+      <div class="foot-col">
+        <h4>Products</h4>
+        <a href="#engine">The Engine</a>
+        <a href="#cuts">Play Online</a>
+        <a href="#cuts">Beat the Grandmaster</a>
+        <a href="#cuts">Gammon University</a>
+      </div>
+      <div class="foot-col">
+        <h4>Community</h4>
+        <a href="#clubs">Run a Club</a>
+        <a href="#cuts">Record &amp; Stream</a>
+        <a href="#members">Membership</a>
+        <a href="#final">Start free</a>
+      </div>
+      <div class="foot-col">
+        <h4>Foundry</h4>
+        <a href="#top">About</a>
+        <a href="#members">Log in</a>
+        <a href="#final">Support</a>
+        <a href="#top">Press kit</a>
+      </div>
+    </div>
+    <div class="foot-bot">
+      <span>© 2026 Gammon — The home of worldwide backgammon</span>
+      <span>Specimen Nº 04 · Type Foundry Edition · Set worldwide</span>
+    </div>
+  </footer>
+</div>
+
+</main>
+
+<script>
+  // mobile menu
+  var burger=document.getElementById('burger');
+  var mob=document.getElementById('mobmenu');
+  function closeMenu(){mob.classList.remove('open');document.body.classList.remove('lock');burger.setAttribute('aria-expanded','false');}
+  burger.addEventListener('click',function(){
+    var open=mob.classList.toggle('open');
+    document.body.classList.toggle('lock',open);
+    burger.setAttribute('aria-expanded',open?'true':'false');
+  });
+  mob.querySelectorAll('a').forEach(function(a){a.addEventListener('click',closeMenu);});
+
+  // scroll reveal
+  if('IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(es){
+      es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});
+    },{threshold:.12});
+    document.querySelectorAll('.reveal').forEach(function(el){io.observe(el);});
+  }else{
+    document.querySelectorAll('.reveal').forEach(function(el){el.classList.add('in');});
+  }
+
+  // subtle parallax drift on the ghost G in final CTA
+  var gG=document.querySelector('.ghostG');
+  if(gG && !window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+    window.addEventListener('scroll',function(){
+      var r=gG.getBoundingClientRect();
+      var off=(window.innerHeight/2 - (r.top+r.height/2))*0.04;
+      gG.style.transform='translate(-50%,calc(-46% + '+off+'px))';
+    },{passive:true});
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>Gammon — The home of worldwide backgammon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Monoton&family=Poppins:wght@300;400;500;600;700&family=Yeseva+One&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#f5ecd7;
+    --cream-2:#efe3c6;
+    --charcoal:#2b2620;
+    --ink:#3a332a;
+    --aqua:#2fb8b0;
+    --aqua-dk:#1c8b86;
+    --coral:#f2664e;
+    --coral-dk:#d94b34;
+    --mustard:#f0b429;
+    --mustard-dk:#d99411;
+    --salmon:#f8a48c;
+    --chrome:#d9d4c8;
+    --line:#4a4236;
+    --shadow:rgba(43,38,32,.22);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'Poppins',sans-serif;
+    color:var(--ink);
+    background-color:var(--cream);
+    background-image:
+      radial-gradient(circle at 12% 18%, rgba(47,184,176,.06) 0 2px, transparent 3px),
+      radial-gradient(circle at 78% 62%, rgba(242,102,78,.06) 0 2px, transparent 3px),
+      radial-gradient(circle at 45% 88%, rgba(240,180,41,.07) 0 2px, transparent 3px),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cg fill='none' stroke='%234a4236' stroke-opacity='0.04' stroke-width='1'%3E%3Cpath d='M0 30 Q15 10 30 30 T60 30'/%3E%3C/g%3E%3C/svg%3E");
+    line-height:1.55;
+    overflow-x:hidden;
+  }
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:1140px;margin:0 auto;padding:0 24px}
+  h1,h2,h3{font-family:'Fredoka',sans-serif;line-height:1.05}
+  .script{font-family:'Yeseva One',serif}
+  .tag-label{
+    display:inline-block;font-family:'Fredoka',sans-serif;font-weight:600;
+    font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;
+    background:var(--mustard);color:var(--charcoal);
+    padding:5px 14px;border:2px solid var(--charcoal);
+    transform:rotate(-2.5deg);box-shadow:3px 3px 0 var(--charcoal);
+  }
+
+  /* ---------- NAV ---------- */
+  header{position:sticky;top:0;z-index:50}
+  nav{
+    display:flex;align-items:center;justify-content:space-between;
+    background:var(--cream);
+    border-bottom:3px solid var(--charcoal);
+    padding:12px 24px;position:relative;
+  }
+  nav::after{
+    content:"";position:absolute;left:0;right:0;bottom:-9px;height:6px;
+    background:repeating-linear-gradient(90deg,var(--coral) 0 22px,var(--aqua) 22px 44px,var(--mustard) 44px 66px);
+    opacity:.9;
+  }
+  .brand{display:flex;align-items:center;gap:10px;font-family:'Fredoka',sans-serif;font-weight:700;font-size:1.5rem;color:var(--charcoal)}
+  .brand .atom{width:34px;height:34px;flex:0 0 auto}
+  .brand b{color:var(--coral)}
+  .nav-links{display:flex;align-items:center;gap:26px}
+  .nav-links a.navlink{font-weight:500;position:relative;font-size:.98rem}
+  .nav-links a.navlink::after{
+    content:"";position:absolute;left:0;bottom:-4px;width:0;height:2px;background:var(--coral);transition:width .25s;
+  }
+  .nav-links a.navlink:hover::after{width:100%}
+  .btn{
+    font-family:'Fredoka',sans-serif;font-weight:600;cursor:pointer;border:none;
+    display:inline-block;transition:transform .15s, box-shadow .15s;
+  }
+  .btn-ghost{padding:8px 16px;border:2px solid var(--charcoal);background:transparent;color:var(--charcoal);border-radius:22px}
+  .btn-ghost:hover{background:var(--charcoal);color:var(--cream)}
+  .btn-solid{
+    padding:9px 20px;background:var(--coral);color:#fff;border:2px solid var(--charcoal);border-radius:22px;
+    box-shadow:3px 3px 0 var(--charcoal);
+  }
+  .btn-solid:hover{transform:translate(-1px,-1px);box-shadow:5px 5px 0 var(--charcoal)}
+  .btn-lg{font-size:1.05rem;padding:14px 30px}
+  .menu-toggle{display:none;background:none;border:2px solid var(--charcoal);border-radius:8px;padding:6px 10px;cursor:pointer}
+  .menu-toggle span{display:block;width:22px;height:2.5px;background:var(--charcoal);margin:4px 0;transition:.3s}
+
+  /* ---------- HERO ---------- */
+  .hero{position:relative;padding:70px 0 90px;overflow:hidden}
+  .hero .starburst-bg{position:absolute;top:-40px;right:-60px;width:420px;height:420px;opacity:.35;z-index:0;animation:spin 60s linear infinite}
+  .hero .boomerang-1{position:absolute;left:-30px;top:120px;width:180px;opacity:.5;z-index:0}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .hero-grid{position:relative;z-index:2;display:grid;grid-template-columns:1.05fr .95fr;gap:48px;align-items:center}
+  .hero h1{font-size:clamp(2.4rem,5.5vw,4rem);font-weight:700;color:var(--charcoal);margin:18px 0 8px}
+  .hero h1 .swoosh{color:var(--aqua-dk);position:relative;display:inline-block}
+  .hero .lede{font-size:1.12rem;max-width:34ch;margin:18px 0 8px;color:var(--ink)}
+  .hero .note{margin-top:16px;font-size:.9rem;font-weight:500;color:var(--aqua-dk);display:flex;align-items:center;gap:8px}
+  .hero .note svg{flex:0 0 auto}
+  .hero-cta{margin-top:26px;display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+  .hero-art{position:relative;display:flex;justify-content:center}
+  .hero-art svg{width:100%;max-width:440px;height:auto;filter:drop-shadow(6px 8px 0 var(--shadow))}
+  .float{animation:float 6s ease-in-out infinite}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
+
+  /* ---------- MARQUEE ---------- */
+  .marquee{background:var(--charcoal);color:var(--cream);overflow:hidden;white-space:nowrap;border-top:3px solid var(--charcoal);border-bottom:3px solid var(--charcoal);padding:12px 0}
+  .marquee .track{display:inline-block;animation:scroll 22s linear infinite;font-family:'Fredoka',sans-serif;font-weight:500;font-size:1rem;letter-spacing:.05em}
+  .marquee .track span{margin:0 26px;color:var(--mustard)}
+  .marquee .track span.b{color:var(--aqua)}
+  .marquee .track span.c{color:var(--salmon)}
+  @keyframes scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+  /* ---------- SECTION HEADS ---------- */
+  .section{padding:80px 0;position:relative}
+  .sec-head{text-align:center;margin-bottom:52px;position:relative}
+  .sec-head h2{font-size:clamp(2rem,4.2vw,3rem);font-weight:700;color:var(--charcoal)}
+  .sec-head p{margin-top:10px;color:var(--ink);font-size:1.05rem}
+  .sec-head .sub-script{font-family:'Yeseva One',serif;color:var(--coral);font-size:1.3rem;display:block;transform:rotate(-1.5deg)}
+
+  /* ---------- PRODUCTS ---------- */
+  .products{background:var(--cream-2);border-top:3px solid var(--charcoal);border-bottom:3px solid var(--charcoal)}
+  .prod-list{display:grid;grid-template-columns:repeat(3,1fr);gap:0}
+  .prod{
+    position:relative;padding:34px 28px;border:2px solid var(--charcoal);margin:-1px;
+    background:var(--cream);transition:transform .2s, background .2s, z-index 0s;
+  }
+  .prod:nth-child(3n+1){background:#fbf3df}
+  .prod:nth-child(3n+2){background:#f6ecd0}
+  .prod:hover{transform:translateY(-6px) rotate(-.6deg);z-index:3;box-shadow:8px 10px 0 var(--shadow)}
+  .prod .icon{width:66px;height:66px;margin-bottom:14px}
+  .prod h3{font-size:1.28rem;font-weight:600;color:var(--charcoal);margin-bottom:8px;display:flex;align-items:baseline;gap:8px}
+  .prod h3 .num{font-family:'Monoton',cursive;font-size:.9rem;color:var(--coral);-webkit-text-stroke:.3px var(--charcoal)}
+  .prod p{font-size:.96rem;color:var(--ink)}
+  .prod .kick{font-family:'Fredoka',sans-serif;font-weight:600;font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--aqua-dk);display:block;margin-bottom:4px}
+
+  /* ---------- MEMBERSHIP ---------- */
+  .members{position:relative}
+  .plan-wrap{display:grid;grid-template-columns:1fr 1fr;gap:30px;max-width:880px;margin:0 auto}
+  .plan{
+    position:relative;border:3px solid var(--charcoal);border-radius:6px;padding:34px 30px 38px;background:var(--cream);
+    box-shadow:6px 8px 0 var(--charcoal);
+  }
+  .plan.free{background:#eef7f5}
+  .plan.prem{background:#fdf1df}
+  .plan .ribbon{
+    position:absolute;top:-16px;left:24px;font-family:'Fredoka',sans-serif;font-weight:600;font-size:.75rem;
+    letter-spacing:.12em;text-transform:uppercase;padding:6px 16px;border:2px solid var(--charcoal);transform:rotate(-3deg);
+  }
+  .plan.free .ribbon{background:var(--aqua);color:#fff}
+  .plan.prem .ribbon{background:var(--mustard);color:var(--charcoal)}
+  .plan h3{font-size:1.9rem;font-weight:700;color:var(--charcoal);margin:6px 0 2px}
+  .plan .price{font-family:'Yeseva One',serif;font-size:2.6rem;color:var(--coral);line-height:1}
+  .plan .price small{font-family:'Poppins',sans-serif;font-size:1rem;color:var(--ink);font-weight:500}
+  .plan ul{list-style:none;margin:20px 0 26px}
+  .plan li{padding:7px 0 7px 30px;position:relative;font-size:.97rem}
+  .plan li::before{content:"";position:absolute;left:0;top:11px;width:16px;height:16px;background:var(--aqua);
+    -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 0l3 6 6 1-4.5 4.5L18 18l-6-3-6 3 1.5-6.5L3 7l6-1z'/%3E%3C/svg%3E") center/contain no-repeat;
+    mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 0l3 6 6 1-4.5 4.5L18 18l-6-3-6 3 1.5-6.5L3 7l6-1z'/%3E%3C/svg%3E") center/contain no-repeat;}
+  .plan.prem li::before{background:var(--mustard-dk)}
+  .plan .btn-solid{width:100%;text-align:center}
+  .plan.free .btn-solid{background:var(--aqua)}
+
+  /* ---------- MISSION ---------- */
+  .mission{background:var(--charcoal);color:var(--cream);position:relative;overflow:hidden;text-align:center;border-top:3px solid var(--charcoal)}
+  .mission .orbit-deco{position:absolute;opacity:.14}
+  .mission h2{color:#fff;font-size:clamp(2rem,4.5vw,3.2rem);max-width:16ch;margin:0 auto 18px}
+  .mission h2 em{color:var(--mustard);font-style:normal}
+  .mission p{max-width:52ch;margin:0 auto 30px;font-size:1.1rem;color:var(--chrome)}
+  .mission .btn-solid{background:var(--mustard);color:var(--charcoal);border-color:var(--cream);box-shadow:3px 3px 0 var(--coral)}
+  .mission .btn-solid:hover{box-shadow:5px 5px 0 var(--coral)}
+
+  /* ---------- FOOTER ---------- */
+  footer{background:var(--cream-2);padding:52px 0 30px;border-top:3px solid var(--charcoal)}
+  .foot-grid{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:30px;margin-bottom:34px}
+  footer h4{font-family:'Fredoka',sans-serif;font-size:.85rem;letter-spacing:.1em;text-transform:uppercase;color:var(--aqua-dk);margin-bottom:12px}
+  footer ul{list-style:none}
+  footer li{margin:7px 0;font-size:.92rem}
+  footer li a:hover{color:var(--coral)}
+  .foot-brand{font-family:'Fredoka',sans-serif;font-weight:700;font-size:1.4rem;color:var(--charcoal);display:flex;align-items:center;gap:8px;margin-bottom:8px}
+  .foot-brand b{color:var(--coral)}
+  .foot-bar{border-top:2px solid var(--charcoal);padding-top:18px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:.85rem;color:var(--ink)}
+
+  /* ---------- RESPONSIVE ---------- */
+  @media(max-width:860px){
+    .hero-grid{grid-template-columns:1fr;gap:24px}
+    .hero-art{order:-1;max-width:340px;margin:0 auto}
+    .prod-list{grid-template-columns:1fr 1fr}
+    .plan-wrap{grid-template-columns:1fr}
+    .foot-grid{grid-template-columns:1fr 1fr}
+  }
+  @media(max-width:640px){
+    .nav-links{
+      position:absolute;top:100%;left:0;right:0;flex-direction:column;align-items:stretch;gap:0;
+      background:var(--cream);border-bottom:3px solid var(--charcoal);
+      max-height:0;overflow:hidden;transition:max-height .35s ease;padding:0 24px;
+    }
+    .nav-links.open{max-height:420px;padding:16px 24px 24px}
+    .nav-links a.navlink{padding:10px 0;border-bottom:1px dashed var(--line)}
+    .nav-links .btn{margin-top:8px;text-align:center}
+    .menu-toggle{display:block}
+    .prod-list{grid-template-columns:1fr}
+    .foot-grid{grid-template-columns:1fr}
+    .hero .starburst-bg{width:300px;right:-90px}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ NAV ============ -->
+<header>
+  <nav class="wrap" style="max-width:1140px">
+    <a href="#" class="brand" aria-label="Gammon home">
+      <svg class="atom" viewBox="0 0 40 40" fill="none">
+        <ellipse cx="20" cy="20" rx="17" ry="6.5" stroke="#f2664e" stroke-width="2"/>
+        <ellipse cx="20" cy="20" rx="17" ry="6.5" stroke="#2fb8b0" stroke-width="2" transform="rotate(60 20 20)"/>
+        <ellipse cx="20" cy="20" rx="17" ry="6.5" stroke="#f0b429" stroke-width="2" transform="rotate(120 20 20)"/>
+        <circle cx="20" cy="20" r="3.6" fill="#2b2620"/>
+        <circle cx="37" cy="20" r="2.4" fill="#f2664e"/>
+      </svg>
+      Gam<b>mon</b>
+    </a>
+    <div class="nav-links" id="navLinks">
+      <a class="navlink" href="#products">Products</a>
+      <a class="navlink" href="#products">Engine</a>
+      <a class="navlink" href="#members">Clubs</a>
+      <a class="navlink" href="#members">Membership</a>
+      <a class="btn btn-ghost" href="#">Log in</a>
+      <a class="btn btn-solid" href="#members">Start free</a>
+    </div>
+    <button class="menu-toggle" id="menuToggle" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+</header>
+
+<!-- ============ HERO ============ -->
+<section class="hero">
+  <!-- decorative starburst -->
+  <svg class="starburst-bg" viewBox="0 0 200 200" aria-hidden="true">
+    <g fill="none" stroke="#f0b429" stroke-width="1.5">
+      <g id="rays">
+        <path d="M100 100 L100 4"/><path d="M100 100 L134 12"/><path d="M100 100 L167 33"/>
+        <path d="M100 100 L188 66"/><path d="M100 100 L196 100"/><path d="M100 100 L188 134"/>
+        <path d="M100 100 L167 167"/><path d="M100 100 L134 188"/><path d="M100 100 L100 196"/>
+        <path d="M100 100 L66 188"/><path d="M100 100 L33 167"/><path d="M100 100 L12 134"/>
+        <path d="M100 100 L4 100"/><path d="M100 100 L12 66"/><path d="M100 100 L33 33"/><path d="M100 100 L66 12"/>
+      </g>
+    </g>
+    <circle cx="100" cy="100" r="10" fill="#f2664e"/>
+  </svg>
+  <!-- boomerang -->
+  <svg class="boomerang-1" viewBox="0 0 200 120" aria-hidden="true">
+    <path d="M20 20 Q100 -10 180 40 Q110 30 60 100 Q40 60 20 20 Z" fill="#2fb8b0" opacity=".85"/>
+  </svg>
+
+  <div class="wrap hero-grid">
+    <div class="hero-copy">
+      <span class="tag-label">The future of backgammon, today!</span>
+      <h1>The home of <span class="swoosh">worldwide</span> backgammon</h1>
+      <p class="lede">Play, learn, compete and run your own club — all powered by a <b>grandmaster-class engine</b> that lives right in your pocket.</p>
+      <div class="hero-cta">
+        <a class="btn btn-solid btn-lg" href="#members">Claim your free year</a>
+        <a class="btn btn-ghost btn-lg" href="#products">Take the tour ↝</a>
+      </div>
+      <p class="note">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#1c8b86" stroke-width="2"/><path d="M7 12.5l3 3 7-7.5" stroke="#1c8b86" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+        Free for the first 3,000 members · one year on us
+      </p>
+    </div>
+
+    <!-- Hero backgammon motif, atomic-style -->
+    <div class="hero-art">
+      <svg class="float" viewBox="0 0 360 300" role="img" aria-label="Atomic backgammon board">
+        <defs>
+          <linearGradient id="boardGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#fbf3df"/><stop offset="1" stop-color="#efe3c6"/>
+          </linearGradient>
+        </defs>
+        <!-- board frame kidney-ish rounded rect -->
+        <rect x="14" y="30" width="332" height="240" rx="26" fill="url(#boardGrad)" stroke="#2b2620" stroke-width="4"/>
+        <line x1="180" y1="34" x2="180" y2="266" stroke="#2b2620" stroke-width="4"/>
+        <!-- points left -->
+        <g>
+          <polygon points="30,34 58,34 44,150" fill="#f2664e"/>
+          <polygon points="62,34 90,34 76,150" fill="#2fb8b0"/>
+          <polygon points="94,34 122,34 108,150" fill="#f2664e"/>
+          <polygon points="126,34 154,34 140,150" fill="#2fb8b0"/>
+          <polygon points="30,266 58,266 44,150" fill="#2fb8b0"/>
+          <polygon points="62,266 90,266 76,150" fill="#f2664e"/>
+          <polygon points="94,266 122,266 108,150" fill="#2fb8b0"/>
+          <polygon points="126,266 154,266 140,150" fill="#f2664e"/>
+        </g>
+        <!-- points right -->
+        <g>
+          <polygon points="206,34 234,34 220,150" fill="#f0b429"/>
+          <polygon points="238,34 266,34 252,150" fill="#2fb8b0"/>
+          <polygon points="270,34 298,34 284,150" fill="#f0b429"/>
+          <polygon points="302,34 330,34 316,150" fill="#2fb8b0"/>
+          <polygon points="206,266 234,266 220,150" fill="#2fb8b0"/>
+          <polygon points="238,266 266,266 252,150" fill="#f0b429"/>
+          <polygon points="270,266 298,266 284,150" fill="#2fb8b0"/>
+          <polygon points="302,266 330,266 316,150" fill="#f0b429"/>
+        </g>
+        <!-- checkers -->
+        <circle cx="44" cy="52" r="13" fill="#2b2620" stroke="#fbf3df" stroke-width="2"/>
+        <circle cx="44" cy="78" r="13" fill="#2b2620" stroke="#fbf3df" stroke-width="2"/>
+        <circle cx="316" cy="248" r="13" fill="#f5ecd7" stroke="#2b2620" stroke-width="2"/>
+        <circle cx="316" cy="222" r="13" fill="#f5ecd7" stroke="#2b2620" stroke-width="2"/>
+        <!-- dice as atoms -->
+        <g transform="translate(150 118)">
+          <rect x="0" y="0" width="30" height="30" rx="7" fill="#f2664e" stroke="#2b2620" stroke-width="3" transform="rotate(-8 15 15)"/>
+          <circle cx="9" cy="10" r="2.6" fill="#fbf3df"/><circle cx="21" cy="20" r="2.6" fill="#fbf3df"/>
+        </g>
+        <g transform="translate(186 116)">
+          <rect x="0" y="0" width="30" height="30" rx="7" fill="#2fb8b0" stroke="#2b2620" stroke-width="3" transform="rotate(9 15 15)"/>
+          <circle cx="9" cy="9" r="2.6" fill="#fbf3df"/><circle cx="15" cy="15" r="2.6" fill="#fbf3df"/><circle cx="21" cy="21" r="2.6" fill="#fbf3df"/>
+        </g>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MARQUEE ============ -->
+<div class="marquee" aria-hidden="true">
+  <div class="track">
+    <span>★ XG-CLASS ENGINE</span><span class="b">◆ SNAP-A-PHOTO ANALYSIS</span><span class="c">✦ WORLDWIDE MATCHES</span>
+    <span>★ REAL MASTERS' PUZZLES</span><span class="b">◆ RUN YOUR CLUB</span><span class="c">✦ LIVE OTB STREAMS</span>
+    <span>★ XG-CLASS ENGINE</span><span class="b">◆ SNAP-A-PHOTO ANALYSIS</span><span class="c">✦ WORLDWIDE MATCHES</span>
+    <span>★ REAL MASTERS' PUZZLES</span><span class="b">◆ RUN YOUR CLUB</span><span class="c">✦ LIVE OTB STREAMS</span>
+  </div>
+</div>
+
+<!-- ============ PRODUCTS ============ -->
+<section class="section products" id="products">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sub-script">everything under one roof</span>
+      <h2>Six ways to love the game</h2>
+      <p>A whole galaxy of backgammon, tuned by the world's strongest engine.</p>
+    </div>
+
+    <div class="prod-list">
+      <!-- 1 The Engine -->
+      <div class="prod">
+        <svg class="icon" viewBox="0 0 64 64" fill="none">
+          <ellipse cx="32" cy="32" rx="26" ry="10" stroke="#f2664e" stroke-width="3"/>
+          <ellipse cx="32" cy="32" rx="26" ry="10" stroke="#2fb8b0" stroke-width="3" transform="rotate(60 32 32)"/>
+          <ellipse cx="32" cy="32" rx="26" ry="10" stroke="#f0b429" stroke-width="3" transform="rotate(120 32 32)"/>
+          <circle cx="32" cy="32" r="5" fill="#2b2620"/>
+        </svg>
+        <h3><span class="num">01</span> The Engine</h3>
+        <span class="kick">XG-class brainpower</span>
+        <p>Grandmaster-strength analysis, snap-a-photo board reading and instant pip counts — all in your pocket.</p>
+      </div>
+      <!-- 2 Play Online -->
+      <div class="prod">
+        <svg class="icon" viewBox="0 0 64 64" fill="none">
+          <rect x="10" y="14" width="20" height="20" rx="5" fill="#2fb8b0" stroke="#2b2620" stroke-width="3" transform="rotate(-8 20 24)"/>
+          <rect x="34" y="30" width="20" height="20" rx="5" fill="#f2664e" stroke="#2b2620" stroke-width="3" transform="rotate(8 44 40)"/>
+          <circle cx="20" cy="24" r="2.5" fill="#fbf3df"/><circle cx="44" cy="40" r="2.5" fill="#fbf3df"/>
+        </svg>
+        <h3><span class="num">02</span> Play Online</h3>
+        <span class="kick">anytime, anywhere</span>
+        <p>Casual matches, money games and lively chouettes against players across the globe.</p>
+      </div>
+      <!-- 3 Beat the Grandmaster -->
+      <div class="prod">
+        <svg class="icon" viewBox="0 0 64 64" fill="none">
+          <path d="M32 6l6.5 13L53 21l-10 10 3 15-14-7-14 7 3-15L11 21l14.5-2z" fill="#f0b429" stroke="#2b2620" stroke-width="3" stroke-linejoin="round"/>
+          <circle cx="32" cy="30" r="3.5" fill="#2b2620"/>
+        </svg>
+        <h3><span class="num">03</span> Beat the Grandmaster</h3>
+        <span class="kick">learn from the greats</span>
+        <p>Puzzles built from real masters' mistakes — find the move they wish they'd made.</p>
+      </div>
+      <!-- 4 Gammon University -->
+      <div class="prod">
+        <svg class="icon" viewBox="0 0 64 64" fill="none">
+          <path d="M8 24L32 12l24 12-24 12z" fill="#2fb8b0" stroke="#2b2620" stroke-width="3" stroke-linejoin="round"/>
+          <path d="M20 30v12c0 3 6 6 12 6s12-3 12-6V30" stroke="#2b2620" stroke-width="3" fill="none"/>
+          <line x1="56" y1="24" x2="56" y2="38" stroke="#f2664e" stroke-width="3"/>
+          <circle cx="56" cy="40" r="3" fill="#f2664e"/>
+        </svg>
+        <h3><span class="num">04</span> Gammon University</h3>
+        <span class="kick">coaching that clicks</span>
+        <p>Structured lessons with world-class coaches, from first roll to expert play.</p>
+      </div>
+      <!-- 5 Run a Club -->
+      <div class="prod">
+        <svg class="icon" viewBox="0 0 64 64" fill="none">
+          <circle cx="24" cy="26" r="10" fill="#f2664e" stroke="#2b2620" stroke-width="3"/>
+          <circle cx="42" cy="26" r="10" fill="#f0b429" stroke="#2b2620" stroke-width="3"/>
+          <path d="M8 52c0-8 7-13 16-13s16 5 16 13" stroke="#2b2620" stroke-width="3" fill="none"/>
+          <path d="M40 41c9 0 16 5 16 11" stroke="#2b2620" stroke-width="3" fill="none"/>
+        </svg>
+        <h3><span class="num">05</span> Run a Club</h3>
+        <span class="kick">your house, your rules</span>
+        <p>Host tournaments, mint club coins and keep every penny of your earnings.</p>
+      </div>
+      <!-- 6 Record & Stream -->
+      <div class="prod">
+        <svg class="icon" viewBox="0 0 64 64" fill="none">
+          <rect x="8" y="18" width="34" height="28" rx="6" fill="#2fb8b0" stroke="#2b2620" stroke-width="3"/>
+          <path d="M42 28l14-8v24l-14-8z" fill="#f0b429" stroke="#2b2620" stroke-width="3" stroke-linejoin="round"/>
+          <circle cx="20" cy="32" r="5" fill="#fbf3df" stroke="#2b2620" stroke-width="2.5"/>
+        </svg>
+        <h3><span class="num">06</span> Record &amp; Stream</h3>
+        <span class="kick">over-the-board, live</span>
+        <p>Capture OTB matches and broadcast them live for the whole world to watch.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MEMBERSHIP ============ -->
+<section class="section members" id="members">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sub-script">pick your orbit</span>
+      <h2>Membership</h2>
+      <p>Join free forever if you're one of the first 3,000 — or go Premium for about a dollar a month.</p>
+    </div>
+
+    <div class="plan-wrap">
+      <div class="plan free">
+        <span class="ribbon">First 3,000 pioneers</span>
+        <h3>Free</h3>
+        <div class="price">$0<small> / one full year</small></div>
+        <ul>
+          <li>Full access to the Engine</li>
+          <li>Unlimited online matches</li>
+          <li>Beat the Grandmaster puzzles</li>
+          <li>Join clubs &amp; tournaments</li>
+        </ul>
+        <a class="btn btn-solid" href="#">Claim your free year</a>
+      </div>
+
+      <div class="plan prem">
+        <span class="ribbon">Best value</span>
+        <h3>Premium</h3>
+        <div class="price">~$1<small> / month</small></div>
+        <ul>
+          <li>Everything in Free, forever</li>
+          <li>Deep engine roll-outs</li>
+          <li>Full Gammon University catalog</li>
+          <li>Run clubs &amp; keep 100% earnings</li>
+        </ul>
+        <a class="btn btn-solid" href="#">Go Premium</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MISSION ============ -->
+<section class="section mission">
+  <svg class="orbit-deco" style="top:-40px;left:-40px;width:240px" viewBox="0 0 200 200" aria-hidden="true">
+    <ellipse cx="100" cy="100" rx="90" ry="34" stroke="#f0b429" stroke-width="2" fill="none"/>
+    <ellipse cx="100" cy="100" rx="90" ry="34" stroke="#2fb8b0" stroke-width="2" fill="none" transform="rotate(60 100 100)"/>
+    <ellipse cx="100" cy="100" rx="90" ry="34" stroke="#f2664e" stroke-width="2" fill="none" transform="rotate(120 100 100)"/>
+  </svg>
+  <svg class="orbit-deco" style="bottom:-50px;right:-30px;width:200px" viewBox="0 0 200 200" aria-hidden="true">
+    <g fill="none" stroke="#f8a48c" stroke-width="1.5">
+      <path d="M100 100 L100 10"/><path d="M100 100 L170 30"/><path d="M100 100 L190 100"/><path d="M100 100 L170 170"/>
+      <path d="M100 100 L100 190"/><path d="M100 100 L30 170"/><path d="M100 100 L10 100"/><path d="M100 100 L30 30"/>
+    </g>
+  </svg>
+  <div class="wrap">
+    <h2>Backgammon for <em>everyone</em>, everywhere</h2>
+    <p>We believe the world's oldest game deserves its brightest future. One engine, one community, one home — bringing players, coaches and clubs together across the planet.</p>
+    <a class="btn btn-solid btn-lg" href="#members">Join the first 3,000 →</a>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <div class="foot-brand">
+          <svg width="30" height="30" viewBox="0 0 40 40" fill="none">
+            <ellipse cx="20" cy="20" rx="17" ry="6.5" stroke="#f2664e" stroke-width="2"/>
+            <ellipse cx="20" cy="20" rx="17" ry="6.5" stroke="#2fb8b0" stroke-width="2" transform="rotate(60 20 20)"/>
+            <circle cx="20" cy="20" r="3.6" fill="#2b2620"/>
+          </svg>
+          Gam<b>mon</b>
+        </div>
+        <p style="font-size:.92rem;max-width:28ch">The home of worldwide backgammon. The future of the game — today.</p>
+      </div>
+      <div>
+        <h4>Products</h4>
+        <ul>
+          <li><a href="#products">The Engine</a></li>
+          <li><a href="#products">Play Online</a></li>
+          <li><a href="#products">Beat the Grandmaster</a></li>
+          <li><a href="#products">Gammon University</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Community</h4>
+        <ul>
+          <li><a href="#members">Clubs</a></li>
+          <li><a href="#members">Tournaments</a></li>
+          <li><a href="#products">Record &amp; Stream</a></li>
+          <li><a href="#members">Membership</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Company</h4>
+        <ul>
+          <li><a href="#">About</a></li>
+          <li><a href="#">Blog</a></li>
+          <li><a href="#">Contact</a></li>
+          <li><a href="#">Log in</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bar">
+      <span>© 2026 Gammon. All rights reserved.</span>
+      <span>Made for players, coaches &amp; clubs worldwide.</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Mobile menu
+  var toggle = document.getElementById('menuToggle');
+  var links = document.getElementById('navLinks');
+  toggle.addEventListener('click', function(){
+    links.classList.toggle('open');
+  });
+  // close menu on link tap
+  links.querySelectorAll('a').forEach(function(a){
+    a.addEventListener('click', function(){ links.classList.remove('open'); });
+  });
+
+  // Subtle scroll-reveal for products
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){
+        e.target.style.opacity = 1;
+        e.target.style.transform = 'translateY(0)';
+        io.unobserve(e.target);
+      }
+    });
+  }, {threshold:.15});
+  document.querySelectorAll('.prod').forEach(function(el, i){
+    el.style.opacity = 0;
+    el.style.transform = 'translateY(24px)';
+    el.style.transition = 'opacity .5s ease '+(i*0.06)+'s, transform .5s ease '+(i*0.06)+'s, box-shadow .2s';
+    io.observe(el);
+  });
+</script>
+</body>
+</html>

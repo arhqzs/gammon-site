@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Gammon — The Home of Worldwide Backgammon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Spectral:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --leading:#0b0d14;        /* dark 'came' / leading lines */
+    --leading-2:#141824;
+    --stone:#191c26;          /* cathedral stone dark */
+    --stone-2:#20242f;
+    --parchment:#efe6cf;      /* legible light text */
+    --parchment-dim:#c4bfa8;
+    --cobalt:#1746b8;
+    --cobalt-lt:#4f86ff;
+    --ruby:#b01432;
+    --ruby-lt:#ff5a72;
+    --emerald:#0c7a4f;
+    --emerald-lt:#3fd89a;
+    --amber:#d68a12;
+    --amber-lt:#ffd061;
+    --amethyst:#6a2fa6;
+    --amethyst-lt:#b478ff;
+    --gold:#e9c05a;
+    --display:'Cinzel',Georgia,serif;
+    --serif:'Cormorant Garamond',Georgia,serif;
+    --body:'Spectral',Georgia,serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:
+      radial-gradient(1200px 800px at 50% -8%, rgba(233,192,90,.10), transparent 60%),
+      radial-gradient(900px 700px at 12% 30%, rgba(23,70,184,.10), transparent 55%),
+      radial-gradient(900px 700px at 88% 60%, rgba(106,47,166,.10), transparent 55%),
+      linear-gradient(180deg,#0a0c12,#0e1119 40%,#0a0c12);
+    color:var(--parchment);
+    font-family:var(--body);
+    -webkit-font-smoothing:antialiased;
+    line-height:1.6;
+    overflow-x:hidden;
+  }
+  .wrap{max-width:1120px;margin:0 auto;padding:0 26px}
+  a{color:inherit;text-decoration:none}
+  h1,h2,h3{margin:0;font-weight:600}
+
+  /* backlit glass texture used by facets */
+  .kicker{
+    font-family:var(--display);
+    text-transform:uppercase;
+    letter-spacing:.34em;
+    font-size:11px;
+    font-weight:600;
+    color:var(--gold);
+    opacity:.9;
+  }
+
+  /* ---------- NAV ---------- */
+  .nav{
+    position:sticky;top:0;z-index:60;
+    background:linear-gradient(180deg,rgba(9,11,17,.96),rgba(9,11,17,.82));
+    border-bottom:2px solid #000;
+    box-shadow:0 2px 0 rgba(233,192,90,.18), 0 10px 30px rgba(0,0,0,.5);
+    backdrop-filter:blur(6px);
+  }
+  .nav-inner{display:flex;align-items:center;justify-content:space-between;height:64px}
+  .brand{display:flex;align-items:center;gap:11px;font-family:var(--display);font-weight:700;font-size:23px;letter-spacing:.06em;color:var(--parchment)}
+  .brand svg{display:block;filter:drop-shadow(0 0 6px rgba(233,192,90,.5))}
+  .nav-links{display:flex;gap:30px;align-items:center}
+  .nav-links a.nl{font-family:var(--display);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--parchment-dim);padding:6px 0;position:relative;transition:color .25s}
+  .nav-links a.nl::after{content:"";position:absolute;left:0;right:100%;bottom:0;height:1px;background:linear-gradient(90deg,var(--gold),var(--amber-lt));transition:right .3s}
+  .nav-links a.nl:hover{color:var(--parchment)}
+  .nav-links a.nl:hover::after{right:0}
+  .nav-cta{display:flex;gap:14px;align-items:center}
+  .btn{font-family:var(--display);letter-spacing:.14em;text-transform:uppercase;font-size:11px;font-weight:600;cursor:pointer;border:none;display:inline-block}
+  .btn-ghost{color:var(--parchment);padding:9px 4px}
+  .btn-lead{
+    color:#100b02;padding:11px 20px;border-radius:2px;
+    background:linear-gradient(180deg,var(--amber-lt),var(--amber));
+    box-shadow:0 0 0 1.5px #000, inset 0 1px 0 rgba(255,255,255,.5), 0 6px 18px rgba(214,138,18,.4);
+    transition:transform .18s, box-shadow .25s;
+  }
+  .btn-lead:hover{transform:translateY(-2px);box-shadow:0 0 0 1.5px #000, inset 0 1px 0 rgba(255,255,255,.6), 0 12px 26px rgba(214,138,18,.55)}
+  .burger{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:8px}
+  .burger span{width:24px;height:2px;background:var(--gold);display:block;transition:.3s}
+  .mobile-menu{display:none;flex-direction:column;padding:10px 26px 22px;gap:2px;border-bottom:2px solid #000;background:rgba(9,11,17,.98)}
+  .mobile-menu a{font-family:var(--display);text-transform:uppercase;letter-spacing:.18em;font-size:12px;padding:12px 0;border-bottom:1px solid rgba(233,192,90,.14);color:var(--parchment-dim)}
+  .mobile-menu.open{display:flex}
+
+  /* ---------- HERO ---------- */
+  .hero{position:relative;padding:64px 0 40px}
+  .hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:48px;align-items:center}
+  .hero h1{
+    font-family:var(--serif);font-weight:700;line-height:1.02;
+    font-size:clamp(44px,6.4vw,82px);letter-spacing:.005em;
+    color:var(--parchment);
+    text-shadow:0 2px 18px rgba(0,0,0,.7);
+  }
+  .hero h1 .glow{
+    background:linear-gradient(100deg,var(--amber-lt),var(--ruby-lt) 40%,var(--amethyst-lt) 70%,var(--cobalt-lt));
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    filter:drop-shadow(0 0 14px rgba(255,208,97,.25));
+  }
+  .hero .sub{font-size:clamp(16px,1.6vw,19px);color:var(--parchment-dim);max-width:34em;margin:22px 0 30px;line-height:1.65}
+  .hero-cta{display:flex;flex-wrap:wrap;gap:18px;align-items:center}
+  .note{font-family:var(--body);font-size:13px;color:var(--parchment-dim);display:flex;align-items:center;gap:9px}
+  .note .dot{width:7px;height:7px;border-radius:50%;background:var(--emerald-lt);box-shadow:0 0 8px var(--emerald-lt)}
+  .rose-wrap{position:relative;display:flex;justify-content:center}
+  .rose{width:min(100%,480px);height:auto;animation:breathe 9s ease-in-out infinite}
+  @keyframes breathe{0%,100%{filter:drop-shadow(0 0 30px rgba(255,208,97,.16))}50%{filter:drop-shadow(0 0 48px rgba(79,134,255,.26))}}
+  /* traveling shimmer over the whole rose */
+  .shimmer{
+    position:absolute;inset:0;pointer-events:none;mix-blend-mode:screen;
+    background:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.42) 48%,transparent 56%);
+    background-size:280% 280%;
+    animation:sweep 7.5s ease-in-out infinite;
+    -webkit-mask:radial-gradient(circle at 50% 50%, #000 66%, transparent 68%);
+            mask:radial-gradient(circle at 50% 50%, #000 66%, transparent 68%);
+    border-radius:50%;
+  }
+  @keyframes sweep{0%{background-position:120% 0}55%{background-position:-40% 100%}100%{background-position:-40% 100%}}
+
+  /* ---------- SECTION FRAMING (glass panel with lead border) ---------- */
+  .section{padding:70px 0}
+  .sec-head{text-align:center;max-width:720px;margin:0 auto 46px}
+  .sec-head h2{font-family:var(--serif);font-weight:700;font-size:clamp(32px,4.2vw,52px);color:var(--parchment);line-height:1.05;margin-top:12px}
+  .sec-head p{color:var(--parchment-dim);font-size:17px;margin-top:14px}
+  .divider{display:flex;align-items:center;justify-content:center;gap:14px;margin:0 auto}
+  .divider .line{height:1px;width:60px;background:linear-gradient(90deg,transparent,var(--gold))}
+  .divider .line.r{background:linear-gradient(90deg,var(--gold),transparent)}
+  .divider .gem{width:9px;height:9px;transform:rotate(45deg);background:var(--gold);box-shadow:0 0 10px var(--gold)}
+
+  /* ---------- LANCET PRODUCT PANELS ---------- */
+  .lancets{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+  .lancet{
+    position:relative;
+    background:linear-gradient(180deg,rgba(20,24,36,.9),rgba(11,13,20,.95));
+    border:2px solid #000;
+    border-radius:120px 120px 8px 8px; /* pointed-arch lancet top */
+    padding:34px 26px 30px;
+    overflow:hidden;
+    box-shadow:inset 0 0 0 1px rgba(233,192,90,.16), 0 18px 40px rgba(0,0,0,.5);
+    transition:transform .3s, box-shadow .3s;
+  }
+  .lancet::before{ /* backlit colored glow behind the panel top */
+    content:"";position:absolute;left:50%;top:-30%;width:140%;height:70%;transform:translateX(-50%);
+    background:radial-gradient(closest-side, var(--gl,rgba(79,134,255,.5)), transparent 72%);
+    opacity:.5;pointer-events:none;transition:opacity .3s;
+  }
+  .lancet:hover{transform:translateY(-6px)}
+  .lancet:hover::before{opacity:.85}
+  .lancet .icon{position:relative;width:64px;height:82px;margin:0 auto 18px;filter:drop-shadow(0 4px 10px rgba(0,0,0,.5))}
+  .lancet h3{font-family:var(--serif);font-weight:700;font-size:25px;text-align:center;color:var(--parchment);letter-spacing:.01em}
+  .lancet .tag{display:block;text-align:center;font-family:var(--display);font-size:9.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--gold);margin:6px 0 12px}
+  .lancet p{color:var(--parchment-dim);font-size:14.5px;text-align:center;line-height:1.6;margin:0}
+
+  /* ---------- MEMBERSHIP ---------- */
+  .members{display:grid;grid-template-columns:1fr 1fr;gap:26px;max-width:900px;margin:0 auto}
+  .plan{
+    position:relative;border:2px solid #000;border-radius:8px;padding:38px 34px;
+    background:linear-gradient(180deg,rgba(20,24,36,.92),rgba(11,13,20,.96));
+    box-shadow:inset 0 0 0 1px rgba(233,192,90,.16),0 16px 40px rgba(0,0,0,.5);
+  }
+  .plan.prem{
+    background:linear-gradient(180deg,rgba(41,28,64,.55),rgba(11,13,20,.96));
+    box-shadow:inset 0 0 0 1px rgba(180,120,255,.32),0 22px 50px rgba(106,47,166,.28);
+  }
+  .plan .pname{font-family:var(--display);letter-spacing:.2em;text-transform:uppercase;font-size:12px;color:var(--gold)}
+  .plan.prem .pname{color:var(--amethyst-lt)}
+  .plan .price{font-family:var(--serif);font-weight:700;font-size:52px;color:var(--parchment);margin:8px 0 2px;line-height:1}
+  .plan .price small{font-size:16px;color:var(--parchment-dim);font-family:var(--body);font-weight:400}
+  .plan .pdesc{color:var(--parchment-dim);font-size:14px;margin-bottom:20px}
+  .plan ul{list-style:none;padding:0;margin:0 0 26px}
+  .plan li{position:relative;padding:8px 0 8px 26px;color:var(--parchment);font-size:15px;border-bottom:1px solid rgba(233,192,90,.1)}
+  .plan li::before{content:"";position:absolute;left:0;top:15px;width:8px;height:8px;transform:rotate(45deg);background:var(--emerald-lt);box-shadow:0 0 7px var(--emerald-lt)}
+  .plan.prem li::before{background:var(--amethyst-lt);box-shadow:0 0 7px var(--amethyst-lt)}
+  .plan .btn-lead,.plan .btn-out{width:100%;text-align:center;box-sizing:border-box}
+  .btn-out{font-family:var(--display);letter-spacing:.14em;text-transform:uppercase;font-size:11px;font-weight:600;padding:12px 20px;border-radius:2px;color:var(--parchment);background:transparent;border:1.5px solid var(--gold);cursor:pointer;display:inline-block;transition:.25s}
+  .btn-out:hover{background:rgba(233,192,90,.12)}
+  .ribbon{position:absolute;top:20px;right:-34px;transform:rotate(45deg);background:linear-gradient(180deg,var(--amethyst-lt),var(--amethyst));color:#160a26;font-family:var(--display);font-size:9px;letter-spacing:.18em;padding:6px 40px;box-shadow:0 4px 10px rgba(0,0,0,.4)}
+
+  /* ---------- MISSION ---------- */
+  .mission{text-align:center;max-width:760px;margin:0 auto;padding:26px 0}
+  .mission .q{font-family:var(--serif);font-style:italic;font-size:clamp(24px,3.2vw,38px);line-height:1.3;color:var(--parchment)}
+  .mission .q em{color:var(--gold);font-style:italic}
+
+  /* ---------- FINAL CTA ---------- */
+  .final{position:relative;text-align:center;padding:78px 0;margin-top:20px;
+    border-top:2px solid #000;border-bottom:2px solid #000;
+    background:
+      radial-gradient(700px 300px at 50% 0%, rgba(233,192,90,.14), transparent 70%),
+      linear-gradient(180deg,rgba(15,18,28,.6),rgba(9,11,17,.6));}
+  .final h2{font-family:var(--serif);font-weight:700;font-size:clamp(34px,4.6vw,58px);color:var(--parchment)}
+  .final p{color:var(--parchment-dim);margin:16px auto 30px;max-width:30em;font-size:17px}
+
+  /* ---------- FOOTER ---------- */
+  footer{padding:52px 0 40px;color:var(--parchment-dim)}
+  .foot-grid{display:flex;justify-content:space-between;flex-wrap:wrap;gap:30px;align-items:flex-start}
+  .foot-brand{font-family:var(--display);font-size:20px;letter-spacing:.06em;color:var(--parchment);display:flex;gap:10px;align-items:center}
+  .foot-cols{display:flex;gap:56px;flex-wrap:wrap}
+  .foot-col h4{font-family:var(--display);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);margin:0 0 12px}
+  .foot-col a{display:block;font-size:14px;padding:4px 0;color:var(--parchment-dim);transition:color .2s}
+  .foot-col a:hover{color:var(--parchment)}
+  .foot-bottom{margin-top:40px;padding-top:22px;border-top:1px solid rgba(233,192,90,.14);display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:12.5px;letter-spacing:.04em}
+
+  @media(max-width:900px){
+    .hero-grid{grid-template-columns:1fr;gap:34px}
+    .rose-wrap{order:-1}
+    .lancets{grid-template-columns:1fr 1fr}
+    .members{grid-template-columns:1fr}
+  }
+  @media(max-width:640px){
+    .nav-links{display:none}
+    .burger{display:flex}
+    .lancets{grid-template-columns:1fr}
+    .hero{padding:40px 0 20px}
+    .foot-grid{flex-direction:column}
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== NAV ===== -->
+<nav class="nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="#">
+      <svg width="26" height="26" viewBox="0 0 40 40" aria-hidden="true">
+        <defs>
+          <radialGradient id="bg-mark" cx="50%" cy="42%" r="60%">
+            <stop offset="0%" stop-color="#ffd061"/><stop offset="55%" stop-color="#d68a12"/><stop offset="100%" stop-color="#b01432"/>
+          </radialGradient>
+        </defs>
+        <circle cx="20" cy="20" r="18" fill="url(#bg-mark)" stroke="#000" stroke-width="2.5"/>
+        <path d="M20 6 L27 20 L13 20 Z" fill="#0b0d14"/>
+        <path d="M20 34 L13 20 L27 20 Z" fill="#0b0d14" opacity="0.55"/>
+      </svg>
+      Gammon
+    </a>
+    <div class="nav-links">
+      <a class="nl" href="#products">Products</a>
+      <a class="nl" href="#products">Engine</a>
+      <a class="nl" href="#membership">Clubs</a>
+      <a class="nl" href="#membership">Membership</a>
+    </div>
+    <div class="nav-cta">
+      <a class="btn btn-ghost" href="#">Log in</a>
+      <a class="btn btn-lead" href="#membership">Start free</a>
+      <button class="burger" id="burger" aria-label="Menu"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="#products">Products</a>
+    <a href="#products">Engine</a>
+    <a href="#membership">Clubs</a>
+    <a href="#membership">Membership</a>
+    <a href="#">Log in</a>
+  </div>
+</nav>
+
+<!-- ===== HERO ===== -->
+<header class="hero">
+  <div class="wrap hero-grid">
+    <div class="hero-copy">
+      <span class="kicker">The Cathedral of the Game</span>
+      <h1>The home of<br><span class="glow">worldwide backgammon</span></h1>
+      <p class="sub">Play, learn, and compete — or run a whole club — all illuminated by a grandmaster-class engine that lives in your pocket. One luminous place for every dice roll on earth.</p>
+      <div class="hero-cta">
+        <a class="btn btn-lead" href="#membership" style="padding:14px 26px;font-size:12px">Claim your free year</a>
+        <span class="note"><span class="dot"></span>Free for the first 3,000 members · one year on us</span>
+      </div>
+    </div>
+
+    <!-- ROSE WINDOW: backgammon triangles tessellated into radial glass -->
+    <div class="rose-wrap">
+      <svg class="rose" viewBox="0 0 500 500" role="img" aria-label="Stained glass rose window of a backgammon board">
+        <defs>
+          <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#fff6da" stop-opacity=".9"/>
+            <stop offset="30%" stop-color="#ffd061" stop-opacity=".55"/>
+            <stop offset="100%" stop-color="#ffd061" stop-opacity="0"/>
+          </radialGradient>
+          <radialGradient id="gCobalt" cx="40%" cy="30%" r="75%"><stop offset="0%" stop-color="#4f86ff"/><stop offset="100%" stop-color="#0e2f8a"/></radialGradient>
+          <radialGradient id="gRuby" cx="40%" cy="30%" r="75%"><stop offset="0%" stop-color="#ff5a72"/><stop offset="100%" stop-color="#7d0d22"/></radialGradient>
+          <radialGradient id="gEmerald" cx="40%" cy="30%" r="75%"><stop offset="0%" stop-color="#3fd89a"/><stop offset="100%" stop-color="#075437"/></radialGradient>
+          <radialGradient id="gAmber" cx="40%" cy="30%" r="75%"><stop offset="0%" stop-color="#ffd061"/><stop offset="100%" stop-color="#a5620a"/></radialGradient>
+          <radialGradient id="gAmethyst" cx="40%" cy="30%" r="75%"><stop offset="0%" stop-color="#b478ff"/><stop offset="100%" stop-color="#48207a"/></radialGradient>
+          <radialGradient id="gCenter" cx="50%" cy="45%" r="60%"><stop offset="0%" stop-color="#fff3cf"/><stop offset="60%" stop-color="#ffd061"/><stop offset="100%" stop-color="#d68a12"/></radialGradient>
+        </defs>
+
+        <!-- backlight -->
+        <circle cx="250" cy="250" r="245" fill="url(#glow)"/>
+        <!-- outer stone ring -->
+        <circle cx="250" cy="250" r="238" fill="none" stroke="#0b0d14" stroke-width="14"/>
+        <circle cx="250" cy="250" r="230" fill="none" stroke="#2a2e3a" stroke-width="2"/>
+
+        <!-- 24 radial 'point' triangles (the board's points) as glass petals -->
+        <g id="petals" stroke="#0b0d14" stroke-width="3" stroke-linejoin="round"></g>
+
+        <!-- inner ring of leading -->
+        <circle cx="250" cy="250" r="120" fill="none" stroke="#0b0d14" stroke-width="9"/>
+
+        <!-- inner medallion: quartered glass with checker discs -->
+        <g id="medallion" stroke="#0b0d14" stroke-width="3"></g>
+
+        <!-- center boss -->
+        <circle cx="250" cy="250" r="34" fill="url(#gCenter)" stroke="#0b0d14" stroke-width="6"/>
+        <circle cx="250" cy="250" r="15" fill="#0b0d14"/>
+        <circle cx="250" cy="250" r="7" fill="#ffd061"/>
+
+        <!-- rim gems -->
+        <g id="rimgems"></g>
+      </svg>
+      <div class="shimmer"></div>
+    </div>
+  </div>
+</header>
+
+<!-- ===== PRODUCTS ===== -->
+<section class="section" id="products">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="divider"><span class="line"></span><span class="gem"></span><span class="line r"></span></div>
+      <span class="kicker" style="display:block;margin-top:16px">Six Panels of Craft</span>
+      <h2>Everything the game asks of you</h2>
+      <p>Each pane its own light. Six ways Gammon carries the whole of backgammon — from the first roll to a club of thousands.</p>
+    </div>
+
+    <div class="lancets">
+      <!-- The Engine -->
+      <article class="lancet" style="--gl:rgba(79,134,255,.55)">
+        <svg class="icon" viewBox="0 0 64 82" aria-hidden="true">
+          <path d="M4 40 A28 28 0 0 1 60 40 L60 78 L4 78 Z" fill="url(#gCobalt)" stroke="#0b0d14" stroke-width="3"/>
+          <path d="M32 14 L48 40 L16 40 Z" fill="#0b0d14" opacity=".5"/>
+          <circle cx="32" cy="52" r="10" fill="#fff" opacity=".25"/><circle cx="32" cy="52" r="10" fill="none" stroke="#0b0d14" stroke-width="2.5"/>
+          <path d="M32 46 L36 52 L32 58 L28 52 Z" fill="#ffd061"/>
+        </svg>
+        <span class="tag">Grandmaster in your pocket</span>
+        <h3>The Engine</h3>
+        <p>XG-class analysis for every position. Snap a photo of any board and get instant equity, plus a precise pip count in a heartbeat.</p>
+      </article>
+
+      <!-- Play Online -->
+      <article class="lancet" style="--gl:rgba(255,90,114,.5)">
+        <svg class="icon" viewBox="0 0 64 82" aria-hidden="true">
+          <path d="M4 40 A28 28 0 0 1 60 40 L60 78 L4 78 Z" fill="url(#gRuby)" stroke="#0b0d14" stroke-width="3"/>
+          <rect x="20" y="44" width="24" height="24" rx="4" fill="#fff" opacity=".9" stroke="#0b0d14" stroke-width="2.5" transform="rotate(12 32 56)"/>
+          <circle cx="27" cy="52" r="2.4" fill="#0b0d14"/><circle cx="37" cy="60" r="2.4" fill="#0b0d14"/><circle cx="32" cy="56" r="2.4" fill="#0b0d14"/>
+        </svg>
+        <span class="tag">Roll against the world</span>
+        <h3>Play Online</h3>
+        <p>Ranked matches, money games, and lively chouettes around the clock. Real opponents, real stakes, real gammons.</p>
+      </article>
+
+      <!-- Beat the Grandmaster -->
+      <article class="lancet" style="--gl:rgba(180,120,255,.5)">
+        <svg class="icon" viewBox="0 0 64 82" aria-hidden="true">
+          <path d="M4 40 A28 28 0 0 1 60 40 L60 78 L4 78 Z" fill="url(#gAmethyst)" stroke="#0b0d14" stroke-width="3"/>
+          <path d="M22 30 L26 46 L38 46 L42 30 L34 38 L32 26 L30 38 Z" fill="#ffd061" stroke="#0b0d14" stroke-width="2"/>
+          <rect x="24" y="48" width="16" height="6" fill="#ffd061" stroke="#0b0d14" stroke-width="2"/>
+        </svg>
+        <span class="tag">Learn from real mistakes</span>
+        <h3>Beat the Grandmaster</h3>
+        <p>Puzzles drawn from the actual blunders of real masters. Find the move they missed — and outplay a champion.</p>
+      </article>
+
+      <!-- Gammon University -->
+      <article class="lancet" style="--gl:rgba(63,216,154,.5)">
+        <svg class="icon" viewBox="0 0 64 82" aria-hidden="true">
+          <path d="M4 40 A28 28 0 0 1 60 40 L60 78 L4 78 Z" fill="url(#gEmerald)" stroke="#0b0d14" stroke-width="3"/>
+          <path d="M32 34 L52 42 L32 50 L12 42 Z" fill="#fff" opacity=".92" stroke="#0b0d14" stroke-width="2"/>
+          <path d="M22 46 L22 58 Q32 64 42 58 L42 46" fill="none" stroke="#0b0d14" stroke-width="2.5"/>
+          <line x1="52" y1="42" x2="52" y2="56" stroke="#0b0d14" stroke-width="2.5"/>
+        </svg>
+        <span class="tag">Lessons with coaches</span>
+        <h3>Gammon University</h3>
+        <p>Structured courses and live lessons with world-class coaches. Climb from opening theory to endgame mastery.</p>
+      </article>
+
+      <!-- Run a Club -->
+      <article class="lancet" style="--gl:rgba(255,208,97,.55)">
+        <svg class="icon" viewBox="0 0 64 82" aria-hidden="true">
+          <path d="M4 40 A28 28 0 0 1 60 40 L60 78 L4 78 Z" fill="url(#gAmber)" stroke="#0b0d14" stroke-width="3"/>
+          <path d="M20 30 h24 v6 a12 12 0 0 1 -24 0 Z" fill="#fff" opacity=".9" stroke="#0b0d14" stroke-width="2"/>
+          <rect x="28" y="42" width="8" height="10" fill="#0b0d14"/><rect x="22" y="52" width="20" height="6" fill="#0b0d14"/>
+          <path d="M16 32 a6 6 0 0 1 -6 6 M48 32 a6 6 0 0 0 6 6" fill="none" stroke="#0b0d14" stroke-width="2"/>
+        </svg>
+        <span class="tag">Tournaments &amp; coins</span>
+        <h3>Run a Club</h3>
+        <p>Host tournaments, mint your own coins, and grow a community — and keep every penny of what your club earns.</p>
+      </article>
+
+      <!-- Record & Stream -->
+      <article class="lancet" style="--gl:rgba(79,134,255,.5)">
+        <svg class="icon" viewBox="0 0 64 82" aria-hidden="true">
+          <path d="M4 40 A28 28 0 0 1 60 40 L60 78 L4 78 Z" fill="url(#gCobalt)" stroke="#0b0d14" stroke-width="3"/>
+          <rect x="16" y="42" width="24" height="18" rx="3" fill="#fff" opacity=".9" stroke="#0b0d14" stroke-width="2.5"/>
+          <path d="M40 48 L50 42 L50 60 L40 54 Z" fill="#ffd061" stroke="#0b0d14" stroke-width="2"/>
+          <circle cx="22" cy="47" r="2" fill="#b01432"/>
+        </svg>
+        <span class="tag">OTB capture &amp; live stream</span>
+        <h3>Record &amp; Stream</h3>
+        <p>Capture over-the-board matches move by move and broadcast them live. Turn any table into a spectator event.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ===== MEMBERSHIP ===== -->
+<section class="section" id="membership" style="background:radial-gradient(900px 500px at 50% 0%,rgba(23,70,184,.10),transparent 70%)">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="divider"><span class="line"></span><span class="gem"></span><span class="line r"></span></div>
+      <span class="kicker" style="display:block;margin-top:16px">Take your seat</span>
+      <h2>Membership</h2>
+      <p>The doors are open. Walk in free — or take everything the cathedral holds for about the price of a coffee once a month.</p>
+    </div>
+
+    <div class="members">
+      <div class="plan">
+        <div class="pname">Free</div>
+        <div class="price">$0<small> / forever start</small></div>
+        <p class="pdesc">Free for the first 3,000 members — a full year on us.</p>
+        <ul>
+          <li>Full access to the Engine &amp; pip count</li>
+          <li>Play online: matches &amp; chouettes</li>
+          <li>Daily Beat-the-Grandmaster puzzles</li>
+          <li>Join clubs and open tournaments</li>
+        </ul>
+        <a class="btn btn-lead" href="#" style="padding:14px 20px;font-size:12px">Claim your free year</a>
+      </div>
+
+      <div class="plan prem">
+        <div class="ribbon">Best value</div>
+        <div class="pname">Premium</div>
+        <div class="price">$1<small> / month</small></div>
+        <p class="pdesc">Every panel unlocked, forever. Support the game you love.</p>
+        <ul>
+          <li>Unlimited snap-a-photo analysis</li>
+          <li>Full Gammon University course library</li>
+          <li>Run your own club &amp; keep earnings</li>
+          <li>Record &amp; live-stream OTB matches</li>
+        </ul>
+        <a class="btn btn-out" href="#">Go Premium</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== MISSION ===== -->
+<section class="section" style="padding-top:20px">
+  <div class="wrap">
+    <div class="mission">
+      <div class="divider"><span class="line"></span><span class="gem"></span><span class="line r"></span></div>
+      <p class="q" style="margin-top:26px">We are building <em>one luminous home</em> for the oldest game on earth — where anyone, anywhere, can learn from masters, play for real, and gather their own congregation around the board.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FINAL CTA ===== -->
+<section class="final">
+  <div class="wrap">
+    <span class="kicker">The light is on</span>
+    <h2 style="margin-top:14px">Roll under stained glass</h2>
+    <p>Join the first 3,000 and play a full year free. Your seat at the world's table is waiting.</p>
+    <a class="btn btn-lead" href="#" style="padding:16px 34px;font-size:13px">Claim your free year</a>
+    <div class="note" style="justify-content:center;margin-top:18px"><span class="dot"></span>Free for the first 3,000 members · one year on us</div>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <div class="foot-brand">
+          <svg width="22" height="22" viewBox="0 0 40 40" aria-hidden="true">
+            <circle cx="20" cy="20" r="18" fill="url(#bg-mark)" stroke="#000" stroke-width="2.5"/>
+            <path d="M20 6 L27 20 L13 20 Z" fill="#0b0d14"/>
+          </svg>
+          Gammon
+        </div>
+        <p style="max-width:24em;font-size:14px;margin-top:14px">The home of worldwide backgammon. Play, learn, compete, and run a club — all in one luminous place.</p>
+      </div>
+      <div class="foot-cols">
+        <div class="foot-col">
+          <h4>Product</h4>
+          <a href="#products">The Engine</a><a href="#products">Play Online</a><a href="#products">Puzzles</a><a href="#products">University</a>
+        </div>
+        <div class="foot-col">
+          <h4>Community</h4>
+          <a href="#membership">Clubs</a><a href="#products">Streaming</a><a href="#membership">Membership</a><a href="#">Support</a>
+        </div>
+        <div class="foot-col">
+          <h4>Company</h4>
+          <a href="#">About</a><a href="#">Blog</a><a href="#">Careers</a><a href="#">Contact</a>
+        </div>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 Gammon · The home of worldwide backgammon</span>
+      <span>Crafted pane by pane · Privacy · Terms</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // ---- mobile menu ----
+  const burger = document.getElementById('burger');
+  const menu = document.getElementById('mobileMenu');
+  burger.addEventListener('click', () => {
+    menu.classList.toggle('open');
+    burger.classList.toggle('active');
+  });
+  menu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => menu.classList.remove('open')));
+
+  // ---- build the rose window's 24 glass point-petals ----
+  (function buildRose(){
+    const cx = 250, cy = 250;
+    const rOut = 225, rIn = 122;
+    const SVGNS = 'http://www.w3.org/2000/svg';
+    const petals = document.getElementById('petals');
+    const glass = ['url(#gCobalt)','url(#gRuby)','url(#gEmerald)','url(#gAmber)','url(#gAmethyst)'];
+    const N = 24;
+    const step = (Math.PI * 2) / N;
+    const pt = (r, a) => [cx + r * Math.cos(a), cy + r * Math.sin(a)];
+    for (let i = 0; i < N; i++){
+      const a0 = -Math.PI/2 + i * step;
+      const a1 = a0 + step;
+      const am = (a0 + a1) / 2;
+      // triangle 'point': two inner corners on inner ring, apex out near outer ring
+      const [x0,y0] = pt(rIn, a0 + step*0.06);
+      const [x1,y1] = pt(rIn, a1 - step*0.06);
+      const [ax,ay] = pt(rOut - 6, am);
+      const tri = document.createElementNS(SVGNS,'path');
+      tri.setAttribute('d', `M${x0.toFixed(1)} ${y0.toFixed(1)} L${ax.toFixed(1)} ${ay.toFixed(1)} L${x1.toFixed(1)} ${y1.toFixed(1)} Z`);
+      // alternate long/short board points feel via jewel rotation
+      tri.setAttribute('fill', glass[i % glass.length]);
+      petals.appendChild(tri);
+      // little gem where each petal meets the outer rim
+      const [gx,gy] = pt(rOut - 2, am);
+    }
+
+    // rim gems (small diamonds around outer ring)
+    const rim = document.getElementById('rimgems');
+    for (let i = 0; i < N; i++){
+      const am = -Math.PI/2 + (i + 0.5) * step;
+      const [gx,gy] = pt(rOut + 6, am);
+      const g = document.createElementNS(SVGNS,'circle');
+      g.setAttribute('cx', gx.toFixed(1)); g.setAttribute('cy', gy.toFixed(1));
+      g.setAttribute('r','5'); g.setAttribute('fill', glass[i % glass.length]);
+      g.setAttribute('stroke','#0b0d14'); g.setAttribute('stroke-width','2');
+      rim.appendChild(g);
+    }
+
+    // inner medallion: 8 wedge panes + a checker-disc motif
+    const med = document.getElementById('medallion');
+    const M = 8, mstep = (Math.PI*2)/M;
+    for (let i = 0; i < M; i++){
+      const a0 = -Math.PI/2 + i*mstep;
+      const a1 = a0 + mstep;
+      const [x0,y0] = pt(rIn-4, a0);
+      const [x1,y1] = pt(rIn-4, a1);
+      const wedge = document.createElementNS(SVGNS,'path');
+      wedge.setAttribute('d', `M${cx} ${cy} L${x0.toFixed(1)} ${y0.toFixed(1)} A ${rIn-4} ${rIn-4} 0 0 1 ${x1.toFixed(1)} ${y1.toFixed(1)} Z`);
+      wedge.setAttribute('fill', glass[(i+2) % glass.length]);
+      wedge.setAttribute('opacity','0.9');
+      med.appendChild(wedge);
+      // checker disc on each wedge (backgammon stones)
+      const [dx,dy] = pt((rIn)*0.62, (a0+a1)/2);
+      const disc = document.createElementNS(SVGNS,'circle');
+      disc.setAttribute('cx', dx.toFixed(1)); disc.setAttribute('cy', dy.toFixed(1));
+      disc.setAttribute('r','13');
+      disc.setAttribute('fill', i%2 ? '#f4ecd2' : '#0b0d14');
+      disc.setAttribute('stroke','#0b0d14'); disc.setAttribute('stroke-width','3');
+      med.appendChild(disc);
+      const ring = document.createElementNS(SVGNS,'circle');
+      ring.setAttribute('cx', dx.toFixed(1)); ring.setAttribute('cy', dy.toFixed(1));
+      ring.setAttribute('r','6');
+      ring.setAttribute('fill','none'); ring.setAttribute('stroke', i%2 ? '#b01432':'#ffd061'); ring.setAttribute('stroke-width','2.5');
+      med.appendChild(ring);
+    }
+  })();
+
+  // ---- subtle facet flicker: gently vary opacity of random petals for candlelit feel ----
+  (function flicker(){
+    const tris = document.querySelectorAll('#petals path');
+    if(!tris.length) return;
+    setInterval(() => {
+      const t = tris[Math.floor(Math.random()*tris.length)];
+      t.style.transition = 'opacity 1.4s ease';
+      t.style.opacity = (0.78 + Math.random()*0.22).toFixed(2);
+    }, 420);
+  })();
+
+  // ---- reveal on scroll ----
+  const io = new IntersectionObserver((es)=>{
+    es.forEach(e=>{ if(e.isIntersecting){ e.target.style.opacity=1; e.target.style.transform='none'; io.unobserve(e.target);} });
+  },{threshold:.12});
+  document.querySelectorAll('.lancet,.plan,.sec-head,.mission,.final .wrap').forEach((el,i)=>{
+    el.style.opacity=0; el.style.transform='translateY(22px)';
+    el.style.transition=`opacity .7s ease ${(i%3)*.08}s, transform .7s ease ${(i%3)*.08}s`;
+    io.observe(el);
+  });
+</script>
+</body>
+</html>

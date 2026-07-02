@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Gammon — The Home of Worldwide Backgammon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,900;1,9..144,600&family=Archivo+Black&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --terracotta:#d0603f;
+    --terracotta-dk:#a8432a;
+    --mustard:#e6a92e;
+    --mustard-dk:#c78a1a;
+    --sage:#8ba474;
+    --sage-dk:#6b8556;
+    --dustyblue:#6f92a8;
+    --dustyblue-dk:#4f7186;
+    --cream:#f6ecd6;
+    --cream2:#efe0c2;
+    --ink:#2a231c;
+    --ink2:#463a2c;
+    --rose:#dd8b7d;
+    --paper:#f9f2e2;
+    --shadow:rgba(52,38,22,.28);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'Space Grotesk',system-ui,sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    overflow-x:hidden;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  /* paper grain overlay */
+  body::before{
+    content:"";position:fixed;inset:0;z-index:9999;pointer-events:none;
+    opacity:.05;mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  h1,h2,h3,.display{font-family:'Fraunces',Georgia,serif;line-height:1.02;letter-spacing:-.01em}
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 26px}
+
+  /* torn / cut paper shadow helper */
+  .paper{
+    filter:drop-shadow(3px 6px 0 rgba(0,0,0,.06)) drop-shadow(6px 12px 14px var(--shadow));
+  }
+  .tape{
+    position:absolute;width:92px;height:26px;background:rgba(246,236,214,.66);
+    border-left:1px dashed rgba(0,0,0,.08);border-right:1px dashed rgba(0,0,0,.08);
+    box-shadow:0 2px 6px rgba(0,0,0,.12);mix-blend-mode:multiply;transform:rotate(-6deg);
+  }
+
+  /* ---------- NAV ---------- */
+  header{position:sticky;top:0;z-index:200}
+  nav{
+    display:flex;align-items:center;justify-content:space-between;gap:18px;
+    margin:14px auto;max-width:1180px;padding:10px 20px;
+    background:var(--cream);
+    border:2px solid var(--ink);
+    box-shadow:5px 6px 0 var(--ink);
+    clip-path:polygon(0 8%,2% 0,98% 3%,100% 12%,99% 92%,97% 100%,3% 97%,0 88%);
+  }
+  .logo{display:flex;align-items:center;gap:10px;font-family:'Fraunces';font-weight:900;font-size:1.5rem;letter-spacing:-.02em}
+  .logo .chip{width:26px;height:26px;background:var(--terracotta);border-radius:50%;box-shadow:inset -3px -3px 0 rgba(0,0,0,.18),2px 2px 0 var(--ink);display:inline-block;transform:rotate(-4deg)}
+  .navlinks{display:flex;gap:24px;font-weight:600;font-size:.98rem}
+  .navlinks a{position:relative;padding:3px 2px}
+  .navlinks a::after{content:"";position:absolute;left:0;right:0;bottom:-2px;height:6px;background:var(--mustard);opacity:0;transform:scaleX(.4);transition:.2s;transform-origin:left;border-radius:3px}
+  .navlinks a:hover::after{opacity:.85;transform:scaleX(1)}
+  .navcta{display:flex;align-items:center;gap:12px}
+  .btn{
+    font-family:'Space Grotesk';font-weight:700;cursor:pointer;border:2px solid var(--ink);
+    padding:9px 18px;background:var(--cream);color:var(--ink);
+    box-shadow:3px 3px 0 var(--ink);transition:transform .12s, box-shadow .12s;font-size:.95rem;
+  }
+  .btn:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0 var(--ink)}
+  .btn:active{transform:translate(1px,1px);box-shadow:1px 1px 0 var(--ink)}
+  .btn.solid{background:var(--terracotta);color:var(--cream)}
+  .btn.ghost{border:none;box-shadow:none;background:transparent;padding:9px 6px}
+  .btn.ghost:hover{transform:none;text-decoration:underline;text-decoration-style:wavy;text-underline-offset:4px}
+  .burger{display:none;flex-direction:column;gap:5px;background:none;border:2px solid var(--ink);padding:9px;cursor:pointer;box-shadow:2px 2px 0 var(--ink)}
+  .burger span{width:22px;height:3px;background:var(--ink);border-radius:2px}
+  #mobmenu{display:none}
+
+  /* ---------- HERO ---------- */
+  .hero{position:relative;padding:40px 0 70px;overflow:hidden}
+  .hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:30px;align-items:center}
+  .kicker{
+    display:inline-block;font-weight:700;font-size:.82rem;letter-spacing:.16em;text-transform:uppercase;
+    background:var(--sage);color:var(--cream);padding:6px 14px;transform:rotate(-2deg);
+    box-shadow:3px 3px 0 var(--ink);border:2px solid var(--ink);margin-bottom:22px;
+  }
+  .hero h1{font-size:clamp(2.6rem,6.4vw,5.2rem);font-weight:900;margin-bottom:8px}
+  .hero h1 .w{display:inline-block;padding:0 .06em}
+  .hero h1 .a{color:var(--terracotta);transform:rotate(-2deg)}
+  .hero h1 .b{color:var(--dustyblue-dk);transform:rotate(1.5deg)}
+  .hero h1 .c{color:var(--mustard-dk);transform:rotate(-1deg)}
+  .hero h1 .d{background:var(--mustard);padding:0 .12em;transform:rotate(1deg);box-shadow:2px 3px 0 rgba(0,0,0,.12)}
+  .hero p.sub{font-size:1.16rem;max-width:34ch;color:var(--ink2);margin:20px 0 30px}
+  .hero-cta{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+  .btn.big{font-size:1.12rem;padding:15px 28px}
+  .freenote{font-size:.86rem;color:var(--ink2);max-width:22ch;font-weight:600}
+  .freenote b{color:var(--terracotta-dk)}
+  .hero-art{position:relative;height:480px}
+  .hero-art svg{width:100%;height:100%;overflow:visible}
+  .float{animation:bob 6s ease-in-out infinite}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
+  .sticker{
+    position:absolute;font-family:'Fraunces';font-weight:900;font-size:.95rem;
+    background:var(--rose);color:var(--ink);padding:12px 14px;border-radius:50%;
+    width:96px;height:96px;display:grid;place-items:center;text-align:center;line-height:1.05;
+    border:2px dashed var(--ink);box-shadow:3px 4px 0 var(--shadow);transform:rotate(12deg);z-index:5;
+  }
+
+  /* torn strip divider */
+  .torn-strip{height:46px;position:relative;margin-top:-10px}
+
+  /* ---------- SECTION HEADINGS ---------- */
+  .sec-head{text-align:center;margin:20px auto 46px;max-width:720px}
+  .sec-head .kicker{transform:rotate(1.5deg)}
+  .sec-head h2{font-size:clamp(2rem,4.4vw,3.2rem);font-weight:900;margin:14px 0 8px}
+  .sec-head p{color:var(--ink2);font-size:1.05rem}
+
+  /* ---------- PRODUCTS collage ---------- */
+  .products{padding:80px 0;background:var(--cream);position:relative}
+  .prod-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:34px 26px;margin-top:20px}
+  .scrap{
+    position:relative;background:var(--paper);border:2px solid var(--ink);padding:26px 22px 24px;
+    box-shadow:5px 7px 0 rgba(42,35,28,.16),8px 14px 22px var(--shadow);
+    transition:transform .18s, box-shadow .18s;
+  }
+  .scrap:nth-child(3n+1){transform:rotate(-1.4deg)}
+  .scrap:nth-child(3n+2){transform:rotate(.8deg)}
+  .scrap:nth-child(3n){transform:rotate(-.5deg)}
+  .scrap:hover{transform:rotate(0) translateY(-6px);box-shadow:6px 10px 0 rgba(42,35,28,.2),12px 20px 30px var(--shadow);z-index:6}
+  .scrap .tab{
+    position:absolute;top:-16px;left:22px;font-family:'Fraunces';font-weight:800;font-size:.78rem;
+    letter-spacing:.08em;text-transform:uppercase;padding:5px 14px;border:2px solid var(--ink);color:var(--cream);
+    box-shadow:2px 2px 0 var(--ink);
+  }
+  .scrap .num{position:absolute;top:16px;right:18px;font-family:'Archivo Black';font-size:2.4rem;color:rgba(42,35,28,.09);line-height:1}
+  .scrap .icon{width:66px;height:66px;margin:8px 0 16px;filter:drop-shadow(2px 3px 0 var(--shadow))}
+  .scrap h3{font-size:1.42rem;font-weight:800;margin-bottom:8px}
+  .scrap p{font-size:.97rem;color:var(--ink2)}
+  .scrap .pin{position:absolute;top:-9px;right:24px;width:16px;height:16px;background:var(--terracotta);border-radius:50%;box-shadow:inset -2px -2px 0 rgba(0,0,0,.25),1px 2px 3px rgba(0,0,0,.3);border:1px solid var(--ink)}
+  .c-terra .tab{background:var(--terracotta)} .c-terra .pin{background:var(--terracotta)}
+  .c-sage .tab{background:var(--sage-dk)} .c-sage .pin{background:var(--sage-dk)}
+  .c-blue .tab{background:var(--dustyblue-dk)} .c-blue .pin{background:var(--dustyblue-dk)}
+  .c-must .tab{background:var(--mustard-dk)} .c-must .pin{background:var(--mustard-dk)}
+  .c-rose .tab{background:#c66e5f} .c-rose .pin{background:#c66e5f}
+  .c-ink .tab{background:var(--ink2)} .c-ink .pin{background:var(--ink2)}
+
+  /* ---------- MEMBERSHIP ---------- */
+  .member{padding:90px 0;position:relative}
+  .plan-grid{display:grid;grid-template-columns:1fr 1fr;gap:36px;max-width:920px;margin:0 auto}
+  .plan{position:relative;background:var(--paper);border:2px solid var(--ink);padding:36px 32px 40px;box-shadow:6px 8px 0 var(--ink)}
+  .plan.free{transform:rotate(-1deg);background:var(--cream)}
+  .plan.prem{transform:rotate(1deg);background:var(--dustyblue);color:var(--cream)}
+  .plan.prem h3,.plan.prem .price{color:var(--cream)}
+  .plan h3{font-size:1.7rem;font-weight:900}
+  .plan .price{font-family:'Fraunces';font-weight:900;font-size:3rem;margin:6px 0 2px}
+  .plan .price small{font-size:1rem;font-weight:600;font-family:'Space Grotesk'}
+  .plan ul{list-style:none;margin:22px 0 28px}
+  .plan li{padding:9px 0 9px 30px;position:relative;font-size:1rem;border-bottom:1px dashed rgba(42,35,28,.25)}
+  .plan.prem li{border-bottom:1px dashed rgba(246,236,214,.35)}
+  .plan li::before{content:"✂";position:absolute;left:0;top:8px;font-size:1rem}
+  .plan .badge{position:absolute;top:-18px;right:22px;background:var(--mustard);color:var(--ink);font-family:'Fraunces';font-weight:900;font-size:.8rem;padding:8px 14px;border:2px solid var(--ink);box-shadow:2px 3px 0 var(--ink);transform:rotate(6deg)}
+  .plan .btn{width:100%;text-align:center;margin-top:4px}
+  .plan.prem .btn{background:var(--mustard);color:var(--ink)}
+
+  /* ---------- MISSION / CTA ---------- */
+  .mission{padding:80px 0;background:var(--terracotta);color:var(--cream);position:relative;overflow:hidden}
+  .mission .wrap{position:relative;z-index:2;text-align:center;max-width:760px}
+  .mission h2{font-size:clamp(2rem,5vw,3.4rem);font-weight:900;margin-bottom:20px}
+  .mission p{font-size:1.15rem;opacity:.95;margin-bottom:34px}
+  .mission .btn{background:var(--cream);color:var(--ink);font-size:1.15rem;padding:16px 32px}
+  .mission-scraps span{position:absolute;opacity:.2;font-family:'Archivo Black';font-size:8rem;color:var(--cream)}
+
+  /* ---------- FOOTER ---------- */
+  footer{background:var(--ink);color:var(--cream2);padding:56px 0 34px}
+  .foot-grid{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:30px;margin-bottom:40px}
+  footer h4{font-family:'Fraunces';font-weight:800;font-size:1.05rem;margin-bottom:14px;color:var(--mustard)}
+  footer a{display:block;padding:5px 0;color:rgba(246,236,214,.8);font-size:.94rem}
+  footer a:hover{color:var(--cream);text-decoration:underline;text-underline-offset:3px}
+  .foot-brand .logo{color:var(--cream)}
+  .foot-brand p{margin-top:14px;font-size:.92rem;color:rgba(246,236,214,.6);max-width:32ch}
+  .foot-bottom{border-top:1px dashed rgba(246,236,214,.25);padding-top:22px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;font-size:.85rem;color:rgba(246,236,214,.55)}
+
+  /* ---------- RESPONSIVE ---------- */
+  @media(max-width:920px){
+    .hero-grid{grid-template-columns:1fr;gap:10px}
+    .hero-art{height:360px;order:-1}
+    .prod-grid{grid-template-columns:repeat(2,1fr)}
+    .foot-grid{grid-template-columns:1fr 1fr}
+  }
+  @media(max-width:640px){
+    .navlinks,.navcta .btn:not(.burger){display:none}
+    .burger{display:flex}
+    .prod-grid{grid-template-columns:1fr}
+    .plan-grid{grid-template-columns:1fr}
+    .foot-grid{grid-template-columns:1fr}
+    .hero h1{font-size:2.7rem}
+    #mobmenu.open{display:block}
+    #mobmenu{background:var(--cream);border:2px solid var(--ink);margin:0 26px;padding:18px 22px;box-shadow:4px 5px 0 var(--ink)}
+    #mobmenu a{display:block;padding:10px 0;font-weight:600;border-bottom:1px dashed rgba(42,35,28,.2)}
+    #mobmenu .btn{width:100%;text-align:center;margin-top:12px}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ NAV ============ -->
+<header>
+  <nav class="wrap">
+    <a class="logo" href="#top"><span class="chip"></span>Gammon</a>
+    <div class="navlinks">
+      <a href="#products">Products</a>
+      <a href="#products">Engine</a>
+      <a href="#membership">Clubs</a>
+      <a href="#membership">Membership</a>
+    </div>
+    <div class="navcta">
+      <a class="btn ghost" href="#">Log in</a>
+      <a class="btn solid" href="#membership">Start free</a>
+      <button class="burger" id="burger" aria-label="Menu"><span></span><span></span><span></span></button>
+    </div>
+  </nav>
+  <div id="mobmenu">
+    <a href="#products">Products</a>
+    <a href="#products">Engine</a>
+    <a href="#membership">Clubs</a>
+    <a href="#membership">Membership</a>
+    <a href="#">Log in</a>
+    <a class="btn solid" href="#membership">Start free</a>
+  </div>
+</header>
+
+<!-- ============ HERO ============ -->
+<section class="hero" id="top">
+  <div class="wrap hero-grid">
+    <div class="hero-copy">
+      <span class="kicker">Est. for players everywhere</span>
+      <h1>
+        <span class="w a">The</span> <span class="w b">home</span> of
+        <span class="w c">worldwide</span> <span class="w d">backgammon</span>
+      </h1>
+      <p class="sub">Play, learn, compete and run a club — all powered by a grandmaster-class engine that lives in your pocket.</p>
+      <div class="hero-cta">
+        <a class="btn solid big" href="#membership">Claim your free year</a>
+        <span class="freenote"><b>Free</b> for the first 3,000 members · one year on us</span>
+      </div>
+    </div>
+
+    <!-- Cut-paper backgammon motif -->
+    <div class="hero-art">
+      <div class="sticker float" style="top:6px;right:-6px">Grand&shy;master in your pocket</div>
+      <svg viewBox="0 0 460 480" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cut-paper backgammon board">
+        <defs>
+          <filter id="softsh" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="4" dy="8" stdDeviation="7" flood-color="#342616" flood-opacity="0.3"/>
+          </filter>
+          <filter id="softsh2" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="3" dy="5" stdDeviation="4" flood-color="#342616" flood-opacity="0.35"/>
+          </filter>
+        </defs>
+
+        <!-- torn board base (dusty blue) -->
+        <path filter="url(#softsh)" fill="#6f92a8" d="M30 66 L410 54 Q432 78 424 132 L430 380 Q426 424 402 428 L58 440 Q30 432 34 402 L28 118 Q26 84 30 66 Z"/>
+        <!-- cream inner mat -->
+        <path filter="url(#softsh2)" fill="#f6ecd6" d="M54 96 L392 88 L400 400 L62 410 Z"/>
+        <!-- center bar -->
+        <rect x="216" y="92" width="24" height="316" fill="#a8432a" transform="rotate(0.6 228 250)"/>
+
+        <!-- points: alternating terracotta / mustard triangles, top row -->
+        <g class="float" style="animation-delay:.2s">
+          <path fill="#d0603f" d="M70 100 L104 100 L88 210 Z"/>
+          <path fill="#e6a92e" d="M112 100 L146 100 L130 200 Z"/>
+          <path fill="#d0603f" d="M154 100 L188 100 L172 208 Z"/>
+          <path fill="#e6a92e" d="M248 100 L282 100 L266 204 Z"/>
+          <path fill="#d0603f" d="M290 100 L324 100 L308 210 Z"/>
+          <path fill="#e6a92e" d="M332 100 L366 100 L350 200 Z"/>
+        </g>
+        <!-- points bottom row -->
+        <path fill="#8ba474" d="M88 398 L70 296 L104 296 Z"/>
+        <path fill="#6f92a8" d="M130 400 L112 300 L146 300 Z"/>
+        <path fill="#8ba474" d="M172 398 L154 292 L188 292 Z"/>
+        <path fill="#6f92a8" d="M266 400 L248 300 L282 300 Z"/>
+        <path fill="#8ba474" d="M308 398 L290 296 L324 296 Z"/>
+        <path fill="#6f92a8" d="M350 400 L332 300 L366 300 Z"/>
+
+        <!-- checkers (cut circles with paper shadow) -->
+        <g filter="url(#softsh2)">
+          <circle cx="87" cy="128" r="18" fill="#2a231c"/>
+          <circle cx="87" cy="128" r="18" fill="none" stroke="#463a2c" stroke-width="2"/>
+          <ellipse cx="82" cy="122" rx="6" ry="4" fill="#463a2c"/>
+          <circle cx="87" cy="166" r="18" fill="#f9f2e2"/>
+          <ellipse cx="82" cy="160" rx="6" ry="4" fill="#efe0c2"/>
+        </g>
+        <g filter="url(#softsh2)" class="float" style="animation-delay:.5s">
+          <circle cx="308" cy="128" r="18" fill="#f9f2e2"/>
+          <ellipse cx="303" cy="122" rx="6" ry="4" fill="#efe0c2"/>
+          <circle cx="308" cy="166" r="18" fill="#2a231c"/>
+          <ellipse cx="303" cy="160" rx="6" ry="4" fill="#463a2c"/>
+        </g>
+        <g filter="url(#softsh2)">
+          <circle cx="266" cy="372" r="18" fill="#2a231c"/>
+          <ellipse cx="261" cy="366" rx="6" ry="4" fill="#463a2c"/>
+        </g>
+
+        <!-- cut-paper dice -->
+        <g filter="url(#softsh)" class="float" style="animation-delay:.35s">
+          <rect x="150" y="230" width="64" height="64" rx="8" fill="#f9f2e2" stroke="#2a231c" stroke-width="2.5" transform="rotate(-9 182 262)"/>
+          <g transform="rotate(-9 182 262)">
+            <circle cx="166" cy="246" r="6" fill="#a8432a"/>
+            <circle cx="198" cy="278" r="6" fill="#a8432a"/>
+            <circle cx="182" cy="262" r="6" fill="#a8432a"/>
+          </g>
+          <rect x="230" y="248" width="60" height="60" rx="8" fill="#e6a92e" stroke="#2a231c" stroke-width="2.5" transform="rotate(11 260 278)"/>
+          <g transform="rotate(11 260 278)">
+            <circle cx="246" cy="264" r="5.5" fill="#2a231c"/>
+            <circle cx="274" cy="264" r="5.5" fill="#2a231c"/>
+            <circle cx="246" cy="292" r="5.5" fill="#2a231c"/>
+            <circle cx="274" cy="292" r="5.5" fill="#2a231c"/>
+          </g>
+        </g>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- torn strip -->
+<svg class="torn-strip" viewBox="0 0 1440 46" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+  <path fill="#f6ecd6" d="M0 20 Q60 4 120 16 T240 14 T360 20 T480 10 T600 18 T720 8 T840 20 T960 12 T1080 18 T1200 10 T1320 20 T1440 12 L1440 46 L0 46 Z"/>
+</svg>
+
+<!-- ============ PRODUCTS ============ -->
+<section class="products" id="products">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="kicker" style="background:var(--terracotta)">Six ways to play</span>
+      <h2>Cut from the same cloth</h2>
+      <p>Everything you need to fall in love with backgammon — analysis, matches, coaching and clubs, all in one place.</p>
+    </div>
+
+    <div class="prod-grid">
+      <!-- 1 Engine -->
+      <div class="scrap c-terra paper">
+        <span class="tab">Analysis</span><span class="pin"></span><span class="num">01</span>
+        <svg class="icon" viewBox="0 0 64 64"><rect x="8" y="8" width="48" height="48" rx="6" fill="#d0603f" stroke="#2a231c" stroke-width="2.5"/><path d="M18 40 L28 26 L36 34 L46 20" fill="none" stroke="#f6ecd6" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="46" cy="20" r="4" fill="#e6a92e" stroke="#2a231c" stroke-width="2"/></svg>
+        <h3>The Engine</h3>
+        <p>XG-class analysis in your pocket. Snap a photo of any board, get an instant pip count and the best play, every time.</p>
+      </div>
+      <!-- 2 Play Online -->
+      <div class="scrap c-sage paper">
+        <span class="tab">Live</span><span class="pin"></span><span class="num">02</span>
+        <svg class="icon" viewBox="0 0 64 64"><circle cx="24" cy="26" r="12" fill="#8ba474" stroke="#2a231c" stroke-width="2.5"/><circle cx="42" cy="34" r="12" fill="#e6a92e" stroke="#2a231c" stroke-width="2.5"/><path d="M20 24l3 3 5-6M38 32l3 3 5-6" stroke="#2a231c" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <h3>Play Online</h3>
+        <p>Rated matches, money games and lively chouettes against players from every corner of the world, around the clock.</p>
+      </div>
+      <!-- 3 Beat the Grandmaster -->
+      <div class="scrap c-blue paper">
+        <span class="tab">Puzzles</span><span class="pin"></span><span class="num">03</span>
+        <svg class="icon" viewBox="0 0 64 64"><path d="M32 8l6 12 13 2-9 9 2 13-12-6-12 6 2-13-9-9 13-2z" fill="#6f92a8" stroke="#2a231c" stroke-width="2.5" stroke-linejoin="round"/></svg>
+        <h3>Beat the Grandmaster</h3>
+        <p>Sharpen your eye on puzzles drawn from real masters' mistakes — learn to spot the plays even the pros missed.</p>
+      </div>
+      <!-- 4 Gammon University -->
+      <div class="scrap c-must paper">
+        <span class="tab">Learn</span><span class="pin"></span><span class="num">04</span>
+        <svg class="icon" viewBox="0 0 64 64"><path d="M32 14 L56 24 L32 34 L8 24 Z" fill="#e6a92e" stroke="#2a231c" stroke-width="2.5" stroke-linejoin="round"/><path d="M18 30 V42 Q32 50 46 42 V30" fill="none" stroke="#2a231c" stroke-width="2.5"/><line x1="56" y1="24" x2="56" y2="38" stroke="#2a231c" stroke-width="2.5" stroke-linecap="round"/></svg>
+        <h3>Gammon University</h3>
+        <p>Structured lessons with world-class coaches — from your first prime to advanced cube theory, at your own pace.</p>
+      </div>
+      <!-- 5 Run a Club -->
+      <div class="scrap c-rose paper">
+        <span class="tab">Clubs</span><span class="pin"></span><span class="num">05</span>
+        <svg class="icon" viewBox="0 0 64 64"><path d="M14 22 L50 22 L46 46 L18 46 Z" fill="#dd8b7d" stroke="#2a231c" stroke-width="2.5" stroke-linejoin="round"/><path d="M14 22 L10 12 L20 18 L26 10 L32 18 L38 10 L44 18 L54 12 L50 22" fill="#e6a92e" stroke="#2a231c" stroke-width="2.5" stroke-linejoin="round"/><circle cx="32" cy="34" r="5" fill="#f6ecd6" stroke="#2a231c" stroke-width="2"/></svg>
+        <h3>Run a Club</h3>
+        <p>Host tournaments, mint your own coins and keep your earnings. Your community, your rules, your revenue.</p>
+      </div>
+      <!-- 6 Record & Stream -->
+      <div class="scrap c-ink paper">
+        <span class="tab">Broadcast</span><span class="pin"></span><span class="num">06</span>
+        <svg class="icon" viewBox="0 0 64 64"><rect x="8" y="18" width="34" height="28" rx="5" fill="#463a2c" stroke="#2a231c" stroke-width="2.5"/><path d="M42 28 L56 20 L56 44 L42 36 Z" fill="#d0603f" stroke="#2a231c" stroke-width="2.5" stroke-linejoin="round"/><circle cx="18" cy="32" r="5" fill="#e6a92e"/></svg>
+        <h3>Record &amp; Stream</h3>
+        <p>Capture your over-the-board games and go live in a tap. Broadcast your club night to the whole backgammon world.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MEMBERSHIP ============ -->
+<section class="member" id="membership">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="kicker" style="background:var(--dustyblue-dk)">Two paper tickets</span>
+      <h2>Pick your plan</h2>
+      <p>Start free for a whole year, or go Premium for about the price of a coffee — once.</p>
+    </div>
+    <div class="plan-grid">
+      <div class="plan free paper">
+        <span class="tape" style="top:-14px;left:40%"></span>
+        <h3>Free</h3>
+        <div class="price">$0<small> / first year</small></div>
+        <ul>
+          <li>Reserved for the first 3,000 members</li>
+          <li>A full year of everything, on us</li>
+          <li>The Engine, photo analysis &amp; pip count</li>
+          <li>Play online, puzzles &amp; university access</li>
+        </ul>
+        <a class="btn solid" href="#">Claim your free year</a>
+      </div>
+      <div class="plan prem paper">
+        <span class="badge">~$1 / mo</span>
+        <h3>Premium</h3>
+        <div class="price">$1<small> / month</small></div>
+        <ul>
+          <li>Everything in Free, forever</li>
+          <li>Unlimited engine analysis &amp; rollouts</li>
+          <li>Run unlimited clubs &amp; keep your earnings</li>
+          <li>Priority streaming &amp; OTB capture tools</li>
+        </ul>
+        <a class="btn" href="#">Go Premium</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MISSION / CTA ============ -->
+<section class="mission">
+  <div class="mission-scraps" aria-hidden="true">
+    <span style="top:-30px;left:-20px;transform:rotate(-12deg)">⚁</span>
+    <span style="bottom:-50px;right:-10px;transform:rotate(14deg)">⚄</span>
+  </div>
+  <div class="wrap">
+    <h2>Backgammon belongs to everyone</h2>
+    <p>Our mission is simple: put a grandmaster in every pocket and a thriving club on every street. From cafés in Cairo to kitchen tables in Kyoto — this is the home of worldwide backgammon.</p>
+    <a class="btn big" href="#membership">Claim your free year</a>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a class="logo" href="#top"><span class="chip"></span>Gammon</a>
+        <p>The home of worldwide backgammon. Cut, folded and shipped with love for players everywhere.</p>
+      </div>
+      <div>
+        <h4>Products</h4>
+        <a href="#products">The Engine</a>
+        <a href="#products">Play Online</a>
+        <a href="#products">Beat the Grandmaster</a>
+        <a href="#products">Gammon University</a>
+      </div>
+      <div>
+        <h4>Community</h4>
+        <a href="#membership">Run a Club</a>
+        <a href="#products">Record &amp; Stream</a>
+        <a href="#membership">Membership</a>
+        <a href="#">Tournaments</a>
+      </div>
+      <div>
+        <h4>Company</h4>
+        <a href="#">About</a>
+        <a href="#">Careers</a>
+        <a href="#">Contact</a>
+        <a href="#">Press</a>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 Gammon · The home of worldwide backgammon</span>
+      <span>Made from cut paper &amp; good moves</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // mobile menu toggle
+  const burger = document.getElementById('burger');
+  const mob = document.getElementById('mobmenu');
+  burger.addEventListener('click', () => mob.classList.toggle('open'));
+  mob.querySelectorAll('a').forEach(a => a.addEventListener('click', () => mob.classList.remove('open')));
+
+  // gentle layered parallax on hero art
+  const art = document.querySelector('.hero-art svg');
+  const floats = document.querySelectorAll('.hero-art .float');
+  let ticking = false;
+  window.addEventListener('scroll', () => {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => {
+      const y = window.scrollY;
+      if (art && y < 900) {
+        art.style.transform = 'translateY(' + (y * 0.06) + 'px) rotate(' + (y * 0.004) + 'deg)';
+      }
+      ticking = false;
+    });
+  });
+
+  // subtle mouse parallax on hero stickers
+  const hero = document.querySelector('.hero');
+  const sticker = document.querySelector('.sticker');
+  hero.addEventListener('mousemove', (e) => {
+    const rx = (e.clientX / window.innerWidth - 0.5);
+    const ry = (e.clientY / window.innerHeight - 0.5);
+    if (sticker) sticker.style.transform = 'rotate(12deg) translate(' + (rx * 18) + 'px,' + (ry * 14) + 'px)';
+  });
+
+  // reveal-on-scroll for scraps
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(en => {
+      if (en.isIntersecting) {
+        en.target.style.opacity = 1;
+        en.target.style.transitionDelay = (en.target.dataset.d || 0) + 'ms';
+        en.target.classList.add('in');
+        io.unobserve(en.target);
+      }
+    });
+  }, {threshold:0.12});
+  document.querySelectorAll('.scrap, .plan').forEach((el, i) => {
+    el.style.opacity = 0;
+    el.style.transition = 'opacity .6s ease, transform .18s, box-shadow .18s';
+    el.dataset.d = (i % 3) * 90;
+    io.observe(el);
+  });
+</script>
+</body></html>

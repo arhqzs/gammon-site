@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="Gammon — the home of worldwide backgammon. Play, learn, compete and run a club powered by a grandmaster-class engine in your pocket." />
+<title>Gammon — The home of worldwide backgammon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    /* editor chrome */
+    --bg:#0d1117;              /* editor background */
+    --bg-2:#010409;           /* activity/title bar */
+    --panel:#0d1117;
+    --sidebar:#0b0f14;
+    --gutter:#0a0e13;
+    --line:#161b22;           /* subtle borders */
+    --line-2:#21262d;
+    --accent-line:#1f6feb;    /* active tab / focus */
+    --sel:#173d64;            /* selection highlight */
+    --status:#0b3a67;         /* bottom status bar (VS-ish blue) */
+    /* syntax palette */
+    --fg:#c9d1d9;             /* default text */
+    --dim:#8b949e;            /* line numbers, muted */
+    --comment:#6a9955;        /* comments */
+    --keyword:#ff7b72;        /* keyword (const, return, import) */
+    --func:#d2a8ff;           /* functions / types */
+    --string:#a5d6ff;         /* strings */
+    --number:#79c0ff;         /* numbers / props */
+    --tag:#7ee787;            /* jsx tags / attrs */
+    --var:#ffa657;            /* identifiers */
+    --mono:'Space Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+    --sans:'Inter', system-ui, sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;
+    background:var(--bg-2);
+    color:var(--fg);
+    font-family:var(--mono);
+    font-size:15px;
+    line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;text-decoration:none}
+  ::selection{background:var(--sel)}
+  code,pre{font-family:var(--mono)}
+
+  /* ---------- Editor shell ---------- */
+  .editor{
+    max-width:1280px;
+    margin:22px auto;
+    background:var(--bg);
+    border:1px solid var(--line-2);
+    border-radius:10px;
+    overflow:hidden;
+    box-shadow:0 24px 70px rgba(0,0,0,.55), 0 2px 0 rgba(255,255,255,.02) inset;
+  }
+
+  /* ---------- Title bar ---------- */
+  .titlebar{
+    display:flex;align-items:center;gap:14px;
+    background:linear-gradient(180deg,#161b22,#0d1117);
+    border-bottom:1px solid var(--line-2);
+    padding:9px 14px;
+    user-select:none;
+  }
+  .dots{display:flex;gap:8px}
+  .dot{width:12px;height:12px;border-radius:50%}
+  .dot.r{background:#ff5f56}.dot.y{background:#ffbd2e}.dot.g{background:#27c93f}
+  .titlebar .path{
+    color:var(--dim);font-size:12.5px;letter-spacing:.02em;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .titlebar .path b{color:#c9d1d9;font-weight:700}
+  .titlebar .spacer{flex:1}
+  .titlebar .meta{color:var(--dim);font-size:11.5px;display:flex;gap:16px}
+  .titlebar .meta span::before{content:"● ";color:#3fb950}
+
+  /* ---------- Tab strip / nav ---------- */
+  .tabbar{
+    display:flex;align-items:stretch;
+    background:var(--bg-2);
+    border-bottom:1px solid var(--line-2);
+    overflow-x:auto;scrollbar-width:none;
+  }
+  .tabbar::-webkit-scrollbar{display:none}
+  .tab{
+    display:flex;align-items:center;gap:8px;
+    padding:10px 16px;font-size:12.5px;color:var(--dim);
+    border-right:1px solid var(--line-2);
+    white-space:nowrap;cursor:pointer;position:relative;
+    transition:color .15s,background .15s;
+  }
+  .tab .fi{width:9px;height:9px;border-radius:2px;flex:none}
+  .tab:hover{color:var(--fg);background:#0d1117}
+  .tab.active{
+    color:var(--fg);background:var(--bg);
+    box-shadow:inset 0 2px 0 var(--accent-line);
+  }
+  .tab.active::after{content:"";position:absolute;inset:0 0 -1px 0;border-bottom:1px solid var(--bg)}
+  .tabbar .grow{flex:1;border-right:none}
+  .tab.action{color:var(--number)}
+  .tab.action.solid{color:#dff1ff;background:rgba(31,111,235,.18)}
+  .tab.action.solid:hover{background:rgba(31,111,235,.32)}
+  .hamburger{display:none;padding:10px 16px;color:var(--fg);cursor:pointer;border-right:1px solid var(--line-2);font-size:16px}
+
+  /* ---------- Workbench: sidebar + main ---------- */
+  .workbench{display:flex;min-height:0}
+  .sidebar{
+    width:250px;flex:none;
+    background:var(--sidebar);
+    border-right:1px solid var(--line-2);
+    padding:12px 0 20px;
+    font-size:12.5px;
+  }
+  .sb-head{
+    color:var(--dim);letter-spacing:.14em;font-size:10.5px;
+    padding:6px 16px 10px;text-transform:uppercase;
+  }
+  .sb-tree{list-style:none;margin:0;padding:0}
+  .sb-tree .folder{color:var(--fg);padding:4px 16px;display:flex;gap:6px;align-items:center}
+  .sb-tree .folder .caret{color:var(--dim)}
+  .sb-file{
+    display:flex;align-items:center;gap:8px;
+    padding:5px 16px 5px 30px;color:var(--dim);cursor:pointer;
+    border-left:2px solid transparent;transition:background .12s,color .12s;
+  }
+  .sb-file:hover{background:#11161d;color:var(--fg)}
+  .sb-file.active{background:#11202f;color:#e6edf3;border-left-color:var(--accent-line)}
+  .sb-file .fi{width:9px;height:9px;border-radius:2px;flex:none}
+  .sb-file .ext{color:#586069;margin-left:auto;font-size:10.5px}
+  .sb-sect{margin-top:16px}
+
+  /* ---------- Editor pane ---------- */
+  .pane{flex:1;min-width:0;background:var(--bg)}
+  .breadcrumbs{
+    padding:7px 18px;color:var(--dim);font-size:11.5px;
+    border-bottom:1px solid var(--line);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .breadcrumbs b{color:#8b949e;font-weight:400}
+  .breadcrumbs .sep{margin:0 6px;color:#30363d}
+
+  /* code block with gutter */
+  .code{display:flex;font-size:14px}
+  .code .gutter{
+    flex:none;text-align:right;color:#484f58;
+    background:var(--gutter);border-right:1px solid var(--line);
+    padding:16px 12px 20px;user-select:none;min-width:52px;
+  }
+  .code .gutter span{display:block;line-height:1.85}
+  .code .body{padding:16px 20px 20px;flex:1;min-width:0;overflow-x:auto}
+  .code .body .ln{line-height:1.85;white-space:pre-wrap;word-break:break-word}
+  .indent{display:inline-block;width:2ch}
+
+  /* syntax colors */
+  .kw{color:var(--keyword)} .fn{color:var(--func)} .str{color:var(--string)}
+  .num{color:var(--number)} .cm{color:var(--comment);font-style:italic}
+  .tg{color:var(--tag)} .vr{color:var(--var)} .pn{color:var(--dim)}
+  .op{color:#ff7b72}
+
+  /* ---------- Hero ---------- */
+  .hero{position:relative}
+  .hero .code .body{padding-bottom:8px}
+  .hero-h1{font-size:clamp(26px,4vw,44px);line-height:1.2;margin:6px 0 10px;font-weight:700}
+  .hero-h1 .str{color:var(--string)}
+  .hero-sub{color:var(--fg);font-size:clamp(14px,1.6vw,16.5px);max-width:60ch;line-height:1.75}
+  .hero-sub .cm{color:var(--comment)}
+  .hero-row{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin-top:18px}
+  .btn{
+    font-family:var(--mono);font-size:13.5px;cursor:pointer;
+    border:1px solid var(--line-2);background:#0d1117;color:var(--fg);
+    padding:10px 18px;border-radius:6px;transition:transform .12s,background .15s,border-color .15s;
+    display:inline-flex;align-items:center;gap:8px;
+  }
+  .btn:hover{transform:translateY(-1px)}
+  .btn.primary{background:var(--accent-line);border-color:var(--accent-line);color:#fff;font-weight:700}
+  .btn.primary:hover{background:#388bfd;box-shadow:0 8px 22px rgba(31,111,235,.35)}
+  .btn .arrow{transition:transform .15s}
+  .btn:hover .arrow{transform:translateX(3px)}
+  .free-note{color:var(--comment);font-size:12.5px;font-style:italic}
+
+  /* hero SVG board motif */
+  .hero-art{
+    margin:22px 0 6px;border:1px solid var(--line);border-radius:8px;
+    background:#0a0e13;overflow:hidden;
+  }
+  .hero-art .cap{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:7px 14px;border-bottom:1px solid var(--line);color:var(--dim);font-size:11px;
+  }
+  .hero-art svg{display:block;width:100%;height:auto}
+
+  /* ---------- Section headers as comment banners ---------- */
+  .section{border-top:1px solid var(--line-2);padding:0}
+  .sec-head{
+    padding:14px 20px 6px;color:var(--comment);font-size:13px;
+    background:linear-gradient(180deg,#0b1016,var(--bg));
+  }
+  .sec-head .kw{color:var(--keyword)}
+  .sec-title{padding:0 20px 14px;font-size:clamp(20px,2.6vw,26px);font-weight:700;color:#e6edf3}
+
+  /* ---------- Products: file objects ---------- */
+  .products{padding:6px 12px 26px}
+  .prod{
+    border:1px solid var(--line-2);border-radius:8px;margin:12px 8px;
+    background:#0b0f14;overflow:hidden;transition:border-color .18s,transform .18s;
+  }
+  .prod:hover{border-color:#30475f;transform:translateY(-2px)}
+  .prod-bar{
+    display:flex;align-items:center;gap:9px;padding:9px 14px;
+    background:#0d1117;border-bottom:1px solid var(--line-2);font-size:12px;color:var(--dim);
+  }
+  .prod-bar .fi{width:9px;height:9px;border-radius:2px}
+  .prod-bar .fname{color:#c9d1d9}
+  .prod-bar .badge{margin-left:auto;color:#3fb950;font-size:10.5px}
+  .prod-body{display:flex;font-size:13.5px}
+  .prod-body .gutter{
+    flex:none;text-align:right;color:#3a424c;background:var(--gutter);
+    border-right:1px solid var(--line);padding:14px 10px;min-width:40px;
+  }
+  .prod-body .gutter span{display:block;line-height:1.9}
+  .prod-body .src{padding:14px 16px;flex:1;min-width:0}
+  .prod-body .src .ln{line-height:1.9;white-space:pre-wrap;word-break:break-word}
+  @media(min-width:760px){
+    .products-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;padding:6px 4px 26px}
+  }
+
+  /* ---------- Membership ---------- */
+  .plans{padding:8px 12px 24px;display:grid;gap:16px}
+  @media(min-width:760px){.plans{grid-template-columns:1fr 1fr;padding:8px 8px 26px}}
+  .plan{border:1px solid var(--line-2);border-radius:8px;background:#0b0f14;overflow:hidden}
+  .plan.featured{border-color:#2b6cb0;box-shadow:0 0 0 1px rgba(31,111,235,.25)}
+  .plan-bar{display:flex;align-items:center;gap:9px;padding:9px 14px;background:#0d1117;border-bottom:1px solid var(--line-2);font-size:12px;color:var(--dim)}
+  .plan-bar .fi{width:9px;height:9px;border-radius:2px}
+  .plan-body{padding:16px 18px;font-size:13.5px}
+  .plan-body .ln{line-height:1.95;white-space:pre-wrap;word-break:break-word}
+  .plan .price{font-size:clamp(24px,4vw,34px);font-weight:700;color:#e6edf3;margin:2px 0 4px}
+  .plan .price small{font-size:14px;color:var(--dim);font-weight:400}
+  .plan .btn{margin-top:14px;width:100%;justify-content:center}
+
+  /* ---------- Mission / final CTA ---------- */
+  .mission{padding:6px 20px 8px}
+  .mission .ln{line-height:1.95;white-space:pre-wrap;word-break:break-word;font-size:14px}
+  .cta-final{
+    margin:14px 12px 26px;border:1px solid var(--accent-line);border-radius:8px;
+    background:linear-gradient(180deg,rgba(31,111,235,.12),#0b0f14);
+    padding:22px 22px 24px;
+  }
+  .cta-final h3{margin:0 0 6px;font-size:clamp(18px,2.4vw,24px);color:#e6edf3}
+  .cta-final p{margin:0 0 14px;color:var(--dim);font-size:13.5px}
+
+  /* ---------- Terminal / status ---------- */
+  .terminal{
+    background:#010409;border-top:1px solid var(--line-2);
+    font-size:13px;
+  }
+  .term-tabs{display:flex;gap:0;border-bottom:1px solid var(--line-2);color:var(--dim);font-size:11px}
+  .term-tabs .tt{padding:7px 14px;border-right:1px solid var(--line-2)}
+  .term-tabs .tt.on{color:#e6edf3;box-shadow:inset 0 -2px 0 var(--accent-line)}
+  .term-body{padding:12px 16px 16px;min-height:96px}
+  .term-body .ln{line-height:1.9;white-space:pre-wrap;word-break:break-word}
+  .prompt{color:#3fb950}
+  .prompt .u{color:var(--number)}
+  .cursor{display:inline-block;width:8px;height:1.05em;background:#c9d1d9;vertical-align:-2px;margin-left:2px;animation:blink 1.05s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+
+  /* ---------- Status bar (footer) ---------- */
+  .statusbar{
+    display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+    background:var(--status);color:#dbe9f7;
+    font-size:11.5px;padding:6px 14px;
+  }
+  .statusbar .s{display:flex;align-items:center;gap:6px}
+  .statusbar .spacer{flex:1}
+  .statusbar a:hover{color:#fff;text-decoration:underline}
+
+  /* ---------- Reveal animation ---------- */
+  .reveal{opacity:0;transform:translateY(14px);transition:opacity .6s ease,transform .6s ease}
+  .reveal.in{opacity:1;transform:none}
+  @media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none}.cursor{animation:none}}
+
+  /* ---------- Responsive ---------- */
+  @media(max-width:820px){
+    .editor{margin:0;border-radius:0;border-left:none;border-right:none}
+    .sidebar{display:none}
+    .sidebar.open{
+      display:block;position:fixed;z-index:40;top:0;left:0;bottom:0;width:78%;max-width:290px;
+      box-shadow:0 0 60px rgba(0,0,0,.6);overflow:auto;
+    }
+    .backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:30}
+    .backdrop.show{display:block}
+    .hamburger{display:block}
+    .tab.hide-sm{display:none}
+    .titlebar .meta{display:none}
+    .products-grid{grid-template-columns:1fr}
+  }
+  @media(min-width:821px){.backdrop{display:none}}
+</style>
+</head>
+<body>
+
+<div class="editor">
+
+  <!-- ===== Title bar ===== -->
+  <div class="titlebar">
+    <div class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
+    <div class="path"><b>gammon</b> — worldwide-backgammon &nbsp;·&nbsp; ~/projects/gammon</div>
+    <div class="spacer"></div>
+    <div class="meta"><span>engine online</span><span>build passing</span></div>
+  </div>
+
+  <!-- ===== Tab strip = NAV ===== -->
+  <nav class="tabbar" aria-label="Primary">
+    <div class="hamburger" id="ham" aria-label="Toggle file explorer" role="button" tabindex="0">≡</div>
+    <a class="tab active" href="#hero"><span class="fi" style="background:#ff7b72"></span>gammon.hero</a>
+    <a class="tab hide-sm" href="#products"><span class="fi" style="background:#7ee787"></span>products.ts</a>
+    <a class="tab hide-sm" href="#engine"><span class="fi" style="background:#79c0ff"></span>engine.ts</a>
+    <a class="tab hide-sm" href="#clubs"><span class="fi" style="background:#ffa657"></span>clubs.tsx</a>
+    <a class="tab hide-sm" href="#membership"><span class="fi" style="background:#d2a8ff"></span>membership.json</a>
+    <span class="tab grow"></span>
+    <a class="tab action hide-sm" href="#login">log in</a>
+    <a class="tab action solid" href="#membership">▸ Start free</a>
+  </nav>
+
+  <!-- ===== Workbench ===== -->
+  <div class="workbench">
+
+    <!-- Sidebar: file explorer listing products -->
+    <aside class="sidebar" id="sidebar" aria-label="Explorer">
+      <div class="sb-head">Explorer — Gammon</div>
+      <ul class="sb-tree">
+        <li class="folder"><span class="caret">▾</span> src</li>
+        <li><a class="sb-file active" href="#hero"><span class="fi" style="background:#ff7b72"></span>hero.tsx</a></li>
+        <li class="folder" style="padding-left:26px"><span class="caret">▾</span> products</li>
+        <li><a class="sb-file" href="#engine"><span class="fi" style="background:#79c0ff"></span>the-engine<span class="ext">.ts</span></a></li>
+        <li><a class="sb-file" href="#play"><span class="fi" style="background:#7ee787"></span>play-online<span class="ext">.tsx</span></a></li>
+        <li><a class="sb-file" href="#grandmaster"><span class="fi" style="background:#ffa657"></span>beat-grandmaster<span class="ext">.ts</span></a></li>
+        <li><a class="sb-file" href="#university"><span class="fi" style="background:#d2a8ff"></span>university<span class="ext">.tsx</span></a></li>
+        <li><a class="sb-file" href="#clubs"><span class="fi" style="background:#a5d6ff"></span>run-a-club<span class="ext">.ts</span></a></li>
+        <li><a class="sb-file" href="#record"><span class="fi" style="background:#f778ba"></span>record-stream<span class="ext">.tsx</span></a></li>
+        <li class="sb-sect folder"><span class="caret">▾</span> config</li>
+        <li><a class="sb-file" href="#membership"><span class="fi" style="background:#d2a8ff"></span>membership<span class="ext">.json</span></a></li>
+        <li><a class="sb-file" href="#mission"><span class="fi" style="background:#6a9955"></span>MISSION<span class="ext">.md</span></a></li>
+        <li class="sb-sect folder"><span class="caret">▸</span> node_modules</li>
+        <li class="folder"><span class="caret">▸</span> .git</li>
+      </ul>
+    </aside>
+    <div class="backdrop" id="backdrop"></div>
+
+    <!-- Main editor pane -->
+    <main class="pane">
+
+      <!-- ===== HERO ===== -->
+      <section class="hero" id="hero">
+        <div class="breadcrumbs"><b>src</b><span class="sep">›</span><b>hero.tsx</b><span class="sep">›</span><b>&lt;Hero /&gt;</b></div>
+        <div class="code">
+          <div class="gutter" aria-hidden="true">
+            <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span><span>11</span>
+          </div>
+          <div class="body">
+            <div class="ln"><span class="cm">// gammon.hero — the marketing entrypoint</span></div>
+            <div class="ln"><span class="kw">import</span> <span class="pn">{</span> <span class="vr">Engine</span> <span class="pn">}</span> <span class="kw">from</span> <span class="str">"@gammon/engine"</span><span class="pn">;</span></div>
+            <div class="ln">&nbsp;</div>
+            <div class="ln"><span class="kw">export const</span> <span class="fn">headline</span> <span class="op">=</span></div>
+            <div class="ln"><span class="indent"></span><h1 class="hero-h1"><span class="str">"The home of worldwide backgammon"</span></h1></div>
+            <div class="ln">&nbsp;</div>
+            <div class="ln"><span class="kw">const</span> <span class="vr">subhead</span> <span class="op">=</span> <span class="str">`</span></div>
+            <div class="ln"><p class="hero-sub"><span class="indent"></span>Play, learn, compete and run a club — all powered by a
+              grandmaster-class engine that lives right in your pocket.
+              <span class="cm">// analysis · matches · coaching · tournaments</span></p></div>
+            <div class="ln"><span class="str">`</span><span class="pn">;</span></div>
+            <div class="ln">&nbsp;</div>
+            <div class="ln"><span class="kw">return</span> <span class="pn">(</span></div>
+
+            <div class="hero-row">
+              <a class="btn primary" href="#membership">Claim your free year <span class="arrow">→</span></a>
+              <a class="btn" href="#products">Explore the engine</a>
+              <span class="free-note">// free for the first 3,000 members · one year on us</span>
+            </div>
+
+            <!-- In-theme SVG board motif -->
+            <figure class="hero-art">
+              <figcaption class="cap"><span>gammon.board.svg</span><span>preview · 24 points</span></figcaption>
+              <svg viewBox="0 0 640 220" role="img" aria-label="Backgammon board with points and checkers">
+                <rect width="640" height="220" fill="#0a0e13"/>
+                <!-- outer frame -->
+                <rect x="8" y="8" width="624" height="204" fill="none" stroke="#21262d"/>
+                <!-- bar -->
+                <rect x="312" y="8" width="16" height="204" fill="#0d1117" stroke="#21262d"/>
+                <!-- points top -->
+                <g id="pts"></g>
+                <!-- dice -->
+                <g transform="translate(430,150)">
+                  <rect x="0" y="0" width="34" height="34" rx="5" fill="#0d1117" stroke="#30363d"/>
+                  <circle cx="9" cy="9" r="3" fill="#79c0ff"/><circle cx="25" cy="25" r="3" fill="#79c0ff"/><circle cx="17" cy="17" r="3" fill="#79c0ff"/>
+                  <rect x="44" y="6" width="34" height="34" rx="5" fill="#0d1117" stroke="#30363d"/>
+                  <circle cx="53" cy="15" r="3" fill="#ff7b72"/><circle cx="69" cy="15" r="3" fill="#ff7b72"/>
+                  <circle cx="53" cy="31" r="3" fill="#ff7b72"/><circle cx="69" cy="31" r="3" fill="#ff7b72"/>
+                </g>
+                <text x="20" y="30" fill="#6a9955" font-family="Space Mono, monospace" font-size="11">// pip count: 167–167</text>
+              </svg>
+            </figure>
+
+            <div class="ln"><span class="pn">)</span><span class="pn">;</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== PRODUCTS ===== -->
+      <section class="section" id="products">
+        <div class="sec-head"><span class="cm">/* ---- src/products/*  ·  six things Gammon ships ---- */</span></div>
+        <div class="sec-title">export const products = [</div>
+
+        <div class="products-grid">
+
+          <!-- 1 The Engine -->
+          <article class="prod reveal" id="engine">
+            <div class="prod-bar"><span class="fi" style="background:#79c0ff"></span><span class="fname">the-engine.ts</span><span class="badge">● XG-class</span></div>
+            <div class="prod-body">
+              <div class="gutter" aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span></div>
+              <div class="src">
+                <div class="ln"><span class="cm">// The Engine</span></div>
+                <div class="ln"><span class="kw">const</span> <span class="fn">engine</span> <span class="op">=</span> <span class="str">"XG-class analysis"</span><span class="pn">;</span></div>
+                <div class="ln"><span class="vr">engine</span>.<span class="fn">snapPhoto</span><span class="pn">()</span> <span class="cm">// read any real board</span></div>
+                <div class="ln"><span class="vr">engine</span>.<span class="fn">pipCount</span><span class="pn">()</span> <span class="cm">// instant, exact</span></div>
+              </div>
+            </div>
+          </article>
+
+          <!-- 2 Play Online -->
+          <article class="prod reveal" id="play">
+            <div class="prod-bar"><span class="fi" style="background:#7ee787"></span><span class="fname">play-online.tsx</span><span class="badge">● live</span></div>
+            <div class="prod-body">
+              <div class="gutter" aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span></div>
+              <div class="src">
+                <div class="ln"><span class="cm">// Play Online</span></div>
+                <div class="ln"><span class="kw">await</span> <span class="fn">match</span><span class="pn">(</span><span class="str">"ranked"</span><span class="pn">)</span><span class="pn">;</span></div>
+                <div class="ln"><span class="kw">await</span> <span class="fn">moneyGame</span><span class="pn">(</span><span class="pn">)</span><span class="pn">;</span> <span class="cm">// stakes optional</span></div>
+                <div class="ln"><span class="kw">await</span> <span class="fn">chouette</span><span class="pn">(</span><span class="pn">)</span><span class="pn">;</span> <span class="cm">// bring friends</span></div>
+              </div>
+            </div>
+          </article>
+
+          <!-- 3 Beat the Grandmaster -->
+          <article class="prod reveal" id="grandmaster">
+            <div class="prod-bar"><span class="fi" style="background:#ffa657"></span><span class="fname">beat-grandmaster.ts</span><span class="badge">● daily</span></div>
+            <div class="prod-body">
+              <div class="gutter" aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span></div>
+              <div class="src">
+                <div class="ln"><span class="cm">// Beat the Grandmaster</span></div>
+                <div class="ln"><span class="kw">const</span> <span class="vr">puzzle</span> <span class="op">=</span> <span class="fn">fromRealMistake</span><span class="pn">(</span><span class="pn">)</span><span class="pn">;</span></div>
+                <div class="ln"><span class="cm">// find the move a master missed</span></div>
+                <div class="ln"><span class="kw">return</span> <span class="vr">puzzle</span>.<span class="fn">solve</span><span class="pn">(</span><span class="pn">)</span><span class="pn">;</span></div>
+              </div>
+            </div>
+          </article>
+
+          <!-- 4 Gammon University -->
+          <article class="prod reveal" id="university">
+            <div class="prod-bar"><span class="fi" style="background:#d2a8ff"></span><span class="fname">university.tsx</span><span class="badge">● coaches</span></div>
+            <div class="prod-body">
+              <div class="gutter" aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span></div>
+              <div class="src">
+                <div class="ln"><span class="cm">// Gammon University</span></div>
+                <div class="ln"><span class="kw">import</span> <span class="pn">{</span> <span class="vr">lessons</span> <span class="pn">}</span> <span class="kw">from</span> <span class="str">"./coaches"</span><span class="pn">;</span></div>
+                <div class="ln"><span class="vr">lessons</span>.<span class="fn">structured</span><span class="pn">(</span><span class="pn">)</span><span class="pn">;</span> <span class="cm">// beginner → pro</span></div>
+                <div class="ln"><span class="vr">lessons</span>.<span class="fn">withPros</span><span class="pn">(</span><span class="pn">)</span><span class="pn">;</span> <span class="cm">// learn live</span></div>
+              </div>
+            </div>
+          </article>
+
+          <!-- 5 Run a Club -->
+          <article class="prod reveal" id="clubs">
+            <div class="prod-bar"><span class="fi" style="background:#a5d6ff"></span><span class="fname">run-a-club.ts</span><span class="badge">● keep 100%</span></div>
+            <div class="prod-body">
+              <div class="gutter" aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span></div>
+              <div class="src">
+                <div class="ln"><span class="cm">// Run a Club</span></div>
+                <div class="ln"><span class="vr">club</span>.<span class="fn">tournaments</span><span class="pn">(</span><span class="pn">)</span><span class="pn">;</span></div>
+                <div class="ln"><span class="vr">club</span>.<span class="fn">coins</span><span class="pn">(</span><span class="pn">)</span><span class="pn">;</span> <span class="cm">// your own economy</span></div>
+                <div class="ln"><span class="kw">return</span> <span class="vr">club</span>.<span class="vr">earnings</span><span class="pn">;</span> <span class="cm">// you keep them</span></div>
+              </div>
+            </div>
+          </article>
+
+          <!-- 6 Record & Stream -->
+          <article class="prod reveal" id="record">
+            <div class="prod-bar"><span class="fi" style="background:#f778ba"></span><span class="fname">record-stream.tsx</span><span class="badge">● OTB</span></div>
+            <div class="prod-body">
+              <div class="gutter" aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span></div>
+              <div class="src">
+                <div class="ln"><span class="cm">// Record &amp; Stream</span></div>
+                <div class="ln"><span class="kw">const</span> <span class="vr">game</span> <span class="op">=</span> <span class="fn">captureOTB</span><span class="pn">(</span><span class="pn">)</span><span class="pn">;</span></div>
+                <div class="ln"><span class="vr">game</span>.<span class="fn">liveStream</span><span class="pn">(</span><span class="pn">)</span><span class="pn">;</span> <span class="cm">// to the world</span></div>
+                <div class="ln"><span class="vr">game</span>.<span class="fn">archive</span><span class="pn">(</span><span class="pn">)</span><span class="pn">;</span> <span class="cm">// analyse later</span></div>
+              </div>
+            </div>
+          </article>
+
+        </div>
+        <div class="sec-title" style="padding-top:6px">]<span class="pn">;</span></div>
+      </section>
+
+      <!-- ===== MEMBERSHIP ===== -->
+      <section class="section" id="membership">
+        <div class="sec-head"><span class="cm">/* ---- config/membership.json  ·  pick a tier ---- */</span></div>
+        <div class="sec-title">"membership": {</div>
+
+        <div class="plans">
+          <!-- Free -->
+          <div class="plan reveal">
+            <div class="plan-bar"><span class="fi" style="background:#7ee787"></span>free.tier</div>
+            <div class="plan-body">
+              <div class="ln"><span class="cm">// for the first 3,000 members</span></div>
+              <div class="price">$0 <small>/ first year</small></div>
+              <div class="ln"><span class="str">"engine"</span><span class="pn">:</span> <span class="kw">true</span><span class="pn">,</span> <span class="cm">// full analysis</span></div>
+              <div class="ln"><span class="str">"play_online"</span><span class="pn">:</span> <span class="kw">true</span><span class="pn">,</span></div>
+              <div class="ln"><span class="str">"university"</span><span class="pn">:</span> <span class="kw">true</span><span class="pn">,</span></div>
+              <div class="ln"><span class="str">"term"</span><span class="pn">:</span> <span class="str">"12 months, on us"</span></div>
+              <a class="btn primary" href="#claim">Claim your free year →</a>
+            </div>
+          </div>
+
+          <!-- Premium -->
+          <div class="plan featured reveal">
+            <div class="plan-bar"><span class="fi" style="background:#d2a8ff"></span>premium.tier</div>
+            <div class="plan-body">
+              <div class="ln"><span class="cm">// everything, forever, for pocket change</span></div>
+              <div class="price">~$1 <small>/ month</small></div>
+              <div class="ln"><span class="str">"engine"</span><span class="pn">:</span> <span class="str">"unlimited"</span><span class="pn">,</span></div>
+              <div class="ln"><span class="str">"clubs"</span><span class="pn">:</span> <span class="str">"run your own"</span><span class="pn">,</span></div>
+              <div class="ln"><span class="str">"record_stream"</span><span class="pn">:</span> <span class="kw">true</span><span class="pn">,</span></div>
+              <div class="ln"><span class="str">"support"</span><span class="pn">:</span> <span class="str">"priority"</span></div>
+              <a class="btn primary" href="#claim">Go Premium →</a>
+            </div>
+          </div>
+        </div>
+        <div class="sec-title" style="padding-top:0">}</div>
+      </section>
+
+      <!-- ===== MISSION / FINAL CTA ===== -->
+      <section class="section" id="mission">
+        <div class="sec-head"><span class="cm"># MISSION.md</span></div>
+        <div class="mission">
+          <div class="ln"><span class="cm"># Our mission</span></div>
+          <div class="ln"><span class="cm">Backgammon is one of the oldest games on earth. We think it deserves</span></div>
+          <div class="ln"><span class="cm">the best software on earth — open to everyone, everywhere, from the</span></div>
+          <div class="ln"><span class="cm">kitchen table to the world championship. One engine. One community.</span></div>
+        </div>
+
+        <div class="cta-final" id="claim">
+          <h3>Claim your free year</h3>
+          <p>// free for the first 3,000 members · one year on us · no card required</p>
+          <div class="hero-row" style="margin-top:2px">
+            <a class="btn primary" href="#claim">Start free <span class="arrow">→</span></a>
+            <a class="btn" href="#login" id="login">Log in</a>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ===== TERMINAL ===== -->
+  <div class="terminal" id="terminal">
+    <div class="term-tabs">
+      <span class="tt on">TERMINAL</span><span class="tt">PROBLEMS</span><span class="tt">OUTPUT</span><span class="tt">DEBUG</span>
+    </div>
+    <div class="term-body">
+      <div class="ln"><span class="prompt"><span class="u">gammon@world</span>:~$</span> gammon start --free-year</div>
+      <div class="ln" style="color:#8b949e">✔ engine loaded · XG-class · pip-count ready</div>
+      <div class="ln" style="color:#8b949e">✔ 2,417 / 3,000 free memberships remaining</div>
+      <div class="ln"><span class="prompt"><span class="u">gammon@world</span>:~$</span> <span id="typed"></span><span class="cursor"></span></div>
+    </div>
+  </div>
+
+  <!-- ===== STATUS BAR (footer) ===== -->
+  <div class="statusbar">
+    <span class="s">⎇ main</span>
+    <span class="s">✔ 0 problems</span>
+    <span class="s">engine online</span>
+    <span class="spacer"></span>
+    <a href="#products" class="s">Products</a>
+    <a href="#engine" class="s">Engine</a>
+    <a href="#clubs" class="s">Clubs</a>
+    <a href="#membership" class="s">Membership</a>
+    <span class="s">© Gammon · The home of worldwide backgammon</span>
+    <span class="s">UTF-8 · TSX · Ln 1</span>
+  </div>
+
+</div>
+
+<script>
+  // ---- draw board points into hero SVG ----
+  (function(){
+    var g=document.getElementById('pts'); if(!g) return;
+    var cols=['#ff7b72','#79c0ff'];
+    for(var i=0;i<12;i++){
+      var top=i<6, idx=i%6;
+      var side = i<6 ? i : (i-6);
+      var x = 20 + side*46 + (i>=6?336:0);
+      // top points 0-5 left, 6-11 right; keep simple two banks
+      var bx = 20 + (i%6)*46 + (i>=6?336:0);
+      var p=document.createElementNS('http://www.w3.org/2000/svg','polygon');
+      var color = (i%2===0)?'#1b2733':'#131a22';
+      p.setAttribute('points', bx+',12 '+(bx+40)+',12 '+(bx+20)+',96');
+      p.setAttribute('fill', color);
+      p.setAttribute('stroke','#21262d'); p.setAttribute('stroke-width','1');
+      g.appendChild(p);
+      // bottom mirror
+      var pb=document.createElementNS('http://www.w3.org/2000/svg','polygon');
+      pb.setAttribute('points', bx+',208 '+(bx+40)+',208 '+(bx+20)+',124');
+      pb.setAttribute('fill', (i%2===0)?'#131a22':'#1b2733');
+      pb.setAttribute('stroke','#21262d');
+      g.appendChild(pb);
+    }
+    // a few checkers
+    var chk=[[40,30],[40,52],[86,178],[544,30],[590,178],[590,156]];
+    chk.forEach(function(c,i){
+      var e=document.createElementNS('http://www.w3.org/2000/svg','circle');
+      e.setAttribute('cx',c[0]); e.setAttribute('cy',c[1]); e.setAttribute('r','9');
+      e.setAttribute('fill', i%2? '#c9d1d9':'#30363d');
+      e.setAttribute('stroke', i%2? '#8b949e':'#484f58');
+      g.appendChild(e);
+    });
+  })();
+
+  // ---- mobile file explorer toggle ----
+  (function(){
+    var ham=document.getElementById('ham'),
+        sb=document.getElementById('sidebar'),
+        bd=document.getElementById('backdrop');
+    function open(){ sb.classList.add('open'); bd.classList.add('show'); }
+    function close(){ sb.classList.remove('open'); bd.classList.remove('show'); }
+    function toggle(){ sb.classList.contains('open')?close():open(); }
+    ham.addEventListener('click',toggle);
+    ham.addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){e.preventDefault();toggle();} });
+    bd.addEventListener('click',close);
+    sb.querySelectorAll('a').forEach(function(a){ a.addEventListener('click',close); });
+  })();
+
+  // ---- active tab / sidebar file sync on scroll ----
+  (function(){
+    var tabs=document.querySelectorAll('.tabbar .tab[href^="#"]');
+    var files=document.querySelectorAll('.sb-file');
+    var map={ '#hero':'gammon.hero','#products':'products.ts','#engine':'engine.ts','#clubs':'clubs.tsx','#membership':'membership.json' };
+    var sections=[].slice.call(document.querySelectorAll('section[id], article[id]'));
+    var obs=new IntersectionObserver(function(ents){
+      ents.forEach(function(en){
+        if(!en.isIntersecting) return;
+        var id='#'+en.target.id;
+        files.forEach(function(f){ f.classList.toggle('active', f.getAttribute('href')===id); });
+        tabs.forEach(function(t){ if(t.classList.contains('action')) return;
+          t.classList.toggle('active', t.getAttribute('href')===id); });
+      });
+    },{rootMargin:'-45% 0px -50% 0px'});
+    sections.forEach(function(s){ obs.observe(s); });
+  })();
+
+  // ---- reveal on scroll ----
+  (function(){
+    var els=document.querySelectorAll('.reveal');
+    var io=new IntersectionObserver(function(ents){
+      ents.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+    },{threshold:.15});
+    els.forEach(function(e){ io.observe(e); });
+  })();
+
+  // ---- terminal typing loop ----
+  (function(){
+    var el=document.getElementById('typed'); if(!el) return;
+    var cmds=[
+      'gammon play --ranked',
+      'gammon analyze --snap-a-photo board.jpg',
+      'gammon club create "London BG"',
+      'gammon stream --live otb',
+      'gammon start --free-year'
+    ];
+    var ci=0, chi=0, del=false;
+    function tick(){
+      var cur=cmds[ci];
+      el.textContent = del ? cur.slice(0,chi--) : cur.slice(0,chi++);
+      var wait=del?32:70;
+      if(!del && chi>cur.length){ del=true; wait=1500; }
+      else if(del && chi<0){ del=false; chi=0; ci=(ci+1)%cmds.length; wait=380; }
+      setTimeout(tick, wait);
+    }
+    setTimeout(tick, 900);
+  })();
+</script>
+</body>
+</html>

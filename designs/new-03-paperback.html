@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Gammon — The Home of Worldwide Backgammon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1a1712;          /* near-black */
+    --cream:#f3ead4;        /* paper cream */
+    --cream-2:#ece1c4;
+    --orange:#e4581f;       /* penguin-ish orange */
+    --green:#0f5136;        /* deep classic green */
+    --rule:#1a1712;
+    --muted:#6a6252;
+    --serif:'EB Garamond',Georgia,serif;
+    --display:'Cormorant Garamond',Georgia,serif;
+    --grot:'Archivo',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--cream);
+    color:var(--ink);
+    font-family:var(--serif);
+    -webkit-font-smoothing:antialiased;
+    line-height:1.5;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:0 28px}
+  a{color:inherit;text-decoration:none}
+
+  /* ---- shared label type ---- */
+  .label{
+    font-family:var(--grot);
+    text-transform:uppercase;
+    letter-spacing:.22em;
+    font-size:11px;
+    font-weight:600;
+  }
+
+  /* ---------- NAV ---------- */
+  .nav{
+    border-bottom:2px solid var(--ink);
+    background:var(--cream);
+    position:sticky;top:0;z-index:40;
+  }
+  .nav-inner{
+    display:flex;align-items:center;justify-content:space-between;
+    height:56px;
+  }
+  .brand{font-family:var(--display);font-weight:700;font-size:24px;letter-spacing:.02em}
+  .brand::before{content:"";display:inline-block;width:10px;height:10px;background:var(--orange);margin-right:9px;vertical-align:2px;border-radius:50%}
+  .nav-links{display:flex;gap:26px}
+  .nav-links a{font-family:var(--grot);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink);padding:4px 0;border-bottom:1px solid transparent;transition:border-color .2s}
+  .nav-links a:hover{border-color:var(--orange)}
+  .nav-cta{display:flex;align-items:center;gap:16px}
+  .nav-cta .login{font-family:var(--grot);font-size:12px;letter-spacing:.1em;text-transform:uppercase}
+  .btn{
+    font-family:var(--grot);text-transform:uppercase;letter-spacing:.12em;font-size:11px;font-weight:600;
+    border:2px solid var(--ink);background:var(--ink);color:var(--cream);
+    padding:9px 16px;cursor:pointer;display:inline-block;transition:background .18s,color .18s;
+  }
+  .btn:hover{background:var(--orange);border-color:var(--orange);color:#fff}
+  .btn-line{background:transparent;color:var(--ink)}
+  .btn-line:hover{background:var(--ink);color:var(--cream);border-color:var(--ink)}
+  .burger{display:none;flex-direction:column;gap:4px;background:none;border:0;cursor:pointer;padding:8px}
+  .burger span{width:22px;height:2px;background:var(--ink);display:block}
+  .mobile-menu{display:none;border-bottom:2px solid var(--ink);background:var(--cream)}
+  .mobile-menu a{display:block;font-family:var(--grot);text-transform:uppercase;letter-spacing:.12em;font-size:13px;padding:12px 28px;border-top:1px solid rgba(26,23,18,.2)}
+
+  /* ---------- COVER (tri-band) ---------- */
+  .cover{border:2px solid var(--ink);margin:34px 0 12px;background:var(--cream)}
+  .band{position:relative;overflow:hidden}
+  .band-top{background:var(--orange);height:118px;display:flex;align-items:center;justify-content:center}
+  .band-top .kicker{font-family:var(--grot);text-transform:uppercase;letter-spacing:.42em;font-size:12px;color:#fff;font-weight:600}
+  .band-bot{background:var(--green);height:118px;display:flex;align-items:center;justify-content:center}
+  .band-bot .series{font-family:var(--grot);text-transform:uppercase;letter-spacing:.34em;font-size:11px;color:var(--cream);font-weight:600}
+
+  .panel{
+    background:var(--cream);
+    padding:44px 30px;
+    text-align:center;
+    border-top:2px solid var(--ink);
+    border-bottom:2px solid var(--ink);
+  }
+  .panel-frame{
+    border:2px solid var(--ink);
+    max-width:720px;margin:0 auto;
+    padding:40px 34px;
+    position:relative;
+  }
+  .panel-frame::before{
+    content:"";position:absolute;inset:6px;border:1px solid var(--ink);pointer-events:none;
+  }
+  .emblem{margin:0 auto 20px;display:block}
+  h1.hero{
+    font-family:var(--display);font-weight:600;
+    font-size:clamp(34px,5.2vw,58px);line-height:1.02;letter-spacing:.005em;
+    margin:0;
+  }
+  .hero-sub{
+    font-family:var(--serif);font-size:clamp(16px,2vw,19px);color:var(--ink);
+    max-width:520px;margin:20px auto 0;line-height:1.55;
+  }
+  .hero-rule{width:60px;height:2px;background:var(--orange);margin:22px auto}
+  .hero-cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:8px}
+  .hero-note{font-family:var(--grot);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:20px}
+  .price-flag{font-family:var(--display);font-style:italic;font-size:22px;color:var(--orange)}
+
+  /* ---------- SECTION HEADINGS ---------- */
+  .sec-head{display:flex;align-items:center;gap:16px;margin:64px 0 8px}
+  .sec-head .line{flex:1;height:2px;background:var(--ink)}
+  .sec-head .txt{font-family:var(--grot);text-transform:uppercase;letter-spacing:.22em;font-size:12px;font-weight:600;color:var(--green)}
+  .sec-lead{font-family:var(--display);font-style:italic;font-size:20px;color:var(--muted);text-align:center;max-width:600px;margin:6px auto 0}
+
+  /* ---------- CATALOGUE (series of titles) ---------- */
+  .catalogue{border-top:2px solid var(--ink);margin-top:26px}
+  .entry{
+    display:grid;grid-template-columns:88px 1fr auto;align-items:center;gap:24px;
+    padding:24px 8px;border-bottom:1px solid rgba(26,23,18,.28);
+    transition:background .18s,padding-left .18s;
+  }
+  .entry:hover{background:var(--cream-2);padding-left:16px}
+  .entry .no{font-family:var(--display);font-weight:600;font-size:40px;color:var(--orange);line-height:1;text-align:center}
+  .entry .title{font-family:var(--display);font-weight:700;font-size:26px;line-height:1.05}
+  .entry .desc{font-family:var(--serif);font-size:16px;color:var(--muted);margin-top:3px;max-width:560px}
+  .entry .imprint{font-family:var(--grot);text-transform:uppercase;letter-spacing:.16em;font-size:10px;color:var(--green);white-space:nowrap}
+
+  /* ---------- MEMBERSHIP ---------- */
+  .members{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:26px}
+  .plan{border:2px solid var(--ink);background:var(--cream);display:flex;flex-direction:column}
+  .plan-band{padding:14px 22px;border-bottom:2px solid var(--ink);display:flex;justify-content:space-between;align-items:baseline}
+  .plan-band .label{color:#fff}
+  .plan.free .plan-band{background:var(--green)}
+  .plan.free .plan-band .label,.plan.free .plan-band .tag{color:var(--cream)}
+  .plan.prem .plan-band{background:var(--orange)}
+  .plan.prem .plan-band .label,.plan.prem .plan-band .tag{color:#fff}
+  .plan-band .tag{font-family:var(--display);font-style:italic;font-size:18px}
+  .plan-body{padding:26px 26px 28px;display:flex;flex-direction:column;flex:1}
+  .plan-price{font-family:var(--display);font-weight:600;font-size:44px;line-height:1}
+  .plan-price small{font-family:var(--grot);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:500}
+  .plan ul{list-style:none;margin:18px 0 24px;padding:0;font-size:16px}
+  .plan li{padding:7px 0 7px 22px;position:relative;border-bottom:1px solid rgba(26,23,18,.14)}
+  .plan li::before{content:"—";position:absolute;left:0;color:var(--orange)}
+  .plan .btn{margin-top:auto;text-align:center}
+
+  /* ---------- MISSION ---------- */
+  .mission{border:2px solid var(--ink);margin-top:64px;text-align:center;background:var(--cream)}
+  .mission .band-top{height:26px}
+  .mission-body{padding:52px 30px}
+  .mission-body .label{color:var(--green);margin-bottom:16px;display:block}
+  .mission-body p{font-family:var(--display);font-size:clamp(22px,3vw,32px);line-height:1.28;max-width:760px;margin:0 auto;font-weight:500}
+  .mission-body .final-cta{margin-top:30px}
+
+  /* ---------- FOOTER ---------- */
+  footer{border-top:2px solid var(--ink);margin-top:64px;padding:34px 0 46px}
+  .foot-inner{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:24px}
+  .foot-brand{font-family:var(--display);font-weight:700;font-size:22px}
+  .foot-brand span{display:block;font-family:var(--grot);text-transform:uppercase;letter-spacing:.2em;font-size:10px;color:var(--muted);margin-top:4px}
+  .foot-cols{display:flex;gap:54px;flex-wrap:wrap}
+  .foot-col h4{font-family:var(--grot);text-transform:uppercase;letter-spacing:.16em;font-size:11px;margin:0 0 10px;color:var(--green)}
+  .foot-col a{display:block;font-size:15px;color:var(--muted);padding:3px 0}
+  .foot-col a:hover{color:var(--ink)}
+  .colophon{border-top:1px solid rgba(26,23,18,.28);margin-top:30px;padding-top:16px;font-family:var(--grot);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:center}
+
+  /* ---------- MOTION ---------- */
+  .reveal{opacity:0;transform:translateY(14px);transition:opacity .6s ease,transform .6s ease}
+  .reveal.in{opacity:1;transform:none}
+  @media (prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}}
+
+  /* ---------- RESPONSIVE ---------- */
+  @media(max-width:820px){
+    .members{grid-template-columns:1fr}
+    .nav-links,.nav-cta .login,.nav-cta .btn-line{display:none}
+    .burger{display:flex}
+  }
+  @media(max-width:640px){
+    .entry{grid-template-columns:56px 1fr;gap:14px}
+    .entry .imprint{display:none}
+    .entry .no{font-size:30px}
+    .entry .title{font-size:21px}
+    .panel{padding:30px 16px}
+    .panel-frame{padding:30px 20px}
+    .band-top,.band-bot{height:84px}
+  }
+</style>
+</head>
+<body>
+
+<!-- ===================== NAV ===================== -->
+<nav class="nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="#">Gammon</a>
+    <div class="nav-links">
+      <a href="#catalogue">Products</a>
+      <a href="#catalogue">Engine</a>
+      <a href="#catalogue">Clubs</a>
+      <a href="#membership">Membership</a>
+    </div>
+    <div class="nav-cta">
+      <a class="login" href="#">Log in</a>
+      <a class="btn btn-line" href="#membership">Start free</a>
+      <button class="burger" id="burger" aria-label="Menu"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+</nav>
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#catalogue">Products</a>
+  <a href="#catalogue">Engine</a>
+  <a href="#catalogue">Clubs</a>
+  <a href="#membership">Membership</a>
+  <a href="#">Log in</a>
+  <a href="#membership">Start free</a>
+</div>
+
+<!-- ===================== HERO COVER ===================== -->
+<header class="wrap">
+  <div class="cover reveal">
+    <div class="band band-top"><span class="kicker">Gammon · Worldwide Edition</span></div>
+    <div class="panel">
+      <div class="panel-frame">
+        <!-- in-theme backgammon emblem -->
+        <svg class="emblem" width="72" height="72" viewBox="0 0 72 72" aria-hidden="true">
+          <rect x="1" y="1" width="70" height="70" fill="none" stroke="#1a1712" stroke-width="2"/>
+          <g>
+            <polygon points="8,4 20,4 14,34" fill="#e4581f"/>
+            <polygon points="26,4 38,4 32,34" fill="#0f5136"/>
+            <polygon points="44,4 56,4 50,34" fill="#e4581f"/>
+            <polygon points="8,68 20,68 14,38" fill="#0f5136"/>
+            <polygon points="26,68 38,68 32,38" fill="#e4581f"/>
+            <polygon points="44,68 56,68 50,38" fill="#0f5136"/>
+          </g>
+          <circle cx="59" cy="59" r="9" fill="none" stroke="#1a1712" stroke-width="2"/>
+          <circle cx="55.5" cy="55.5" r="1.6" fill="#1a1712"/>
+          <circle cx="62.5" cy="62.5" r="1.6" fill="#1a1712"/>
+          <circle cx="59" cy="59" r="1.6" fill="#1a1712"/>
+        </svg>
+        <div class="label" style="color:var(--muted);margin-bottom:14px">A complete backgammon platform</div>
+        <h1 class="hero">The home of<br>worldwide backgammon</h1>
+        <div class="hero-rule"></div>
+        <p class="hero-sub">Play, learn, compete and run a club — all powered by a grandmaster-class engine that fits in your pocket.</p>
+        <div class="hero-cta">
+          <a class="btn" href="#membership">Claim your free year</a>
+          <a class="btn btn-line" href="#catalogue">Browse the series</a>
+        </div>
+        <div class="hero-note">Free for the first 3,000 members · one year on us</div>
+      </div>
+    </div>
+    <div class="band band-bot"><span class="series">The Backgammon Series · Est. 2026 · No. 001</span></div>
+  </div>
+</header>
+
+<!-- ===================== CATALOGUE (6 PRODUCTS) ===================== -->
+<main class="wrap" id="catalogue">
+  <div class="sec-head reveal">
+    <div class="line"></div>
+    <div class="txt">The Series · in six volumes</div>
+    <div class="line"></div>
+  </div>
+  <p class="sec-lead reveal">A catalogue of everything the modern player needs, issued as one membership.</p>
+
+  <div class="catalogue">
+    <div class="entry reveal">
+      <div class="no">01</div>
+      <div>
+        <div class="title">The Engine</div>
+        <div class="desc">XG-class analysis in your pocket. Snap a photo of any board, get an instant read, best play, equity and a live pip count.</div>
+      </div>
+      <div class="imprint">Analysis</div>
+    </div>
+    <div class="entry reveal">
+      <div class="no">02</div>
+      <div>
+        <div class="title">Play Online</div>
+        <div class="desc">Rated matches, money games and full chouettes against players worldwide, on the board or on your phone.</div>
+      </div>
+      <div class="imprint">Live Tables</div>
+    </div>
+    <div class="entry reveal">
+      <div class="no">03</div>
+      <div>
+        <div class="title">Beat the Grandmaster</div>
+        <div class="desc">A daily puzzle drawn from a real master's real mistake. Find the play they missed — then see why.</div>
+      </div>
+      <div class="imprint">Puzzles</div>
+    </div>
+    <div class="entry reveal">
+      <div class="no">04</div>
+      <div>
+        <div class="title">Gammon University</div>
+        <div class="desc">Structured lessons and courses taught by working coaches, from your first back-game to advanced cube theory.</div>
+      </div>
+      <div class="imprint">Lessons</div>
+    </div>
+    <div class="entry reveal">
+      <div class="no">05</div>
+      <div>
+        <div class="title">Run a Club</div>
+        <div class="desc">Host tournaments, issue coins, and manage your members — and keep the earnings you build.</div>
+      </div>
+      <div class="imprint">Clubs</div>
+    </div>
+    <div class="entry reveal">
+      <div class="no">06</div>
+      <div>
+        <div class="title">Record &amp; Stream</div>
+        <div class="desc">Capture over-the-board matches move by move and broadcast them live to your audience.</div>
+      </div>
+      <div class="imprint">Broadcast</div>
+    </div>
+  </div>
+
+  <!-- ===================== MEMBERSHIP ===================== -->
+  <div id="membership">
+    <div class="sec-head reveal">
+      <div class="line"></div>
+      <div class="txt">Membership · two editions</div>
+      <div class="line"></div>
+    </div>
+    <p class="sec-lead reveal">One roof for the whole game. Join free while the doors are open.</p>
+
+    <div class="members">
+      <div class="plan free reveal">
+        <div class="plan-band"><span class="label">Free Edition</span><span class="tag">First 3,000</span></div>
+        <div class="plan-body">
+          <div class="plan-price">$0<br><small>one full year, on us</small></div>
+          <ul>
+            <li>The complete engine, no limits</li>
+            <li>Online play, money games &amp; chouettes</li>
+            <li>The daily grandmaster puzzle</li>
+            <li>Full access to Gammon University</li>
+          </ul>
+          <a class="btn" href="#">Claim your free year</a>
+        </div>
+      </div>
+      <div class="plan prem reveal">
+        <div class="plan-band"><span class="label">Premium Edition</span><span class="tag">After year one</span></div>
+        <div class="plan-body">
+          <div class="plan-price">~$1<br><small>per month, forever fair</small></div>
+          <ul>
+            <li>Everything in the Free Edition</li>
+            <li>Run your own club &amp; keep earnings</li>
+            <li>Record &amp; live-stream OTB matches</li>
+            <li>Priority engine &amp; deeper analysis</li>
+          </ul>
+          <a class="btn btn-line" href="#">Go Premium</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== MISSION ===================== -->
+  <section class="mission reveal">
+    <div class="band band-top"></div>
+    <div class="mission-body">
+      <span class="label">Our Mission</span>
+      <p>To gather every part of backgammon — the engine, the tables, the teachers and the clubs — under a single roof, and to hand the world's finest analysis to every player who loves the game.</p>
+      <div class="final-cta hero-cta">
+        <a class="btn" href="#membership">Claim your free year</a>
+        <a class="btn btn-line" href="#catalogue">Browse the series</a>
+      </div>
+    </div>
+    <div class="band band-bot"></div>
+  </section>
+</main>
+
+<!-- ===================== FOOTER ===================== -->
+<footer>
+  <div class="wrap">
+    <div class="foot-inner">
+      <div class="foot-brand">Gammon<span>The Home of Worldwide Backgammon</span></div>
+      <div class="foot-cols">
+        <div class="foot-col">
+          <h4>Platform</h4>
+          <a href="#catalogue">The Engine</a>
+          <a href="#catalogue">Play Online</a>
+          <a href="#catalogue">Puzzles</a>
+          <a href="#catalogue">University</a>
+        </div>
+        <div class="foot-col">
+          <h4>Clubs</h4>
+          <a href="#catalogue">Run a Club</a>
+          <a href="#catalogue">Record &amp; Stream</a>
+          <a href="#membership">Membership</a>
+        </div>
+        <div class="foot-col">
+          <h4>Company</h4>
+          <a href="#">About</a>
+          <a href="#">Mission</a>
+          <a href="#">Contact</a>
+        </div>
+      </div>
+    </div>
+    <div class="colophon">Gammon Editions · Est. 2026 · Printed for players worldwide · No. 001</div>
+  </div>
+</footer>
+
+<script>
+  // Mobile menu
+  var burger=document.getElementById('burger');
+  var menu=document.getElementById('mobileMenu');
+  burger.addEventListener('click',function(){
+    menu.style.display = (menu.style.display==='block') ? 'none' : 'block';
+  });
+  menu.querySelectorAll('a').forEach(function(a){
+    a.addEventListener('click',function(){menu.style.display='none';});
+  });
+
+  // Scroll reveal
+  var io=new IntersectionObserver(function(entries){
+    entries.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} });
+  },{threshold:.12});
+  document.querySelectorAll('.reveal').forEach(function(el){io.observe(el);});
+</script>
+</body>
+</html>

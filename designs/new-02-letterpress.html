@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Gammon — The Home of Worldwide Backgammon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Anton&family=Oswald:wght@300;400;500;600;700&family=Spectral:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --paper:#efe6d2;
+    --paper-2:#e7dcc2;
+    --ink:#211c17;
+    --oxblood:#8f2d2b;
+    --ochre:#c68a1e;
+    --teal:#1f5e5a;
+    --cream:#f6efdd;
+    --rule:#3a332a;
+    --misreg:#c68a1e;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Oswald',sans-serif;
+    line-height:1.4;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  /* paper grain + subtle vignette */
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:1;
+    opacity:.5;mix-blend-mode:multiply;
+    background-image:
+      radial-gradient(circle at 20% 30%, rgba(0,0,0,.05) 0 1px, transparent 1px),
+      radial-gradient(circle at 70% 60%, rgba(0,0,0,.045) 0 1px, transparent 1px),
+      radial-gradient(circle at 45% 85%, rgba(0,0,0,.04) 0 1px, transparent 1px);
+    background-size:7px 7px, 11px 11px, 5px 5px;
+  }
+  body::after{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:2;
+    box-shadow:inset 0 0 200px rgba(58,40,20,.28);
+  }
+  .display{font-family:'Anton',sans-serif;font-weight:400;text-transform:uppercase;letter-spacing:.01em;line-height:.86}
+  .slab{font-family:'Bricolage Grotesque',sans-serif;font-weight:800}
+  .cond{font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.12em}
+  .serif{font-family:'Spectral',serif}
+  a{color:inherit;text-decoration:none}
+  img{max-width:100%}
+
+  /* ---- misregistration text ---- */
+  .misreg{position:relative;display:inline-block}
+  .misreg::before{
+    content:attr(data-t);position:absolute;left:-.035em;top:.035em;
+    color:var(--misreg);z-index:-1;-webkit-text-fill-color:var(--misreg);
+  }
+
+  /* ---- rule borders ---- */
+  .double-rule{border-top:3px double var(--rule);border-bottom:3px double var(--rule)}
+
+  /* ================= NAV ================= */
+  nav{
+    position:sticky;top:0;z-index:50;
+    background:var(--paper);
+    border-bottom:3px double var(--rule);
+    box-shadow:0 2px 0 var(--rule), 0 6px 0 var(--paper), 0 7px 0 var(--rule);
+  }
+  .nav-inner{
+    max-width:1180px;margin:0 auto;padding:.55rem 1.4rem;
+    display:flex;align-items:center;justify-content:space-between;gap:1rem;
+  }
+  .logo{
+    font-family:'Anton',sans-serif;text-transform:uppercase;
+    font-size:1.9rem;letter-spacing:.02em;color:var(--ink);
+    display:flex;align-items:center;gap:.5rem;
+  }
+  .logo .mark{display:inline-block}
+  .logo .misreg::before{color:var(--oxblood);-webkit-text-fill-color:var(--oxblood)}
+  .nav-links{display:flex;align-items:center;gap:1.6rem}
+  .nav-links a.link{
+    font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.15em;
+    font-size:.78rem;font-weight:500;padding:.2rem 0;border-bottom:2px solid transparent;
+    transition:border-color .2s, color .2s;
+  }
+  .nav-links a.link:hover{border-color:var(--oxblood);color:var(--oxblood)}
+  .nav-cta{display:flex;align-items:center;gap:.8rem}
+  .btn{
+    font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.14em;
+    font-size:.78rem;font-weight:600;cursor:pointer;border:none;background:none;
+    display:inline-block;
+  }
+  .btn-login{color:var(--ink);border-bottom:2px solid var(--ink);padding:.2rem 0}
+  .btn-login:hover{color:var(--oxblood);border-color:var(--oxblood)}
+  .btn-solid{
+    background:var(--oxblood);color:var(--cream);padding:.62rem 1.1rem;
+    border:2px solid var(--ink);position:relative;
+    box-shadow:4px 4px 0 var(--ink);transition:transform .12s, box-shadow .12s;
+  }
+  .btn-solid:hover{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--ink)}
+  .btn-solid:active{transform:translate(4px,4px);box-shadow:0 0 0 var(--ink)}
+  .hamburger{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:.3rem}
+  .hamburger span{width:26px;height:3px;background:var(--ink);display:block;transition:.25s}
+  .mobile-menu{display:none}
+
+  /* ================= HERO ================= */
+  header.hero{
+    position:relative;z-index:3;
+    max-width:1180px;margin:0 auto;padding:2.6rem 1.4rem 1.2rem;
+  }
+  .kicker{
+    display:flex;align-items:center;gap:1rem;justify-content:center;
+    font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.35em;
+    font-size:.72rem;color:var(--teal);font-weight:600;margin-bottom:1.4rem;
+  }
+  .kicker .dingbat{color:var(--oxblood);font-size:1rem}
+  .kicker .ln{flex:1;height:2px;background:var(--rule);max-width:120px}
+
+  .bands{text-align:center;margin:0 auto}
+  .band{display:block;line-height:.82}
+  .band-1{font-size:clamp(2.6rem,9vw,7.2rem);color:var(--ink);letter-spacing:.005em}
+  .band-2{
+    font-size:clamp(3.6rem,15vw,12rem);color:var(--oxblood);
+    letter-spacing:-.01em;margin:.02em 0;
+  }
+  .band-2 .misreg::before{color:var(--teal);-webkit-text-fill-color:var(--teal)}
+  .band-3{font-size:clamp(2.2rem,7.5vw,6rem);color:var(--teal);letter-spacing:.01em}
+  .band-3 .misreg::before{color:var(--ochre);-webkit-text-fill-color:var(--ochre)}
+  .band .display{font-family:'Anton',sans-serif}
+
+  .hero-sub{
+    max-width:640px;margin:1.6rem auto 0;text-align:center;
+    font-family:'Spectral',serif;font-size:1.14rem;line-height:1.55;color:#3a332a;
+  }
+  .hero-sub em{color:var(--oxblood);font-style:italic}
+
+  .hero-cta{display:flex;flex-wrap:wrap;gap:1rem;justify-content:center;align-items:center;margin-top:1.8rem}
+  .btn-hero{
+    background:var(--teal);color:var(--cream);border:2px solid var(--ink);
+    padding:.95rem 1.8rem;font-size:1rem;letter-spacing:.12em;
+    box-shadow:5px 5px 0 var(--ink);transition:transform .12s, box-shadow .12s;
+    font-family:'Oswald',sans-serif;text-transform:uppercase;font-weight:600;cursor:pointer;
+  }
+  .btn-hero:hover{transform:translate(2px,2px);box-shadow:3px 3px 0 var(--ink)}
+  .btn-hero:active{transform:translate(5px,5px);box-shadow:0 0 0 var(--ink)}
+  .hero-note{
+    font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.16em;
+    font-size:.72rem;color:var(--ink);border:2px solid var(--rule);
+    padding:.55rem .9rem;background:var(--cream);
+  }
+  .hero-note b{color:var(--oxblood)}
+
+  /* SVG motif */
+  .motif-wrap{margin:2.4rem auto 0;max-width:760px;padding:0 .5rem}
+  .motif{width:100%;height:auto;display:block}
+
+  .press-tag{
+    text-align:center;margin:1.6rem auto .4rem;
+    font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.4em;
+    font-size:.66rem;color:var(--teal);
+  }
+
+  /* ================= SECTION SHELL ================= */
+  section{position:relative;z-index:3;max-width:1180px;margin:0 auto;padding:3.2rem 1.4rem}
+  .sec-head{display:flex;align-items:flex-end;gap:1.2rem;margin-bottom:.4rem}
+  .sec-num{
+    font-family:'Anton',sans-serif;font-size:clamp(2rem,6vw,3.4rem);color:var(--ochre);
+    line-height:.8;-webkit-text-stroke:1.5px var(--ink);
+  }
+  .sec-title{
+    font-family:'Anton',sans-serif;text-transform:uppercase;
+    font-size:clamp(1.8rem,5.5vw,3.2rem);line-height:.86;color:var(--ink);letter-spacing:.01em;
+  }
+  .sec-sub{
+    font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.2em;
+    font-size:.74rem;color:var(--teal);margin:.8rem 0 2rem;
+  }
+
+  /* ================= PRODUCTS (poster blocks) ================= */
+  .products{
+    display:grid;grid-template-columns:repeat(6,1fr);gap:0;
+    border:3px solid var(--ink);background:var(--ink);
+  }
+  .poster{
+    background:var(--cream);padding:1.5rem 1.4rem 1.6rem;position:relative;
+    display:flex;flex-direction:column;min-height:230px;
+    transition:background .2s;
+  }
+  /* span layout: alternating widths for a hand-set poster feel */
+  .poster.p1{grid-column:span 3}
+  .poster.p2{grid-column:span 3}
+  .poster.p3{grid-column:span 2}
+  .poster.p4{grid-column:span 4}
+  .poster.p5{grid-column:span 4}
+  .poster.p6{grid-column:span 2}
+  .poster+.poster{border-left:3px solid var(--ink)}
+  .poster.p3, .poster.p4{border-top:3px solid var(--ink)}
+  .poster.p5, .poster.p6{border-top:3px solid var(--ink)}
+  .poster:hover{background:var(--paper-2)}
+
+  .poster .pidx{
+    font-family:'Anton',sans-serif;font-size:.95rem;color:var(--cream);
+    background:var(--ink);width:1.9rem;height:1.9rem;display:flex;align-items:center;justify-content:center;
+    position:absolute;top:-3px;left:-3px;
+  }
+  .poster h3{
+    font-family:'Anton',sans-serif;text-transform:uppercase;line-height:.86;
+    font-size:clamp(1.6rem,3vw,2.4rem);margin:.6rem 0 .2rem;letter-spacing:.005em;
+  }
+  .poster.tint-oxblood h3{color:var(--oxblood)}
+  .poster.tint-teal h3{color:var(--teal)}
+  .poster.tint-ochre h3{color:var(--ochre)}
+  .poster.tint-ink h3{color:var(--ink)}
+  .poster .plabel{
+    font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.24em;
+    font-size:.66rem;color:var(--ink);font-weight:600;
+    border-top:2px solid var(--ink);border-bottom:2px solid var(--ink);
+    padding:.28rem 0;display:inline-block;align-self:flex-start;
+  }
+  .poster p{
+    font-family:'Spectral',serif;font-size:1rem;line-height:1.5;color:#3a332a;margin-top:.7rem;
+  }
+  .poster .pico{position:absolute;bottom:1.1rem;right:1.1rem;opacity:.85}
+
+  /* ================= MEMBERSHIP ================= */
+  .membership{background:var(--ink);position:relative;z-index:3}
+  .membership-inner{max-width:1180px;margin:0 auto;padding:3.4rem 1.4rem}
+  .membership .sec-title,.membership .sec-num{color:var(--cream)}
+  .membership .sec-num{color:var(--ochre)}
+  .membership .sec-sub{color:var(--ochre)}
+  .plans{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-top:2rem;border:3px solid var(--cream)}
+  .plan{background:var(--cream);color:var(--ink);padding:2rem 1.8rem;position:relative}
+  .plan+.plan{border-left:3px solid var(--ink)}
+  .plan.premium{background:var(--oxblood);color:var(--cream)}
+  .plan .ptag{
+    font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.24em;
+    font-size:.72rem;font-weight:600;
+  }
+  .plan.free .ptag{color:var(--teal)}
+  .plan.premium .ptag{color:var(--ochre)}
+  .plan .pname{font-family:'Anton',sans-serif;text-transform:uppercase;font-size:clamp(2.4rem,6vw,3.6rem);line-height:.86;margin:.3rem 0 .1rem}
+  .plan .pprice{font-family:'Spectral',serif;font-size:1.1rem;margin-bottom:1rem}
+  .plan .pprice b{font-family:'Anton',sans-serif;font-size:1.6rem}
+  .plan ul{list-style:none;margin:1rem 0 1.6rem}
+  .plan li{
+    font-family:'Oswald',sans-serif;font-size:.9rem;padding:.5rem 0;
+    border-top:1px dashed rgba(58,51,42,.4);display:flex;gap:.6rem;align-items:baseline;
+  }
+  .plan.premium li{border-top-color:rgba(246,239,221,.35)}
+  .plan li .dot{color:var(--ochre);font-weight:700}
+  .plan.free li .dot{color:var(--oxblood)}
+  .plan .btn-plan{
+    font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.14em;
+    font-size:.85rem;font-weight:600;padding:.8rem 1.4rem;border:2px solid var(--ink);cursor:pointer;
+    box-shadow:4px 4px 0 var(--ink);transition:transform .12s, box-shadow .12s;width:100%;
+  }
+  .plan.free .btn-plan{background:var(--teal);color:var(--cream)}
+  .plan.premium .btn-plan{background:var(--cream);color:var(--ink)}
+  .btn-plan:hover{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--ink)}
+
+  /* ================= MISSION / FINAL CTA ================= */
+  .mission{text-align:center;padding:4rem 1.4rem}
+  .mission .quote{
+    font-family:'Spectral',serif;font-style:italic;font-size:clamp(1.3rem,3.5vw,2rem);
+    max-width:760px;margin:0 auto 1.4rem;line-height:1.4;color:var(--ink);
+  }
+  .mission .quote b{color:var(--oxblood);font-style:normal;font-family:'Anton',sans-serif;text-transform:uppercase}
+  .final-cta{
+    background:var(--teal);border:3px solid var(--ink);box-shadow:8px 8px 0 var(--ink);
+    max-width:900px;margin:2.4rem auto 0;padding:2.8rem 1.6rem;text-align:center;
+  }
+  .final-cta .fc-title{
+    font-family:'Anton',sans-serif;text-transform:uppercase;color:var(--cream);
+    font-size:clamp(2rem,6vw,4rem);line-height:.86;margin-bottom:1rem;
+  }
+  .final-cta .fc-title .misreg::before{color:var(--ochre);-webkit-text-fill-color:var(--ochre)}
+  .final-cta p{font-family:'Spectral',serif;color:var(--cream);font-size:1.05rem;margin-bottom:1.6rem;opacity:.95}
+  .btn-final{
+    background:var(--ochre);color:var(--ink);border:2px solid var(--ink);
+    padding:1rem 2rem;font-family:'Oswald',sans-serif;text-transform:uppercase;font-weight:700;
+    letter-spacing:.14em;font-size:1.05rem;cursor:pointer;box-shadow:5px 5px 0 var(--ink);
+    transition:transform .12s, box-shadow .12s;
+  }
+  .btn-final:hover{transform:translate(2px,2px);box-shadow:3px 3px 0 var(--ink)}
+
+  /* ================= FOOTER ================= */
+  footer{
+    background:var(--ink);color:var(--cream);position:relative;z-index:3;
+    border-top:3px double var(--ochre);
+  }
+  .footer-inner{max-width:1180px;margin:0 auto;padding:2.8rem 1.4rem 2rem}
+  .footer-top{display:flex;flex-wrap:wrap;gap:2rem;justify-content:space-between}
+  .footer-brand .flogo{font-family:'Anton',sans-serif;text-transform:uppercase;font-size:2.4rem;color:var(--cream)}
+  .footer-brand .flogo .misreg::before{color:var(--oxblood);-webkit-text-fill-color:var(--oxblood)}
+  .footer-brand p{font-family:'Spectral',serif;font-size:.95rem;opacity:.8;max-width:280px;margin-top:.4rem}
+  .footer-cols{display:flex;gap:3rem;flex-wrap:wrap}
+  .fcol h4{font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.2em;font-size:.72rem;color:var(--ochre);margin-bottom:.8rem}
+  .fcol a{display:block;font-family:'Oswald',sans-serif;font-size:.86rem;opacity:.85;padding:.22rem 0}
+  .fcol a:hover{opacity:1;color:var(--ochre)}
+  .footer-bottom{
+    margin-top:2.2rem;padding-top:1.2rem;border-top:1px solid rgba(246,239,221,.2);
+    display:flex;flex-wrap:wrap;justify-content:space-between;gap:.6rem;
+    font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.16em;font-size:.66rem;opacity:.7;
+  }
+  .ornament{text-align:center;font-size:1rem;color:var(--ochre);letter-spacing:.6em;margin:1.4rem 0 0}
+
+  /* reveal animation */
+  .reveal{opacity:0;transform:translateY(22px);transition:opacity .7s ease, transform .7s ease}
+  .reveal.in{opacity:1;transform:none}
+
+  /* dice roll spin */
+  @keyframes tumble{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+  .die-spin{trans-origin:center;animation:tumble 9s linear infinite}
+
+  /* ================= RESPONSIVE ================= */
+  @media(max-width:900px){
+    .products{grid-template-columns:repeat(2,1fr)}
+    .poster.p1,.poster.p2,.poster.p3,.poster.p4,.poster.p5,.poster.p6{grid-column:span 1}
+    .poster:nth-child(odd){border-left:3px solid var(--ink)}
+    .poster:nth-child(n+3){border-top:3px solid var(--ink)}
+    .plans{grid-template-columns:1fr}
+    .plan+.plan{border-left:none;border-top:3px solid var(--ink)}
+  }
+  @media(max-width:720px){
+    .nav-links,.nav-cta .btn-login,.nav-cta .btn-solid{display:none}
+    .hamburger{display:flex}
+    .mobile-menu{
+      display:block;position:fixed;inset:0;z-index:60;background:var(--paper);
+      transform:translateX(100%);transition:transform .3s ease;
+      padding:5rem 2rem 2rem;
+    }
+    .mobile-menu.open{transform:translateX(0)}
+    .mobile-menu a{
+      display:block;font-family:'Anton',sans-serif;text-transform:uppercase;
+      font-size:2rem;padding:.7rem 0;border-bottom:2px solid var(--rule);color:var(--ink);
+    }
+    .mobile-menu a:hover{color:var(--oxblood)}
+    .mobile-menu .mm-actions{margin-top:1.6rem;display:flex;flex-direction:column;gap:1rem}
+    .mm-close{position:absolute;top:1.2rem;right:1.4rem;background:none;border:none;font-size:2rem;cursor:pointer;color:var(--ink)}
+    .products{grid-template-columns:1fr}
+    .poster{border-left:3px solid var(--ink)!important}
+    .poster:nth-child(n+2){border-top:3px solid var(--ink)}
+    .sec-head{flex-direction:column;align-items:flex-start;gap:.4rem}
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= NAV ================= -->
+<nav>
+  <div class="nav-inner">
+    <a href="#top" class="logo">
+      <span class="mark">
+        <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true">
+          <rect x="1" y="1" width="28" height="28" fill="none" stroke="#211c17" stroke-width="2"/>
+          <polygon points="4,4 8,4 6,15" fill="#8f2d2b"/>
+          <polygon points="10,4 14,4 12,15" fill="#1f5e5a"/>
+          <polygon points="16,4 20,4 18,15" fill="#c68a1e"/>
+          <polygon points="22,4 26,4 24,15" fill="#211c17"/>
+          <circle cx="8" cy="24" r="2.4" fill="#211c17"/>
+          <circle cx="15" cy="24" r="2.4" fill="#8f2d2b"/>
+          <circle cx="22" cy="24" r="2.4" fill="#1f5e5a"/>
+        </svg>
+      </span>
+      <span class="misreg" data-t="Gammon">Gammon</span>
+    </a>
+    <div class="nav-links">
+      <a class="link" href="#products">Products</a>
+      <a class="link" href="#engine">Engine</a>
+      <a class="link" href="#clubs">Clubs</a>
+      <a class="link" href="#membership">Membership</a>
+    </div>
+    <div class="nav-cta">
+      <a class="btn btn-login" href="#">Log in</a>
+      <a class="btn btn-solid" href="#membership">Start free</a>
+      <button class="hamburger" id="hamburger" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- mobile menu -->
+<div class="mobile-menu" id="mobileMenu">
+  <button class="mm-close" id="mmClose" aria-label="Close">&times;</button>
+  <a href="#products">Products</a>
+  <a href="#engine">Engine</a>
+  <a href="#clubs">Clubs</a>
+  <a href="#membership">Membership</a>
+  <div class="mm-actions">
+    <a class="btn btn-login" href="#" style="display:inline-block">Log in</a>
+    <a class="btn btn-solid" href="#membership" style="display:inline-block;text-align:center">Start free</a>
+  </div>
+</div>
+
+<span id="top"></span>
+
+<!-- ================= HERO ================= -->
+<header class="hero">
+  <div class="kicker">
+    <span class="ln"></span>
+    <span class="dingbat">&#10070;</span>
+    <span>Est. In The Grand Tradition Of The Board</span>
+    <span class="dingbat">&#10070;</span>
+    <span class="ln"></span>
+  </div>
+
+  <div class="bands reveal">
+    <span class="band band-1 display">The Home Of</span>
+    <span class="band band-2 display"><span class="misreg" data-t="Worldwide">Worldwide</span></span>
+    <span class="band band-3 display"><span class="misreg" data-t="Backgammon">Backgammon</span></span>
+  </div>
+
+  <p class="hero-sub reveal">
+    <em>Play, learn, compete</em> — and run your own club — powered by a
+    grandmaster-class engine that lives right in your pocket. Set in type,
+    pressed by hand, and built for every board on earth.
+  </p>
+
+  <div class="hero-cta reveal">
+    <button class="btn-hero" onclick="location.href='#membership'">Claim Your Free Year</button>
+    <span class="hero-note">Free for the first <b>3,000 members</b> &middot; one year on us</span>
+  </div>
+
+  <!-- ===== INLINE SVG MOTIF: backgammon points, checkers, dice ===== -->
+  <div class="motif-wrap reveal">
+    <svg class="motif" viewBox="0 0 760 260" role="img" aria-label="Backgammon board with points, checkers and dice">
+      <!-- board frame -->
+      <rect x="4" y="4" width="752" height="252" fill="none" stroke="#211c17" stroke-width="4"/>
+      <rect x="14" y="14" width="732" height="232" fill="#e7dcc2"/>
+      <!-- center bar -->
+      <rect x="368" y="14" width="24" height="232" fill="#211c17"/>
+      <!-- left quadrant points (top) -->
+      <g>
+        <polygon points="24,14 60,14 42,120" fill="#8f2d2b"/>
+        <polygon points="66,14 102,14 84,120" fill="#1f5e5a"/>
+        <polygon points="108,14 144,14 126,120" fill="#8f2d2b"/>
+        <polygon points="150,14 186,14 168,120" fill="#1f5e5a"/>
+        <polygon points="192,14 228,14 210,120" fill="#8f2d2b"/>
+        <polygon points="234,14 270,14 252,120" fill="#1f5e5a"/>
+        <polygon points="276,14 312,14 294,120" fill="#8f2d2b"/>
+        <polygon points="318,14 354,14 336,120" fill="#1f5e5a"/>
+      </g>
+      <!-- right quadrant points (top) -->
+      <g>
+        <polygon points="406,14 442,14 424,120" fill="#c68a1e"/>
+        <polygon points="448,14 484,14 466,120" fill="#211c17"/>
+        <polygon points="490,14 526,14 508,120" fill="#c68a1e"/>
+        <polygon points="532,14 568,14 550,120" fill="#211c17"/>
+        <polygon points="574,14 610,14 592,120" fill="#c68a1e"/>
+        <polygon points="616,14 652,14 634,120" fill="#211c17"/>
+        <polygon points="658,14 694,14 676,120" fill="#c68a1e"/>
+        <polygon points="700,14 736,14 718,120" fill="#211c17"/>
+      </g>
+      <!-- bottom points (mirrored, muted) -->
+      <g opacity=".92">
+        <polygon points="24,246 60,246 42,140" fill="#1f5e5a"/>
+        <polygon points="66,246 102,246 84,140" fill="#8f2d2b"/>
+        <polygon points="108,246 144,246 126,140" fill="#1f5e5a"/>
+        <polygon points="150,246 186,246 168,140" fill="#8f2d2b"/>
+        <polygon points="192,246 228,246 210,140" fill="#1f5e5a"/>
+        <polygon points="234,246 270,246 252,140" fill="#8f2d2b"/>
+        <polygon points="276,246 312,246 294,140" fill="#1f5e5a"/>
+        <polygon points="318,246 354,246 336,140" fill="#8f2d2b"/>
+        <polygon points="406,246 442,246 424,140" fill="#211c17"/>
+        <polygon points="448,246 484,246 466,140" fill="#c68a1e"/>
+        <polygon points="490,246 526,246 508,140" fill="#211c17"/>
+        <polygon points="532,246 568,246 550,140" fill="#c68a1e"/>
+        <polygon points="574,246 610,246 592,140" fill="#211c17"/>
+        <polygon points="616,246 652,246 634,140" fill="#c68a1e"/>
+        <polygon points="658,246 694,246 676,140" fill="#211c17"/>
+        <polygon points="700,246 736,246 718,140" fill="#c68a1e"/>
+      </g>
+      <!-- stacked checkers -->
+      <g stroke="#211c17" stroke-width="2.5">
+        <circle cx="42" cy="30" r="14" fill="#f6efdd"/>
+        <circle cx="42" cy="56" r="14" fill="#f6efdd"/>
+        <circle cx="42" cy="82" r="14" fill="#f6efdd"/>
+        <circle cx="718" cy="30" r="14" fill="#211c17"/>
+        <circle cx="718" cy="56" r="14" fill="#211c17"/>
+        <circle cx="336" cy="230" r="14" fill="#f6efdd"/>
+        <circle cx="336" cy="204" r="14" fill="#f6efdd"/>
+        <circle cx="424" cy="230" r="14" fill="#211c17"/>
+      </g>
+      <!-- dice, one slowly tumbling -->
+      <g class="die-spin" style="transform-box:fill-box;transform-origin:center">
+        <rect x="300" y="102" width="52" height="52" rx="6" fill="#8f2d2b" stroke="#211c17" stroke-width="3"/>
+        <circle cx="314" cy="116" r="4.5" fill="#f6efdd"/>
+        <circle cx="338" cy="116" r="4.5" fill="#f6efdd"/>
+        <circle cx="326" cy="128" r="4.5" fill="#f6efdd"/>
+        <circle cx="314" cy="140" r="4.5" fill="#f6efdd"/>
+        <circle cx="338" cy="140" r="4.5" fill="#f6efdd"/>
+      </g>
+      <g>
+        <rect x="410" y="102" width="52" height="52" rx="6" fill="#c68a1e" stroke="#211c17" stroke-width="3"/>
+        <circle cx="424" cy="116" r="4.5" fill="#211c17"/>
+        <circle cx="448" cy="116" r="4.5" fill="#211c17"/>
+        <circle cx="436" cy="128" r="4.5" fill="#211c17"/>
+        <circle cx="424" cy="140" r="4.5" fill="#211c17"/>
+        <circle cx="448" cy="140" r="4.5" fill="#211c17"/>
+      </g>
+    </svg>
+  </div>
+
+  <p class="press-tag">&#10070; Set In Type &middot; Pressed By Hand &#10070;</p>
+</header>
+
+<!-- ================= PRODUCTS ================= -->
+<section id="products">
+  <div class="double-rule" style="height:0;margin-bottom:2rem"></div>
+  <div class="sec-head reveal">
+    <span class="sec-num">No.1</span>
+    <h2 class="sec-title">The Catalogue</h2>
+  </div>
+  <p class="sec-sub reveal">Six presses &middot; one worldwide table</p>
+
+  <div class="products reveal">
+    <!-- 1 THE ENGINE -->
+    <article class="poster p1 tint-oxblood" id="engine">
+      <span class="pidx">1</span>
+      <span class="plabel">Analysis</span>
+      <h3>The Engine</h3>
+      <p>XG-class analysis in your pocket. Snap a photo of any board to read the position, then get your pip count and best play in an instant.</p>
+      <svg class="pico" width="40" height="40" viewBox="0 0 40 40" aria-hidden="true">
+        <rect x="4" y="4" width="32" height="32" rx="4" fill="none" stroke="#8f2d2b" stroke-width="3"/>
+        <circle cx="14" cy="14" r="3" fill="#8f2d2b"/><circle cx="26" cy="14" r="3" fill="#8f2d2b"/>
+        <circle cx="20" cy="20" r="3" fill="#8f2d2b"/><circle cx="14" cy="26" r="3" fill="#8f2d2b"/>
+        <circle cx="26" cy="26" r="3" fill="#8f2d2b"/>
+      </svg>
+    </article>
+    <!-- 2 PLAY ONLINE -->
+    <article class="poster p2 tint-teal">
+      <span class="pidx">2</span>
+      <span class="plabel">Compete</span>
+      <h3>Play Online</h3>
+      <p>Matches, money games and chouettes against opponents on every continent — day or night, the table never closes.</p>
+      <svg class="pico" width="44" height="40" viewBox="0 0 44 40" aria-hidden="true">
+        <circle cx="12" cy="20" r="9" fill="none" stroke="#1f5e5a" stroke-width="3"/>
+        <circle cx="32" cy="20" r="9" fill="#1f5e5a"/>
+      </svg>
+    </article>
+    <!-- 3 BEAT THE GRANDMASTER -->
+    <article class="poster p3 tint-ochre">
+      <span class="pidx">3</span>
+      <span class="plabel">Puzzles</span>
+      <h3>Beat The Grandmaster</h3>
+      <p>Puzzles drawn from real masters' mistakes. Find the play they missed.</p>
+      <svg class="pico" width="34" height="40" viewBox="0 0 34 40" aria-hidden="true">
+        <path d="M17 3 L21 14 L33 14 L23 22 L27 34 L17 27 L7 34 L11 22 L1 14 L13 14 Z" fill="#c68a1e" stroke="#211c17" stroke-width="1.5"/>
+      </svg>
+    </article>
+    <!-- 4 GAMMON UNIVERSITY -->
+    <article class="poster p4 tint-ink" id="clubs">
+      <span class="pidx">4</span>
+      <span class="plabel">Learn</span>
+      <h3>Gammon University</h3>
+      <p>Structured lessons with real coaches — from your first checker play to doubling theory that wins matches. Learn the game the way champions did.</p>
+      <svg class="pico" width="46" height="34" viewBox="0 0 46 34" aria-hidden="true">
+        <polygon points="23,4 44,13 23,22 2,13" fill="none" stroke="#211c17" stroke-width="3"/>
+        <path d="M12 17 V26 Q23 32 34 26 V17" fill="none" stroke="#211c17" stroke-width="3"/>
+      </svg>
+    </article>
+    <!-- 5 RUN A CLUB -->
+    <article class="poster p5 tint-oxblood">
+      <span class="pidx">5</span>
+      <span class="plabel">Organise</span>
+      <h3>Run A Club</h3>
+      <p>Host tournaments, mint your own coins, and keep your earnings. Every organiser gets the tools that used to cost a fortune — set your table, we'll do the printing.</p>
+      <svg class="pico" width="42" height="40" viewBox="0 0 42 40" aria-hidden="true">
+        <path d="M8 6 h26 v6 a13 13 0 0 1 -26 0 Z" fill="none" stroke="#8f2d2b" stroke-width="3"/>
+        <path d="M8 8 h-4 a5 5 0 0 0 5 8 M34 8 h4 a5 5 0 0 1 -5 8" fill="none" stroke="#8f2d2b" stroke-width="3"/>
+        <rect x="16" y="28" width="10" height="6" fill="#8f2d2b"/>
+      </svg>
+    </article>
+    <!-- 6 RECORD & STREAM -->
+    <article class="poster p6 tint-teal">
+      <span class="pidx">6</span>
+      <span class="plabel">Broadcast</span>
+      <h3>Record &amp; Stream</h3>
+      <p>Capture your OTB matches and live-stream them to the world.</p>
+      <svg class="pico" width="42" height="34" viewBox="0 0 42 34" aria-hidden="true">
+        <rect x="3" y="7" width="26" height="20" rx="3" fill="none" stroke="#1f5e5a" stroke-width="3"/>
+        <polygon points="31,13 39,8 39,26 31,21" fill="#1f5e5a"/>
+      </svg>
+    </article>
+  </div>
+</section>
+
+<!-- ================= MEMBERSHIP ================= -->
+<div class="membership" id="membership">
+  <div class="membership-inner">
+    <div class="sec-head reveal">
+      <span class="sec-num">No.2</span>
+      <h2 class="sec-title">Take A Membership</h2>
+    </div>
+    <p class="sec-sub reveal">Two tickets to the worldwide table</p>
+
+    <div class="plans reveal">
+      <div class="plan free">
+        <span class="ptag">The Founder's Ticket</span>
+        <div class="pname">Free</div>
+        <div class="pprice">First <b>3,000</b> members &middot; one full year, on us</div>
+        <ul>
+          <li><span class="dot">&#10070;</span> The Engine — analysis &amp; pip count</li>
+          <li><span class="dot">&#10070;</span> Play online: matches &amp; chouettes</li>
+          <li><span class="dot">&#10070;</span> Beat the Grandmaster puzzles</li>
+          <li><span class="dot">&#10070;</span> Gammon University starter lessons</li>
+        </ul>
+        <button class="btn-plan" onclick="alert('Welcome to the founding table.')">Claim Your Free Year</button>
+      </div>
+      <div class="plan premium">
+        <span class="ptag">The Full Press</span>
+        <div class="pname">Premium</div>
+        <div class="pprice"><b>~$1</b> / month &middot; everything, uncapped</div>
+        <ul>
+          <li><span class="dot">&#10070;</span> Unlimited engine rollouts &amp; photo reads</li>
+          <li><span class="dot">&#10070;</span> Money games &amp; ranked play</li>
+          <li><span class="dot">&#10070;</span> Full University with live coaches</li>
+          <li><span class="dot">&#10070;</span> Run a club &amp; keep your earnings</li>
+          <li><span class="dot">&#10070;</span> Record &amp; stream in high fidelity</li>
+        </ul>
+        <button class="btn-plan" onclick="alert('The full press is yours.')">Go Premium &middot; ~$1/mo</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= MISSION + FINAL CTA ================= -->
+<section class="mission">
+  <p class="ornament">&#10070; &#10022; &#10070; &#10022; &#10070;</p>
+  <p class="quote reveal">
+    Our mission is plain: put a <b>grandmaster</b> in every pocket and a
+    <b>club</b> in every town — and give the ancient game a home that belongs to
+    the whole world.
+  </p>
+
+  <div class="final-cta reveal">
+    <div class="fc-title"><span class="misreg" data-t="Roll The Dice">Roll The Dice</span></div>
+    <p>Three thousand seats at the founding table. One year, entirely on us. When they're gone, they're gone.</p>
+    <button class="btn-final" onclick="location.href='#top'">Claim Your Free Year</button>
+  </div>
+</section>
+
+<!-- ================= FOOTER ================= -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <div class="flogo"><span class="misreg" data-t="Gammon">Gammon</span></div>
+        <p>The home of worldwide backgammon. Set in type, pressed by hand, played the world over.</p>
+      </div>
+      <div class="footer-cols">
+        <div class="fcol">
+          <h4>Products</h4>
+          <a href="#engine">The Engine</a>
+          <a href="#products">Play Online</a>
+          <a href="#products">Beat the Grandmaster</a>
+          <a href="#products">Gammon University</a>
+        </div>
+        <div class="fcol">
+          <h4>The Guild</h4>
+          <a href="#clubs">Run a Club</a>
+          <a href="#products">Record &amp; Stream</a>
+          <a href="#membership">Membership</a>
+          <a href="#">Coaches</a>
+        </div>
+        <div class="fcol">
+          <h4>The Shop</h4>
+          <a href="#">About</a>
+          <a href="#">Journal</a>
+          <a href="#">Contact</a>
+          <a href="#">Terms &amp; Privacy</a>
+        </div>
+      </div>
+    </div>
+    <p class="ornament">&#10070; &#10022; &#10070; &#10022; &#10070; &#10022; &#10070;</p>
+    <div class="footer-bottom">
+      <span>&copy; 2026 Gammon &middot; The Worldwide Table</span>
+      <span>Set In Type &middot; Pressed By Hand</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // ----- mobile menu -----
+  const hamburger = document.getElementById('hamburger');
+  const mobileMenu = document.getElementById('mobileMenu');
+  const mmClose = document.getElementById('mmClose');
+  function closeMenu(){ mobileMenu.classList.remove('open'); }
+  hamburger.addEventListener('click', () => mobileMenu.classList.add('open'));
+  mmClose.addEventListener('click', closeMenu);
+  mobileMenu.querySelectorAll('a').forEach(a => a.addEventListener('click', closeMenu));
+
+  // ----- scroll reveal -----
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold:.12 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+  // ----- nav shadow tighten on scroll -----
+  const nav = document.querySelector('nav');
+  window.addEventListener('scroll', () => {
+    nav.style.boxShadow = window.scrollY > 10
+      ? '0 2px 0 var(--rule), 0 5px 0 var(--paper), 0 6px 0 var(--rule)'
+      : '0 2px 0 var(--rule), 0 6px 0 var(--paper), 0 7px 0 var(--rule)';
+  });
+</script>
+</body>
+</html>

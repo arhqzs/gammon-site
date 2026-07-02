@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Gammon — The home of worldwide backgammon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+/* =========================================================
+   GAMMON — Y2K / Frutiger Aero glossy optimism
+   Aqua-to-sky gradients, glass buttons, bubbles, chrome.
+   ========================================================= */
+:root{
+  --aqua:#26c6da;
+  --aqua-deep:#0288b6;
+  --sky:#7fd4ff;
+  --sky-1:#bff0ff;
+  --sky-2:#7cd3ff;
+  --blue:#1976d2;
+  --blue-deep:#0b4a91;
+  --leaf:#7ac943;
+  --leaf-deep:#3f9a2e;
+  --lime:#c6f36a;
+  --ink:#0c2b3e;
+  --ink-soft:#3b5b6d;
+  --white:#ffffff;
+  --glass-hi:rgba(255,255,255,.92);
+  --glass-lo:rgba(255,255,255,.12);
+  --shadow-blue:rgba(9,86,140,.35);
+  --radius:22px;
+  --radius-pill:999px;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  margin:0;
+  font-family:"Hanken Grotesk",system-ui,sans-serif;
+  color:var(--ink);
+  background:
+    radial-gradient(1200px 600px at 15% -5%, #eafbff 0%, rgba(234,251,255,0) 60%),
+    radial-gradient(1000px 700px at 100% 0%, #d6f3ff 0%, rgba(214,243,255,0) 55%),
+    linear-gradient(180deg,#bfeefc 0%, #8fd6f7 22%, #5fb9ee 48%, #3f9fe3 70%, #6fc9e6 100%);
+  background-attachment:fixed;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+  line-height:1.55;
+}
+a{color:inherit;text-decoration:none;}
+h1,h2,h3{line-height:1.05;letter-spacing:-.02em;margin:0;}
+.wrap{max-width:1160px;margin:0 auto;padding:0 22px;}
+.small{font-size:.86rem;}
+
+/* ---------- Floating bubbles background ---------- */
+.bubbles{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
+.bubble{
+  position:absolute;bottom:-160px;border-radius:50%;
+  background:
+    radial-gradient(circle at 32% 28%, rgba(255,255,255,.95), rgba(255,255,255,.15) 38%, rgba(120,210,255,.08) 60%),
+    radial-gradient(circle at 70% 78%, rgba(90,200,255,.25), rgba(255,255,255,0) 55%);
+  border:1px solid rgba(255,255,255,.55);
+  box-shadow:inset 0 0 24px rgba(255,255,255,.6), 0 8px 26px rgba(11,74,145,.12);
+  animation:rise linear infinite;
+  opacity:.7;
+}
+@keyframes rise{
+  0%{transform:translateY(0) translateX(0) scale(.9);opacity:0;}
+  10%{opacity:.7;}
+  90%{opacity:.55;}
+  100%{transform:translateY(-118vh) translateX(40px) scale(1.05);opacity:0;}
+}
+
+/* ---------- Glass button ---------- */
+.btn{
+  position:relative;display:inline-flex;align-items:center;gap:.5em;
+  padding:.85em 1.5em;border-radius:var(--radius-pill);
+  font-weight:700;font-size:1rem;cursor:pointer;border:none;
+  color:var(--white);
+  background:linear-gradient(180deg,#6fe0ff 0%, #29b3ec 46%, #0d84c6 54%, #0a6fb0 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.9),
+    inset 0 -10px 18px rgba(3,60,105,.35),
+    0 10px 22px var(--shadow-blue);
+  overflow:hidden;transition:transform .18s ease, box-shadow .18s ease, filter .18s ease;
+  text-shadow:0 1px 1px rgba(2,50,90,.35);
+}
+.btn::before{ /* top specular gloss */
+  content:"";position:absolute;left:6%;right:6%;top:5%;height:42%;
+  border-radius:var(--radius-pill);
+  background:linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.15));
+  filter:blur(.2px);pointer-events:none;
+}
+.btn::after{ /* moving sheen */
+  content:"";position:absolute;top:0;left:-60%;width:45%;height:100%;
+  background:linear-gradient(100deg, transparent, rgba(255,255,255,.55), transparent);
+  transform:skewX(-18deg);transition:left .6s ease;
+}
+.btn:hover{transform:translateY(-2px);filter:saturate(1.1) brightness(1.03);}
+.btn:hover::after{left:120%;}
+.btn:active{transform:translateY(0) scale(.98);}
+.btn.leaf{
+  background:linear-gradient(180deg,#c9f57e 0%, #8fd94f 46%, #57ab34 54%, #3f9a2e 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.9), inset 0 -10px 18px rgba(30,90,20,.35), 0 10px 22px rgba(48,120,30,.35);
+  color:#1c3e10;text-shadow:0 1px 1px rgba(255,255,255,.4);
+}
+.btn.ghost{
+  background:linear-gradient(180deg, rgba(255,255,255,.7), rgba(255,255,255,.28));
+  color:var(--blue-deep);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.95), inset 0 -6px 12px rgba(120,180,220,.3), 0 6px 16px rgba(11,74,145,.18);
+  text-shadow:none;border:1px solid rgba(255,255,255,.7);
+}
+.btn.sm{padding:.6em 1.15em;font-size:.9rem;}
+.btn.lg{padding:1.05em 2em;font-size:1.12rem;}
+
+/* ---------- Glass panel ---------- */
+.glass{
+  position:relative;border-radius:var(--radius);
+  background:linear-gradient(160deg, rgba(255,255,255,.78) 0%, rgba(255,255,255,.42) 40%, rgba(214,243,255,.35) 100%);
+  border:1px solid rgba(255,255,255,.75);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.95),
+    inset 0 -20px 40px rgba(120,190,235,.18),
+    0 18px 40px rgba(11,74,145,.18);
+  backdrop-filter:blur(9px) saturate(1.15);
+  -webkit-backdrop-filter:blur(9px) saturate(1.15);
+}
+.glass::before{ /* highlight streak */
+  content:"";position:absolute;left:10px;right:10px;top:8px;height:34%;
+  border-radius:calc(var(--radius) - 6px);
+  background:linear-gradient(180deg, rgba(255,255,255,.6), rgba(255,255,255,0));
+  pointer-events:none;
+}
+
+/* ---------- Nav ---------- */
+header{position:sticky;top:0;z-index:40;padding:14px 0;}
+.nav{
+  display:flex;align-items:center;gap:18px;
+  padding:10px 14px 10px 18px;border-radius:var(--radius-pill);
+  background:linear-gradient(180deg, rgba(255,255,255,.82), rgba(255,255,255,.42));
+  border:1px solid rgba(255,255,255,.8);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.95), 0 10px 30px rgba(11,74,145,.2);
+  backdrop-filter:blur(10px) saturate(1.2);
+  -webkit-backdrop-filter:blur(10px) saturate(1.2);
+}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.4rem;letter-spacing:-.03em;color:var(--blue-deep);}
+.logo .orb{width:34px;height:34px;flex:0 0 auto;}
+.nav-links{display:flex;gap:6px;margin-left:8px;}
+.nav-links a{
+  padding:.5em .9em;border-radius:var(--radius-pill);font-weight:600;color:var(--ink-soft);
+  transition:background .18s ease,color .18s ease;
+}
+.nav-links a:hover{background:rgba(255,255,255,.7);color:var(--blue-deep);box-shadow:inset 0 1px 0 rgba(255,255,255,.9);}
+.nav-cta{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.nav-cta .login{font-weight:700;color:var(--blue-deep);padding:.5em .8em;}
+.burger{display:none;margin-left:auto;width:46px;height:42px;border-radius:14px;border:1px solid rgba(255,255,255,.8);
+  background:linear-gradient(180deg, rgba(255,255,255,.8), rgba(255,255,255,.4));cursor:pointer;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.95), 0 4px 12px rgba(11,74,145,.2);}
+.burger span{display:block;width:20px;height:2.5px;margin:4px auto;background:var(--blue-deep);border-radius:2px;}
+
+/* ---------- Hero ---------- */
+.hero{position:relative;z-index:2;padding:56px 0 40px;}
+.hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:40px;align-items:center;}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:.82rem;
+  text-transform:uppercase;letter-spacing:.12em;color:var(--blue-deep);
+  padding:.45em .9em;border-radius:var(--radius-pill);
+  background:linear-gradient(180deg, rgba(255,255,255,.85), rgba(255,255,255,.4));
+  border:1px solid rgba(255,255,255,.8);box-shadow:inset 0 1px 0 rgba(255,255,255,.95), 0 4px 12px rgba(11,74,145,.15);
+}
+.eyebrow .dot{width:9px;height:9px;border-radius:50%;background:radial-gradient(circle at 35% 30%, #d6ffa8, #6bbf2f);box-shadow:0 0 8px rgba(122,201,67,.8);}
+.hero h1{
+  font-size:clamp(2.4rem,5.4vw,4rem);font-weight:800;margin:.5em 0 .35em;
+  color:var(--blue-deep);
+  text-shadow:0 2px 0 rgba(255,255,255,.7), 0 14px 30px rgba(11,74,145,.12);
+}
+.hero h1 .shine{
+  background:linear-gradient(180deg,#39c6ff 0%, #0a7fc4 60%, #0b4a91 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.hero p.lead{font-size:1.16rem;color:var(--ink-soft);max-width:40ch;margin:0 0 1.5em;}
+.hero-actions{display:flex;flex-wrap:wrap;gap:14px;align-items:center;}
+.hero-note{margin-top:16px;font-size:.9rem;color:var(--ink-soft);display:flex;align-items:center;gap:8px;}
+.hero-note .chip{display:inline-flex;align-items:center;gap:6px;font-weight:700;color:var(--leaf-deep);}
+
+/* hero art card */
+.hero-art{position:relative;padding:22px;}
+.hero-art .board-wrap{position:relative;border-radius:18px;overflow:hidden;}
+.hero-art svg{display:block;width:100%;height:auto;}
+.flare{
+  position:absolute;width:180px;height:180px;border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle, rgba(255,255,255,.9) 0%, rgba(255,255,255,.25) 30%, rgba(255,255,255,0) 68%);
+  mix-blend-mode:screen;
+}
+.flare.a{top:-30px;right:-20px;}
+.flare.b{bottom:10px;left:-30px;width:120px;height:120px;opacity:.7;}
+.droplet{position:absolute;border-radius:50%;
+  background:radial-gradient(circle at 35% 25%, rgba(255,255,255,.95), rgba(180,230,255,.35) 55%, rgba(255,255,255,0) 72%);
+  border:1px solid rgba(255,255,255,.6);box-shadow:0 3px 8px rgba(11,74,145,.2);}
+
+/* ---------- Section shells ---------- */
+section{position:relative;z-index:2;}
+.section-head{text-align:center;max-width:640px;margin:0 auto 40px;}
+.section-head h2{font-size:clamp(1.9rem,3.6vw,2.7rem);font-weight:800;color:var(--blue-deep);text-shadow:0 2px 0 rgba(255,255,255,.6);}
+.section-head p{color:var(--ink-soft);font-size:1.08rem;margin-top:.5em;}
+.pad{padding:70px 0;}
+
+/* ---------- Products ---------- */
+.products{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;}
+.pcard{padding:26px 24px 28px;overflow:hidden;transition:transform .22s ease, box-shadow .22s ease;}
+.pcard:hover{transform:translateY(-6px);box-shadow:inset 0 1px 0 rgba(255,255,255,.95), inset 0 -20px 40px rgba(120,190,235,.2), 0 26px 50px rgba(11,74,145,.26);}
+.pcard .icon{
+  width:64px;height:64px;border-radius:18px;display:grid;place-items:center;margin-bottom:16px;
+  background:linear-gradient(180deg,#eafdff, #bfe9ff 55%, #8fd2f5);
+  border:1px solid rgba(255,255,255,.9);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.95), inset 0 -8px 14px rgba(120,190,235,.35), 0 8px 18px rgba(11,74,145,.2);
+}
+.pcard .icon svg{width:34px;height:34px;}
+.pcard h3{font-size:1.28rem;color:var(--blue-deep);margin-bottom:.4em;}
+.pcard p{color:var(--ink-soft);font-size:.98rem;}
+.pcard .tag{
+  display:inline-block;margin-top:14px;font-size:.76rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--aqua-deep);padding:.35em .8em;border-radius:var(--radius-pill);
+  background:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.8);
+}
+
+/* ---------- Membership ---------- */
+.plans{display:grid;grid-template-columns:1fr 1fr;gap:26px;max-width:900px;margin:0 auto;}
+.plan{padding:34px 30px;position:relative;overflow:hidden;}
+.plan h3{font-size:1.5rem;color:var(--blue-deep);}
+.plan .price{font-size:2.6rem;font-weight:800;color:var(--blue-deep);margin:.2em 0;display:flex;align-items:baseline;gap:.2em;}
+.plan .price small{font-size:.95rem;font-weight:600;color:var(--ink-soft);}
+.plan ul{list-style:none;padding:0;margin:18px 0 24px;}
+.plan li{display:flex;gap:10px;padding:7px 0;color:var(--ink-soft);align-items:flex-start;}
+.plan li .tick{flex:0 0 auto;width:20px;height:20px;border-radius:50%;margin-top:2px;display:grid;place-items:center;
+  background:linear-gradient(180deg,#c9f57e,#57ab34);box-shadow:inset 0 1px 0 rgba(255,255,255,.8),0 2px 6px rgba(48,120,30,.35);}
+.plan.featured{
+  background:linear-gradient(160deg, rgba(122,201,67,.32), rgba(255,255,255,.5) 45%, rgba(214,243,255,.4));
+  border:1px solid rgba(255,255,255,.85);
+}
+.ribbon{position:absolute;top:18px;right:-40px;transform:rotate(38deg);background:linear-gradient(180deg,#8fd94f,#3f9a2e);
+  color:#fff;font-weight:800;font-size:.72rem;letter-spacing:.1em;padding:6px 48px;box-shadow:0 6px 14px rgba(48,120,30,.4);text-shadow:0 1px 1px rgba(0,0,0,.2);}
+
+/* ---------- Mission / CTA banner ---------- */
+.mission{padding:56px 44px;text-align:center;overflow:hidden;}
+.mission h2{font-size:clamp(1.8rem,3.4vw,2.5rem);color:var(--blue-deep);text-shadow:0 2px 0 rgba(255,255,255,.6);}
+.mission p{max-width:60ch;margin:16px auto 26px;color:var(--ink-soft);font-size:1.1rem;}
+.mission .actions{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;}
+
+/* ---------- Footer ---------- */
+footer{position:relative;z-index:2;margin-top:60px;padding:44px 0 34px;color:var(--blue-deep);}
+.foot-glass{padding:34px 30px;}
+.foot-grid{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:26px;}
+.foot-grid h4{font-size:.8rem;text-transform:uppercase;letter-spacing:.12em;color:var(--aqua-deep);margin-bottom:12px;}
+.foot-grid a{display:block;padding:5px 0;color:var(--ink-soft);font-weight:600;}
+.foot-grid a:hover{color:var(--blue-deep);}
+.foot-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:26px;padding-top:20px;border-top:1px solid rgba(255,255,255,.6);color:var(--ink-soft);font-size:.86rem;flex-wrap:wrap;gap:12px;}
+
+/* ---------- Reveal animation ---------- */
+.reveal{opacity:0;transform:translateY(26px);transition:opacity .7s ease, transform .7s ease;}
+.reveal.in{opacity:1;transform:none;}
+
+/* ---------- Mobile ---------- */
+@media(max-width:940px){
+  .hero-grid{grid-template-columns:1fr;}
+  .hero-art{max-width:520px;margin:0 auto;}
+  .products{grid-template-columns:1fr 1fr;}
+  .foot-grid{grid-template-columns:1fr 1fr;}
+}
+@media(max-width:680px){
+  .nav-links,.nav-cta .login,.nav-cta .btn{display:none;}
+  .burger{display:block;}
+  .products{grid-template-columns:1fr;}
+  .plans{grid-template-columns:1fr;}
+  .foot-grid{grid-template-columns:1fr 1fr;}
+  .mission{padding:40px 22px;}
+  .mobile-menu.open{display:block;}
+}
+.mobile-menu{display:none;margin-top:12px;}
+.mobile-menu .glass{padding:16px;}
+.mobile-menu a{display:block;padding:12px 14px;border-radius:14px;font-weight:700;color:var(--blue-deep);}
+.mobile-menu a:hover{background:rgba(255,255,255,.6);}
+.mobile-menu .btn{width:100%;justify-content:center;margin-top:8px;}
+</style>
+</head>
+<body>
+
+<!-- floating bubbles -->
+<div class="bubbles" id="bubbles"></div>
+
+<!-- ===================== NAV ===================== -->
+<header>
+  <div class="wrap">
+    <nav class="nav">
+      <a class="logo" href="#top">
+        <svg class="orb" viewBox="0 0 40 40" aria-hidden="true">
+          <defs>
+            <radialGradient id="orbG" cx="35%" cy="28%" r="75%">
+              <stop offset="0%" stop-color="#eafffb"/>
+              <stop offset="45%" stop-color="#4fd0f0"/>
+              <stop offset="100%" stop-color="#0a6fb0"/>
+            </radialGradient>
+          </defs>
+          <circle cx="20" cy="20" r="18" fill="url(#orbG)" stroke="#fff" stroke-width="1.4"/>
+          <path d="M12 20 L20 11 L28 20 L20 29 Z" fill="rgba(255,255,255,.85)"/>
+          <path d="M20 11 L28 20 L20 20 Z" fill="rgba(11,74,145,.35)"/>
+          <ellipse cx="15" cy="13" rx="6" ry="3.4" fill="rgba(255,255,255,.7)"/>
+        </svg>
+        Gammon
+      </a>
+      <div class="nav-links">
+        <a href="#products">Products</a>
+        <a href="#engine">Engine</a>
+        <a href="#clubs">Clubs</a>
+        <a href="#membership">Membership</a>
+      </div>
+      <div class="nav-cta">
+        <a class="login" href="#">Log in</a>
+        <a class="btn sm" href="#membership">Start free</a>
+      </div>
+      <button class="burger" id="burger" aria-label="Menu"><span></span><span></span><span></span></button>
+    </nav>
+    <div class="mobile-menu" id="mobileMenu">
+      <div class="glass">
+        <a href="#products">Products</a>
+        <a href="#engine">Engine</a>
+        <a href="#clubs">Clubs</a>
+        <a href="#membership">Membership</a>
+        <a href="#">Log in</a>
+        <a class="btn" href="#membership">Start free</a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ===================== HERO ===================== -->
+<section class="hero" id="top">
+  <div class="wrap hero-grid">
+    <div class="hero-copy reveal">
+      <span class="eyebrow"><span class="dot"></span> Play · Learn · Compete · Run a club</span>
+      <h1>The home of<br><span class="shine">worldwide backgammon</span></h1>
+      <p class="lead">Play online, learn from coaches, sharpen up against real masters, and run your own club — all powered by a grandmaster-class engine that lives in your pocket.</p>
+      <div class="hero-actions">
+        <a class="btn leaf lg" href="#membership">Claim your free year →</a>
+        <a class="btn ghost" href="#engine">See the Engine</a>
+      </div>
+      <div class="hero-note">
+        <span class="chip">
+          <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="#7ac943"/><path d="M4.5 8.3 L7 10.6 L11.5 5.5" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Free for the first 3,000 members
+        </span>
+        · one year on us
+      </div>
+    </div>
+
+    <!-- Hero art: glossy backgammon board -->
+    <div class="hero-art reveal">
+      <div class="glass" style="padding:20px;">
+        <div class="board-wrap">
+          <svg viewBox="0 0 460 320" role="img" aria-label="Glossy backgammon board">
+            <defs>
+              <linearGradient id="boardBG" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#e9fbff"/>
+                <stop offset="100%" stop-color="#bfe9ff"/>
+              </linearGradient>
+              <linearGradient id="pointA" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#5fd6f2"/>
+                <stop offset="100%" stop-color="#0a7fc4"/>
+              </linearGradient>
+              <linearGradient id="pointB" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#c9f57e"/>
+                <stop offset="100%" stop-color="#3f9a2e"/>
+              </linearGradient>
+              <radialGradient id="chkW" cx="35%" cy="28%" r="75%">
+                <stop offset="0%" stop-color="#ffffff"/>
+                <stop offset="55%" stop-color="#dff3ff"/>
+                <stop offset="100%" stop-color="#8bb6cf"/>
+              </radialGradient>
+              <radialGradient id="chkB" cx="35%" cy="28%" r="75%">
+                <stop offset="0%" stop-color="#66e0ff"/>
+                <stop offset="55%" stop-color="#0f8bce"/>
+                <stop offset="100%" stop-color="#083f70"/>
+              </radialGradient>
+              <linearGradient id="glassSheen" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="rgba(255,255,255,.85)"/>
+                <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+              </linearGradient>
+            </defs>
+
+            <rect x="6" y="6" width="448" height="308" rx="18" fill="url(#boardBG)" stroke="#fff" stroke-width="3"/>
+            <!-- center bar -->
+            <rect x="220" y="6" width="20" height="308" fill="rgba(11,74,145,.14)"/>
+
+            <!-- top points -->
+            <g>
+              <polygon points="24,14 54,14 39,150" fill="url(#pointA)"/>
+              <polygon points="64,14 94,14 79,150" fill="url(#pointB)"/>
+              <polygon points="104,14 134,14 119,150" fill="url(#pointA)"/>
+              <polygon points="144,14 174,14 159,150" fill="url(#pointB)"/>
+              <polygon points="184,14 214,14 199,150" fill="url(#pointA)"/>
+              <polygon points="246,14 276,14 261,150" fill="url(#pointB)"/>
+              <polygon points="286,14 316,14 301,150" fill="url(#pointA)"/>
+              <polygon points="326,14 356,14 341,150" fill="url(#pointB)"/>
+              <polygon points="366,14 396,14 381,150" fill="url(#pointA)"/>
+              <polygon points="406,14 436,14 421,150" fill="url(#pointB)"/>
+            </g>
+            <!-- bottom points -->
+            <g>
+              <polygon points="24,306 54,306 39,170" fill="url(#pointB)"/>
+              <polygon points="64,306 94,306 79,170" fill="url(#pointA)"/>
+              <polygon points="104,306 134,306 119,170" fill="url(#pointB)"/>
+              <polygon points="144,306 174,306 159,170" fill="url(#pointA)"/>
+              <polygon points="184,306 214,306 199,170" fill="url(#pointB)"/>
+              <polygon points="246,306 276,306 261,170" fill="url(#pointA)"/>
+              <polygon points="286,306 316,306 301,170" fill="url(#pointB)"/>
+              <polygon points="326,306 356,306 341,170" fill="url(#pointA)"/>
+              <polygon points="366,306 396,306 381,170" fill="url(#pointB)"/>
+              <polygon points="406,306 436,306 421,170" fill="url(#pointA)"/>
+            </g>
+
+            <!-- checkers -->
+            <g>
+              <circle cx="39" cy="34" r="15" fill="url(#chkW)" stroke="#fff" stroke-width="1.5"/>
+              <circle cx="39" cy="66" r="15" fill="url(#chkW)" stroke="#fff" stroke-width="1.5"/>
+              <ellipse cx="35" cy="28" rx="7" ry="4" fill="rgba(255,255,255,.7)"/>
+              <ellipse cx="35" cy="60" rx="7" ry="4" fill="rgba(255,255,255,.7)"/>
+
+              <circle cx="261" cy="34" r="15" fill="url(#chkB)" stroke="#fff" stroke-width="1.5"/>
+              <ellipse cx="257" cy="28" rx="7" ry="4" fill="rgba(255,255,255,.5)"/>
+
+              <circle cx="421" cy="286" r="15" fill="url(#chkW)" stroke="#fff" stroke-width="1.5"/>
+              <ellipse cx="417" cy="280" rx="7" ry="4" fill="rgba(255,255,255,.7)"/>
+
+              <circle cx="119" cy="286" r="15" fill="url(#chkB)" stroke="#fff" stroke-width="1.5"/>
+              <ellipse cx="115" cy="280" rx="7" ry="4" fill="rgba(255,255,255,.5)"/>
+            </g>
+
+            <!-- glossy dice -->
+            <g>
+              <rect x="150" y="196" width="46" height="46" rx="11" fill="url(#chkW)" stroke="#fff" stroke-width="2" transform="rotate(-8 173 219)"/>
+              <g transform="rotate(-8 173 219)" fill="#0a7fc4">
+                <circle cx="162" cy="208" r="3.2"/><circle cx="184" cy="208" r="3.2"/>
+                <circle cx="162" cy="230" r="3.2"/><circle cx="184" cy="230" r="3.2"/>
+                <circle cx="173" cy="219" r="3.2"/>
+              </g>
+              <rect x="252" y="200" width="46" height="46" rx="11" fill="url(#chkB)" stroke="#fff" stroke-width="2" transform="rotate(10 275 223)"/>
+              <g transform="rotate(10 275 223)" fill="#eafffb">
+                <circle cx="264" cy="212" r="3.2"/><circle cx="286" cy="212" r="3.2"/>
+                <circle cx="264" cy="234" r="3.2"/><circle cx="286" cy="234" r="3.2"/>
+              </g>
+            </g>
+
+            <!-- top gloss overlay -->
+            <rect x="10" y="10" width="440" height="120" rx="16" fill="url(#glassSheen)" opacity=".55"/>
+          </svg>
+        </div>
+      </div>
+      <div class="flare a"></div>
+      <div class="flare b"></div>
+      <div class="droplet" style="width:26px;height:26px;top:-6px;left:40px;"></div>
+      <div class="droplet" style="width:16px;height:16px;bottom:30px;right:6px;"></div>
+      <div class="droplet" style="width:12px;height:12px;top:60px;right:-4px;"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== PRODUCTS ===================== -->
+<section class="pad" id="products">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <h2>Everything backgammon, in one shiny place</h2>
+      <p>Six products that fit together — analysis, play, practice, learning, running your club, and going live.</p>
+    </div>
+    <div class="products">
+
+      <div class="pcard glass reveal" id="engine">
+        <div class="icon">
+          <svg viewBox="0 0 34 34" fill="none"><rect x="6" y="6" width="22" height="22" rx="6" fill="#0a7fc4"/><circle cx="17" cy="17" r="6" fill="#eafffb"/><path d="M17 5v3M17 26v3M5 17h3M26 17h3" stroke="#3f9a2e" stroke-width="2.4" stroke-linecap="round"/></svg>
+        </div>
+        <h3>The Engine</h3>
+        <p>XG-class analysis in real time. Snap a photo of any board to digitise it, get an instant pip count, and see the best play with equity to spare.</p>
+        <span class="tag">Grandmaster-class</span>
+      </div>
+
+      <div class="pcard glass reveal">
+        <div class="icon">
+          <svg viewBox="0 0 34 34" fill="none"><circle cx="12" cy="17" r="6" fill="#0a7fc4"/><circle cx="23" cy="17" r="6" fill="#3f9a2e"/><path d="M12 17h11" stroke="#fff" stroke-width="2"/></svg>
+        </div>
+        <h3>Play Online</h3>
+        <p>Head-to-head matches, money games, and classic chouettes against friends and rivals from every corner of the world — day or night.</p>
+        <span class="tag">Live tables</span>
+      </div>
+
+      <div class="pcard glass reveal">
+        <div class="icon">
+          <svg viewBox="0 0 34 34" fill="none"><path d="M17 5l3.2 7.6L28 13l-6 5.2L23.6 27 17 22.6 10.4 27 12 18.2 6 13l7.8-.4z" fill="#f2b705" stroke="#fff" stroke-width="1.2"/></svg>
+        </div>
+        <h3>Beat the Grandmaster</h3>
+        <p>Puzzles built from real masters' mistakes. Find the move they should have made, then see exactly where the equity slipped away.</p>
+        <span class="tag">Daily puzzles</span>
+      </div>
+
+      <div class="pcard glass reveal">
+        <div class="icon">
+          <svg viewBox="0 0 34 34" fill="none"><path d="M17 8L5 13l12 5 12-5z" fill="#0a7fc4"/><path d="M9 16v6c0 2 4 3.5 8 3.5s8-1.5 8-3.5v-6" fill="#3f9a2e"/><path d="M29 13v7" stroke="#3f9a2e" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+        <h3>Gammon University</h3>
+        <p>Structured lessons and courses taught by world-class coaches — from opening rolls to doubling-cube mastery, at your own pace.</p>
+        <span class="tag">Coach-led</span>
+      </div>
+
+      <div class="pcard glass reveal" id="clubs">
+        <div class="icon">
+          <svg viewBox="0 0 34 34" fill="none"><rect x="7" y="10" width="20" height="16" rx="4" fill="#0a7fc4"/><path d="M13 10V8a4 4 0 018 0v2" stroke="#3f9a2e" stroke-width="2.4" fill="none"/><circle cx="17" cy="18" r="3.4" fill="#eafffb"/></svg>
+        </div>
+        <h3>Run a Club</h3>
+        <p>Host tournaments, issue your own coins, and manage members. Keep your earnings — Gammon gives club owners the tools, you keep the takings.</p>
+        <span class="tag">Own tournaments</span>
+      </div>
+
+      <div class="pcard glass reveal">
+        <div class="icon">
+          <svg viewBox="0 0 34 34" fill="none"><rect x="6" y="9" width="17" height="16" rx="4" fill="#0a7fc4"/><path d="M23 14l6-3v12l-6-3z" fill="#3f9a2e"/><circle cx="12" cy="17" r="3" fill="#eafffb"/></svg>
+        </div>
+        <h3>Record &amp; Stream</h3>
+        <p>Capture over-the-board matches automatically and stream them live, with the engine narrating every roll for your audience.</p>
+        <span class="tag">OTB &amp; live</span>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ===================== MEMBERSHIP ===================== -->
+<section class="pad" id="membership">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <h2>Join the founding 3,000</h2>
+      <p>Start completely free, or go Premium for about the price of a coffee refill each month.</p>
+    </div>
+    <div class="plans">
+
+      <div class="plan glass reveal">
+        <h3>Free</h3>
+        <div class="price">$0<small>/ first year</small></div>
+        <p class="small" style="color:var(--ink-soft)">For the first 3,000 members — a full year on us, no card required.</p>
+        <ul>
+          <li><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 5.2 L4 7.4 L8 3" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span> Full access to Play Online</li>
+          <li><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 5.2 L4 7.4 L8 3" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span> Daily Beat-the-Grandmaster puzzles</li>
+          <li><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 5.2 L4 7.4 L8 3" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span> Basic engine analysis &amp; pip count</li>
+          <li><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 5.2 L4 7.4 L8 3" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span> Join any public club</li>
+        </ul>
+        <a class="btn ghost" href="#" style="width:100%;justify-content:center;">Claim your free year</a>
+      </div>
+
+      <div class="plan featured glass reveal">
+        <div class="ribbon">BEST VALUE</div>
+        <h3>Premium</h3>
+        <div class="price">~$1<small>/ month</small></div>
+        <p class="small" style="color:var(--ink-soft)">Everything unlimited — the full grandmaster-class experience.</p>
+        <ul>
+          <li><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 5.2 L4 7.4 L8 3" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span> Unlimited XG-class engine &amp; snap-a-photo</li>
+          <li><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 5.2 L4 7.4 L8 3" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span> Full Gammon University library</li>
+          <li><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 5.2 L4 7.4 L8 3" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span> Run your own club &amp; keep earnings</li>
+          <li><span class="tick"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 5.2 L4 7.4 L8 3" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span> Record &amp; live-stream OTB matches</li>
+        </ul>
+        <a class="btn leaf" href="#" style="width:100%;justify-content:center;">Go Premium</a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ===================== MISSION / CTA ===================== -->
+<section class="pad">
+  <div class="wrap">
+    <div class="mission glass reveal">
+      <div class="flare a" style="top:-40px;left:20px;right:auto;"></div>
+      <h2>Backgammon belongs to everyone</h2>
+      <p>Our mission is simple: put a grandmaster in every player's pocket and connect the world's oldest game across every board, club and continent. Bright, open, and built to last.</p>
+      <div class="actions">
+        <a class="btn leaf lg" href="#membership">Claim your free year</a>
+        <a class="btn ghost" href="#products">Explore products</a>
+      </div>
+      <p class="small" style="margin-top:18px;">Free for the first 3,000 members · one year on us · no card required</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== FOOTER ===================== -->
+<footer>
+  <div class="wrap">
+    <div class="foot-glass glass">
+      <div class="foot-grid">
+        <div>
+          <a class="logo" href="#top" style="font-size:1.3rem;">
+            <svg class="orb" viewBox="0 0 40 40" aria-hidden="true">
+              <circle cx="20" cy="20" r="18" fill="url(#orbG)" stroke="#fff" stroke-width="1.4"/>
+              <path d="M12 20 L20 11 L28 20 L20 29 Z" fill="rgba(255,255,255,.85)"/>
+            </svg>
+            Gammon
+          </a>
+          <p class="small" style="color:var(--ink-soft);max-width:34ch;margin-top:12px;">The home of worldwide backgammon. Play, learn, compete, and run a club — powered by a grandmaster-class engine.</p>
+        </div>
+        <div>
+          <h4>Products</h4>
+          <a href="#engine">The Engine</a>
+          <a href="#products">Play Online</a>
+          <a href="#products">Beat the Grandmaster</a>
+          <a href="#products">Gammon University</a>
+        </div>
+        <div>
+          <h4>Community</h4>
+          <a href="#clubs">Run a Club</a>
+          <a href="#products">Record &amp; Stream</a>
+          <a href="#membership">Membership</a>
+          <a href="#">Leaderboards</a>
+        </div>
+        <div>
+          <h4>Company</h4>
+          <a href="#">About</a>
+          <a href="#">Blog</a>
+          <a href="#">Support</a>
+          <a href="#">Contact</a>
+        </div>
+      </div>
+      <div class="foot-bottom">
+        <span>© 2026 Gammon. The home of worldwide backgammon.</span>
+        <span>Made with aqua &amp; optimism.</span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ---- floating bubbles ---- */
+(function(){
+  const box=document.getElementById('bubbles');
+  const N=14;
+  for(let i=0;i<N;i++){
+    const b=document.createElement('div');
+    b.className='bubble';
+    const size=20+Math.random()*90;
+    b.style.width=size+'px';
+    b.style.height=size+'px';
+    b.style.left=(Math.random()*100)+'%';
+    b.style.animationDuration=(14+Math.random()*20)+'s';
+    b.style.animationDelay=(-Math.random()*20)+'s';
+    b.style.opacity=(0.35+Math.random()*0.4).toFixed(2);
+    box.appendChild(b);
+  }
+})();
+
+/* ---- mobile menu ---- */
+(function(){
+  const burger=document.getElementById('burger');
+  const menu=document.getElementById('mobileMenu');
+  burger.addEventListener('click',()=>menu.classList.toggle('open'));
+  menu.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>menu.classList.remove('open')));
+})();
+
+/* ---- reveal on scroll ---- */
+(function(){
+  const els=document.querySelectorAll('.reveal');
+  const io=new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} });
+  },{threshold:0.12});
+  els.forEach(el=>io.observe(el));
+})();
+
+/* ---- subtle parallax on hero art ---- */
+(function(){
+  const art=document.querySelector('.hero-art');
+  if(!art) return;
+  window.addEventListener('mousemove',(e)=>{
+    const x=(e.clientX/window.innerWidth-0.5)*10;
+    const y=(e.clientY/window.innerHeight-0.5)*8;
+    art.style.transform=`translate(${x}px,${y}px)`;
+  });
+})();
+</script>
+</body>
+</html>

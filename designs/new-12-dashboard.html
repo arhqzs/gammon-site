@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Gammon — The Home of Worldwide Backgammon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0b0f14;          /* deep control-room ink */
+    --panel:#111823;       /* tile surface */
+    --panel-2:#0e141d;
+    --panel-3:#0a0e15;
+    --line:#1e2a38;        /* thin grid line */
+    --line-2:#28394c;
+    --ink:#e7eef6;         /* primary text */
+    --dim:#7f93a8;         /* labels / muted */
+    --dimmer:#4d5f73;
+    --teal:#2fd6c4;        /* accent 1 */
+    --amber:#f5b342;       /* accent 2 */
+    --red:#ff5d6c;         /* alert / negative */
+    --green:#4be089;       /* positive */
+    --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+    --sans:'IBM Plex Sans',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--sans);
+    -webkit-font-smoothing:antialiased;
+    line-height:1.5;
+    /* faint dot grid, control-room texture */
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(120,150,180,.05) 1px, transparent 0);
+    background-size:22px 22px;
+  }
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:1240px;margin:0 auto;padding:0 20px}
+  .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+  .tnum{font-variant-numeric:tabular-nums}
+
+  .label{
+    font-family:var(--mono);
+    text-transform:uppercase;
+    letter-spacing:.18em;
+    font-size:10.5px;
+    font-weight:600;
+    color:var(--dim);
+  }
+  .accent-t{color:var(--teal)}
+  .accent-a{color:var(--amber)}
+
+  /* ---------------- TOP STATUS BAR ---------------- */
+  .statusbar{
+    border-bottom:1px solid var(--line);
+    background:var(--panel-3);
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--dim);
+  }
+  .statusbar .wrap{display:flex;align-items:center;gap:22px;height:30px;overflow:hidden}
+  .sb-item{display:flex;align-items:center;gap:7px;white-space:nowrap}
+  .dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+  .dot.live{background:var(--green);box-shadow:0 0 0 0 rgba(75,224,137,.6);animation:pulse 2s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(75,224,137,.5)}70%{box-shadow:0 0 0 6px rgba(75,224,137,0)}100%{box-shadow:0 0 0 0 rgba(75,224,137,0)}}
+  .sb-item b{color:var(--ink);font-weight:600}
+  .sb-clock{margin-left:auto;color:var(--dimmer)}
+
+  /* ---------------- NAV ---------------- */
+  .nav{
+    position:sticky;top:0;z-index:60;
+    border-bottom:1px solid var(--line);
+    background:rgba(11,15,20,.86);
+    backdrop-filter:blur(8px);
+  }
+  .nav-inner{display:flex;align-items:center;justify-content:space-between;height:60px}
+  .brand{display:flex;align-items:center;gap:11px;font-family:var(--mono);font-weight:700;font-size:19px;letter-spacing:.02em}
+  .brand .mk{width:26px;height:26px;flex:0 0 auto}
+  .nav-links{display:flex;gap:8px}
+  .nav-links a{
+    font-family:var(--mono);font-size:12px;letter-spacing:.08em;color:var(--dim);
+    padding:7px 12px;border:1px solid transparent;border-radius:2px;transition:.18s;
+  }
+  .nav-links a:hover{color:var(--ink);border-color:var(--line-2);background:var(--panel)}
+  .nav-cta{display:flex;align-items:center;gap:10px}
+  .btn{
+    font-family:var(--mono);font-size:12.5px;font-weight:600;letter-spacing:.04em;
+    padding:9px 15px;border-radius:3px;cursor:pointer;border:1px solid var(--line-2);
+    background:transparent;color:var(--ink);transition:.18s;white-space:nowrap;
+  }
+  .btn:hover{border-color:var(--teal);color:var(--teal)}
+  .btn-p{background:var(--teal);border-color:var(--teal);color:#04231f}
+  .btn-p:hover{background:#48e6d5;color:#04231f;box-shadow:0 0 22px rgba(47,214,196,.35)}
+  .burger{display:none;background:none;border:1px solid var(--line-2);border-radius:3px;width:40px;height:36px;cursor:pointer;flex-direction:column;gap:4px;align-items:center;justify-content:center}
+  .burger span{width:18px;height:2px;background:var(--ink);display:block}
+  .mobile-menu{display:none;border-bottom:1px solid var(--line);background:var(--panel-2)}
+  .mobile-menu a{display:block;padding:13px 20px;font-family:var(--mono);font-size:13px;color:var(--dim);border-top:1px solid var(--line)}
+
+  /* ---------------- SECTION SCAFFOLD ---------------- */
+  section{padding:0}
+  .sec-head{
+    display:flex;align-items:baseline;gap:14px;
+    padding:26px 0 14px;border-bottom:1px solid var(--line);margin-bottom:24px;
+  }
+  .sec-head .idx{font-family:var(--mono);font-size:11px;color:var(--teal)}
+  .sec-head h2{margin:0;font-family:var(--mono);font-size:15px;font-weight:600;letter-spacing:.04em;color:var(--ink)}
+  .sec-head .meta{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--dimmer)}
+
+  /* ---------------- HERO ---------------- */
+  .hero{padding:44px 0 40px;position:relative;overflow:hidden}
+  .hero-grid{display:grid;grid-template-columns:1.15fr .95fr;gap:34px;align-items:stretch}
+  .hero-tag{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line-2);border-radius:3px;padding:5px 11px;font-family:var(--mono);font-size:11px;color:var(--dim);margin-bottom:20px}
+  .hero h1{
+    font-family:var(--mono);font-weight:700;
+    font-size:clamp(34px,5.2vw,62px);line-height:1.02;letter-spacing:-.01em;margin:0 0 18px;
+  }
+  .hero h1 .hl{color:var(--teal)}
+  .hero p.lead{font-size:16.5px;color:var(--dim);max-width:46ch;margin:0 0 26px;line-height:1.6}
+  .hero-ctas{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .hero .btn{padding:12px 20px;font-size:13.5px}
+  .free-note{font-family:var(--mono);font-size:11.5px;color:var(--dimmer);margin-top:16px}
+  .free-note b{color:var(--amber)}
+
+  /* hero telemetry panel */
+  .hero-panel{
+    border:1px solid var(--line);background:var(--panel);border-radius:4px;
+    display:flex;flex-direction:column;overflow:hidden;
+  }
+  .hp-bar{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:11px;color:var(--dim)}
+  .hp-bar .dot{width:8px;height:8px}
+  .hp-body{padding:16px 16px 6px;flex:1}
+  .hp-title{font-family:var(--mono);font-size:11px;color:var(--dimmer);letter-spacing:.1em;text-transform:uppercase;margin-bottom:2px}
+  .hp-equity{font-family:var(--mono);font-size:13px;color:var(--dim);display:flex;justify-content:space-between;margin-top:8px}
+  .hp-equity b{color:var(--green)}
+  .hp-foot{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line)}
+  .hp-foot > div{padding:12px 14px;border-right:1px solid var(--line)}
+  .hp-foot > div:last-child{border-right:none}
+  .hp-foot .k{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--dimmer)}
+  .hp-foot .v{font-family:var(--mono);font-size:20px;font-weight:600;margin-top:3px}
+
+  /* ---------------- KPI TILES ---------------- */
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding-bottom:8px}
+  .kpi{border:1px solid var(--line);background:var(--panel);border-radius:4px;padding:16px 16px 14px;position:relative;overflow:hidden}
+  .kpi .k{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+  .kpi .v{font-family:var(--mono);font-size:30px;font-weight:600;margin:8px 0 2px;letter-spacing:-.01em}
+  .kpi .d{font-family:var(--mono);font-size:11px;color:var(--green);display:flex;align-items:center;gap:5px}
+  .kpi .d.neg{color:var(--red)}
+  .kpi svg.spark{position:absolute;right:0;bottom:0;opacity:.85}
+
+  /* ---------------- MODULES (products) ---------------- */
+  .modules{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .mod{
+    border:1px solid var(--line);background:var(--panel);border-radius:4px;
+    display:flex;flex-direction:column;transition:.18s;position:relative;
+  }
+  .mod:hover{border-color:var(--line-2);transform:translateY(-2px);box-shadow:0 10px 30px rgba(0,0,0,.35)}
+  .mod-top{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--line)}
+  .mod-id{font-family:var(--mono);font-size:10px;color:var(--dimmer);letter-spacing:.1em}
+  .mod-stat{font-family:var(--mono);font-size:10px;color:var(--teal);display:flex;align-items:center;gap:6px}
+  .mod-body{padding:16px 16px 8px;flex:1}
+  .mod h3{margin:0 0 8px;font-family:var(--mono);font-size:16px;font-weight:600;letter-spacing:-.01em}
+  .mod p{margin:0 0 14px;font-size:13.5px;color:var(--dim);line-height:1.55}
+  .mod-viz{height:64px;margin:0 -2px}
+  .mod-foot{padding:11px 14px;border-top:1px solid var(--line);display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--dimmer)}
+  .mod-foot .go{color:var(--teal)}
+
+  /* ---------------- MEMBERSHIP ---------------- */
+  .plans{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .plan{border:1px solid var(--line);background:var(--panel);border-radius:4px;padding:22px 22px 24px;position:relative}
+  .plan.featured{border-color:var(--teal);box-shadow:0 0 0 1px rgba(47,214,196,.25)}
+  .plan .ptag{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+  .plan h3{font-family:var(--mono);font-size:22px;margin:10px 0 4px;font-weight:600}
+  .plan .price{font-family:var(--mono);font-size:40px;font-weight:600;letter-spacing:-.02em;display:flex;align-items:baseline;gap:8px;margin:6px 0 4px}
+  .plan .price small{font-size:13px;color:var(--dim);font-weight:400}
+  .plan .sub{font-family:var(--mono);font-size:12px;color:var(--dimmer);margin-bottom:18px}
+  .plan ul{list-style:none;padding:0;margin:0 0 22px}
+  .plan li{font-size:13.5px;color:var(--ink);padding:8px 0;border-top:1px solid var(--line);display:flex;gap:10px;align-items:flex-start}
+  .plan li:first-child{border-top:none}
+  .plan li .tick{color:var(--teal);font-family:var(--mono);flex:0 0 auto}
+  .plan .btn{width:100%;text-align:center;justify-content:center}
+  .plan .cap{position:absolute;top:-1px;right:-1px;background:var(--teal);color:#04231f;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.1em;padding:5px 10px;border-radius:0 3px 0 6px}
+
+  /* capacity meter */
+  .cap-meter{margin:6px 0 4px}
+  .cap-meter .track{height:8px;background:var(--panel-3);border:1px solid var(--line);border-radius:2px;overflow:hidden}
+  .cap-meter .fill{height:100%;background:linear-gradient(90deg,var(--teal),var(--amber));width:0;transition:width 1.6s cubic-bezier(.2,.7,.2,1)}
+  .cap-meter .cl{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--dim);margin-top:7px}
+
+  /* ---------------- MISSION / FINAL ---------------- */
+  .mission{border:1px solid var(--line);background:var(--panel-2);border-radius:4px;padding:38px 34px;display:grid;grid-template-columns:1.3fr 1fr;gap:34px;align-items:center;margin-bottom:6px}
+  .mission h2{font-family:var(--mono);font-size:clamp(22px,3vw,32px);font-weight:600;margin:0 0 14px;letter-spacing:-.01em;line-height:1.15}
+  .mission p{color:var(--dim);font-size:15px;line-height:1.65;margin:0 0 20px;max-width:52ch}
+  .mission .btn{padding:13px 22px;font-size:14px}
+  .mission-side{border-left:1px solid var(--line);padding-left:30px}
+  .mission-side .row{display:flex;justify-content:space-between;font-family:var(--mono);font-size:12px;padding:10px 0;border-bottom:1px solid var(--line);color:var(--dim)}
+  .mission-side .row:last-child{border-bottom:none}
+  .mission-side .row b{color:var(--ink)}
+
+  /* ---------------- FOOTER ---------------- */
+  footer{border-top:1px solid var(--line);margin-top:40px;padding:34px 0 40px;background:var(--panel-3)}
+  .foot-grid{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:26px}
+  .foot-brand .brand{margin-bottom:12px}
+  .foot-brand p{font-family:var(--mono);font-size:11.5px;color:var(--dimmer);max-width:34ch;line-height:1.6}
+  .foot-col h4{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin:0 0 12px}
+  .foot-col a{display:block;font-family:var(--mono);font-size:12.5px;color:var(--dimmer);padding:5px 0;transition:.15s}
+  .foot-col a:hover{color:var(--teal)}
+  .foot-bottom{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);margin-top:28px;padding-top:20px;font-family:var(--mono);font-size:11px;color:var(--dimmer);flex-wrap:wrap;gap:12px}
+
+  /* ---------------- RESPONSIVE ---------------- */
+  @media(max-width:980px){
+    .hero-grid{grid-template-columns:1fr;gap:26px}
+    .kpis{grid-template-columns:repeat(2,1fr)}
+    .modules{grid-template-columns:repeat(2,1fr)}
+    .mission{grid-template-columns:1fr}
+    .mission-side{border-left:none;border-top:1px solid var(--line);padding-left:0;padding-top:22px}
+    .foot-grid{grid-template-columns:1fr 1fr}
+  }
+  @media(max-width:720px){
+    .nav-links,.nav-cta .btn{display:none}
+    .burger{display:flex}
+    .plans{grid-template-columns:1fr}
+    .modules{grid-template-columns:1fr}
+    .kpis{grid-template-columns:repeat(2,1fr)}
+    .statusbar .sb-item.hide-sm{display:none}
+    .foot-grid{grid-template-columns:1fr 1fr}
+    .hp-foot .v{font-size:17px}
+  }
+  @media(max-width:460px){
+    .kpis{grid-template-columns:1fr}
+    .foot-grid{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ STATUS BAR ============ -->
+<div class="statusbar">
+  <div class="wrap">
+    <div class="sb-item"><span class="dot live"></span> SYSTEM <b>ONLINE</b></div>
+    <div class="sb-item hide-sm">PLAYERS ONLINE <b class="accent-t mono" id="ticker-online">12,847</b></div>
+    <div class="sb-item hide-sm">MATCHES / MIN <b class="mono" id="ticker-matches">318</b></div>
+    <div class="sb-item hide-sm">ENGINE LATENCY <b class="mono">04ms</b></div>
+    <div class="sb-clock mono" id="clock">--:--:-- UTC</div>
+  </div>
+</div>
+
+<!-- ============ NAV ============ -->
+<nav class="nav">
+  <div class="wrap nav-inner">
+    <a href="#" class="brand">
+      <svg class="mk" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+        <rect x="1" y="1" width="38" height="38" rx="3" stroke="var(--line-2)"/>
+        <path d="M6 6 L14 20 L6 20 Z" fill="var(--teal)"/>
+        <path d="M14 34 L6 20 L14 20 Z" fill="var(--dim)"/>
+        <path d="M20 6 L28 20 L20 20 Z" fill="var(--amber)"/>
+        <path d="M28 34 L20 20 L28 20 Z" fill="var(--dim)"/>
+        <path d="M34 6 L34 34" stroke="var(--line-2)"/>
+        <circle cx="20" cy="20" r="3" fill="var(--bg)" stroke="var(--teal)"/>
+      </svg>
+      Gammon
+    </a>
+    <div class="nav-links">
+      <a href="#modules">Products</a>
+      <a href="#engine">Engine</a>
+      <a href="#clubs">Clubs</a>
+      <a href="#membership">Membership</a>
+    </div>
+    <div class="nav-cta">
+      <a class="btn" href="#">Log in</a>
+      <a class="btn btn-p" href="#membership">Start free</a>
+      <button class="burger" id="burger" aria-label="Menu"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+</nav>
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#modules">Products</a>
+  <a href="#engine">Engine</a>
+  <a href="#clubs">Clubs</a>
+  <a href="#membership">Membership</a>
+  <a href="#">Log in</a>
+  <a href="#membership">Start free →</a>
+</div>
+
+<div class="wrap">
+
+  <!-- ============ HERO ============ -->
+  <section class="hero" id="engine">
+    <div class="hero-grid">
+      <div class="hero-left">
+        <span class="hero-tag"><span class="dot live"></span> GRANDMASTER-CLASS ENGINE · v9.4</span>
+        <h1>The home of<br>worldwide <span class="hl">backgammon</span></h1>
+        <p class="lead">Play, learn, compete, and run a club — all powered by a grandmaster-class analysis engine that lives in your pocket. Backgammon, measured to the decimal.</p>
+        <div class="hero-ctas">
+          <a class="btn btn-p" href="#membership">Claim your free year</a>
+          <a class="btn" href="#modules">View modules</a>
+        </div>
+        <div class="free-note">FREE FOR THE FIRST <b>3,000 MEMBERS</b> · ONE YEAR ON US</div>
+      </div>
+
+      <!-- hero telemetry panel: equity-over-time -->
+      <div class="hero-panel">
+        <div class="hp-bar"><span class="dot live"></span> LIVE ANALYSIS · MATCH #48213 · 7pt</div>
+        <div class="hp-body">
+          <div class="hp-title">Equity over time — cubeful</div>
+          <svg viewBox="0 0 340 150" width="100%" height="150" preserveAspectRatio="none" aria-hidden="true">
+            <!-- grid -->
+            <g stroke="var(--line)" stroke-width="1">
+              <line x1="0" y1="30" x2="340" y2="30"/>
+              <line x1="0" y1="60" x2="340" y2="60"/>
+              <line x1="0" y1="90" x2="340" y2="90"/>
+              <line x1="0" y1="120" x2="340" y2="120"/>
+            </g>
+            <line x1="0" y1="75" x2="340" y2="75" stroke="var(--line-2)" stroke-dasharray="3 4"/>
+            <!-- area + line -->
+            <path id="equityArea" d="M0,95 L34,80 L68,88 L102,60 L136,70 L170,45 L204,52 L238,30 L272,40 L306,22 L340,28 L340,150 L0,150 Z" fill="url(#eqg)" opacity=".35"/>
+            <path id="equityLine" d="M0,95 L34,80 L68,88 L102,60 L136,70 L170,45 L204,52 L238,30 L272,40 L306,22 L340,28"
+                  fill="none" stroke="var(--teal)" stroke-width="2" stroke-linejoin="round"/>
+            <circle cx="340" cy="28" r="3.5" fill="var(--teal)"/>
+            <defs>
+              <linearGradient id="eqg" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="var(--teal)"/>
+                <stop offset="1" stop-color="var(--teal)" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+          </svg>
+          <div class="hp-equity"><span>Cubeful equity</span> <b>+0.482</b></div>
+        </div>
+        <div class="hp-foot">
+          <div><div class="k">Win %</div><div class="v accent-t" data-count="68.4" data-suffix="%">0</div></div>
+          <div><div class="k">Player PR</div><div class="v" data-count="4.1" data-dec="1">0</div></div>
+          <div><div class="k">Confidence</div><div class="v accent-a" data-count="97" data-suffix="%">0</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ KPI STRIP ============ -->
+  <section>
+    <div class="sec-head">
+      <span class="idx">01 /</span><h2>PLATFORM TELEMETRY</h2>
+      <span class="meta">rolling 24h · auto-refresh</span>
+    </div>
+    <div class="kpis">
+      <div class="kpi">
+        <div class="k">Active members</div>
+        <div class="v" data-count="412803">0</div>
+        <div class="d">▲ 3.2% <span style="color:var(--dimmer)">wk</span></div>
+        <svg class="spark" width="110" height="40" viewBox="0 0 110 40"><polyline fill="none" stroke="var(--teal)" stroke-width="1.5" points="0,32 14,28 28,30 42,22 56,24 70,16 84,18 98,9 110,6"/></svg>
+      </div>
+      <div class="kpi">
+        <div class="k">Positions analyzed</div>
+        <div class="v" data-count="1400000000" data-suffix="+" data-compact="1">0</div>
+        <div class="d">▲ 11M <span style="color:var(--dimmer)">today</span></div>
+        <svg class="spark" width="110" height="40" viewBox="0 0 110 40"><polyline fill="none" stroke="var(--amber)" stroke-width="1.5" points="0,34 14,30 28,31 42,26 56,20 70,22 84,14 98,10 110,4"/></svg>
+      </div>
+      <div class="kpi">
+        <div class="k">Clubs hosted</div>
+        <div class="v" data-count="2140">0</div>
+        <div class="d">▲ 47 <span style="color:var(--dimmer)">mo</span></div>
+        <svg class="spark" width="110" height="40" viewBox="0 0 110 40"><polyline fill="none" stroke="var(--teal)" stroke-width="1.5" points="0,30 14,31 28,26 42,27 56,20 70,18 84,19 98,12 110,8"/></svg>
+      </div>
+      <div class="kpi">
+        <div class="k">Median engine PR</div>
+        <div class="v" data-count="3.8" data-dec="1">0</div>
+        <div class="d neg">▼ 0.3 <span style="color:var(--dimmer)">better</span></div>
+        <svg class="spark" width="110" height="40" viewBox="0 0 110 40"><polyline fill="none" stroke="var(--red)" stroke-width="1.5" points="0,10 14,14 28,12 42,18 56,16 70,22 84,20 98,26 110,30"/></svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ MODULES (6 products) ============ -->
+  <section id="modules">
+    <div class="sec-head">
+      <span class="idx">02 /</span><h2>MODULES</h2>
+      <span class="meta">6 active · all systems nominal</span>
+    </div>
+    <div class="modules">
+
+      <!-- 1 The Engine -->
+      <div class="mod">
+        <div class="mod-top"><span class="mod-id">MOD-01</span><span class="mod-stat"><span class="dot live"></span> XG-CLASS</span></div>
+        <div class="mod-body">
+          <h3>The Engine</h3>
+          <p>XG-class rollout analysis in your pocket. Snap a photo of any board, get an instant pip count, best move, and equity delta.</p>
+          <!-- radial gauge -->
+          <svg class="mod-viz" viewBox="0 0 240 64" aria-hidden="true">
+            <g transform="translate(34,54)">
+              <path d="M-26,0 A26,26 0 0 1 26,0" fill="none" stroke="var(--line)" stroke-width="6"/>
+              <path class="gauge-arc" d="M-26,0 A26,26 0 0 1 26,0" fill="none" stroke="var(--teal)" stroke-width="6" stroke-linecap="round" stroke-dasharray="82" stroke-dashoffset="82" pathLength="82"/>
+            </g>
+            <text x="34" y="52" text-anchor="middle" font-family="var(--mono)" font-size="13" font-weight="600" fill="var(--ink)">99.2</text>
+            <text x="80" y="30" font-family="var(--mono)" font-size="9" fill="var(--dim)">ENGINE STRENGTH</text>
+            <text x="80" y="46" font-family="var(--mono)" font-size="11" fill="var(--teal)">≈ world elite</text>
+          </svg>
+        </div>
+        <div class="mod-foot"><span>analysis</span><span class="go">open →</span></div>
+      </div>
+
+      <!-- 2 Play Online -->
+      <div class="mod">
+        <div class="mod-top"><span class="mod-id">MOD-02</span><span class="mod-stat"><span class="dot live"></span> 12.8K LIVE</span></div>
+        <div class="mod-body">
+          <h3>Play Online</h3>
+          <p>Ranked matches, money games, and full chouettes against players worldwide. Fair pairing, verified dice, instant post-game analysis.</p>
+          <!-- bar meter -->
+          <svg class="mod-viz" viewBox="0 0 240 64" aria-hidden="true">
+            <g font-family="var(--mono)" font-size="8" fill="var(--dim)">
+              <text x="0" y="14">MATCHES</text><text x="0" y="34">MONEY</text><text x="0" y="54">CHOUETTE</text>
+            </g>
+            <rect x="58" y="7"  width="0" height="9" fill="var(--teal)"  class="bar" data-w="170"/>
+            <rect x="58" y="27" width="0" height="9" fill="var(--amber)" class="bar" data-w="120"/>
+            <rect x="58" y="47" width="0" height="9" fill="var(--dim)"   class="bar" data-w="86"/>
+          </svg>
+        </div>
+        <div class="mod-foot"><span>live play</span><span class="go">open →</span></div>
+      </div>
+
+      <!-- 3 Beat the Grandmaster -->
+      <div class="mod">
+        <div class="mod-top"><span class="mod-id">MOD-03</span><span class="mod-stat"><span class="dot live"></span> 4,200 SETS</span></div>
+        <div class="mod-body">
+          <h3>Beat the Grandmaster</h3>
+          <p>Puzzles drawn from real blunders by real masters. Find the move they missed — then see the equity you saved against the rollout.</p>
+          <!-- scatter of blunders -->
+          <svg class="mod-viz" viewBox="0 0 240 64" aria-hidden="true">
+            <line x1="0" y1="58" x2="240" y2="58" stroke="var(--line)"/>
+            <line x1="4" y1="4" x2="4" y2="58" stroke="var(--line)"/>
+            <g fill="var(--amber)">
+              <circle cx="30" cy="40" r="2.5"/><circle cx="60" cy="30" r="2.5"/><circle cx="95" cy="46" r="2.5"/>
+              <circle cx="120" cy="22" r="2.5"/><circle cx="150" cy="34" r="2.5"/><circle cx="185" cy="18" r="2.5"/>
+            </g>
+            <g fill="var(--red)"><circle cx="210" cy="12" r="3.2"/></g>
+            <text x="150" y="12" font-family="var(--mono)" font-size="8" fill="var(--dim)">blunder cost, EMG</text>
+          </svg>
+        </div>
+        <div class="mod-foot"><span>puzzles</span><span class="go">open →</span></div>
+      </div>
+
+      <!-- 4 Gammon University -->
+      <div class="mod">
+        <div class="mod-top"><span class="mod-id">MOD-04</span><span class="mod-stat"><span class="dot live"></span> 60+ COACHES</span></div>
+        <div class="mod-body">
+          <h3>Gammon University</h3>
+          <p>Structured lessons and 1:1 sessions with world-class coaches. Track your PR curve as it drops, checkpoint by checkpoint.</p>
+          <!-- descending PR line = improvement -->
+          <svg class="mod-viz" viewBox="0 0 240 64" aria-hidden="true">
+            <g stroke="var(--line)"><line x1="0" y1="20" x2="240" y2="20"/><line x1="0" y1="42" x2="240" y2="42"/></g>
+            <path d="M0,12 L48,20 L96,18 L144,34 L192,40 L240,52" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linejoin="round"/>
+            <circle cx="0" cy="12" r="2.5" fill="var(--dim)"/><circle cx="240" cy="52" r="3.2" fill="var(--teal)"/>
+            <text x="6" y="10" font-family="var(--mono)" font-size="8" fill="var(--dim)">PR 8.2</text>
+            <text x="205" y="49" font-family="var(--mono)" font-size="8" fill="var(--teal)">PR 3.1</text>
+          </svg>
+        </div>
+        <div class="mod-foot"><span>learn</span><span class="go">open →</span></div>
+      </div>
+
+      <!-- 5 Run a Club -->
+      <div class="mod" id="clubs">
+        <div class="mod-top"><span class="mod-id">MOD-05</span><span class="mod-stat"><span class="dot live"></span> 2,140 CLUBS</span></div>
+        <div class="mod-body">
+          <h3>Run a Club</h3>
+          <p>Spin up tournaments, issue coins, and keep 100% of your earnings. Brackets, ratings, and payouts handled — you keep the ledger.</p>
+          <!-- bracket / tournament flow -->
+          <svg class="mod-viz" viewBox="0 0 240 64" aria-hidden="true">
+            <g stroke="var(--line-2)" stroke-width="1.4" fill="none">
+              <path d="M8,10 H40 V22 H72"/><path d="M8,34 H40 V22"/>
+              <path d="M8,44 H120 V38 H150"/><path d="M72,22 H120 V38"/>
+            </g>
+            <g fill="var(--dim)"><rect x="0" y="7" width="8" height="6"/><rect x="0" y="31" width="8" height="6"/><rect x="0" y="41" width="8" height="6"/></g>
+            <rect x="150" y="34" width="10" height="8" fill="var(--amber)"/>
+            <text x="168" y="41" font-family="var(--mono)" font-size="8" fill="var(--amber)">winner · payout</text>
+          </svg>
+        </div>
+        <div class="mod-foot"><span>organize</span><span class="go">open →</span></div>
+      </div>
+
+      <!-- 6 Record & Stream -->
+      <div class="mod">
+        <div class="mod-top"><span class="mod-id">MOD-06</span><span class="mod-stat"><span class="dot live"></span> ON AIR</span></div>
+        <div class="mod-body">
+          <h3>Record &amp; Stream</h3>
+          <p>Capture over-the-board play with a phone, auto-transcribe every roll, and go live with real-time equity overlays for your audience.</p>
+          <!-- waveform / stream -->
+          <svg class="mod-viz" viewBox="0 0 240 64" aria-hidden="true">
+            <g fill="var(--teal)" opacity=".9">
+              <rect x="6"  y="26" width="4" height="12"/><rect x="16" y="18" width="4" height="28"/><rect x="26" y="30" width="4" height="4"/>
+              <rect x="36" y="14" width="4" height="36"/><rect x="46" y="24" width="4" height="16"/><rect x="56" y="10" width="4" height="44"/>
+              <rect x="66" y="28" width="4" height="8"/><rect x="76" y="20" width="4" height="24"/><rect x="86" y="16" width="4" height="32"/>
+              <rect x="96" y="30" width="4" height="4"/><rect x="106" y="22" width="4" height="20"/><rect x="116" y="12" width="4" height="40"/>
+              <rect x="126" y="26" width="4" height="12"/><rect x="136" y="18" width="4" height="28"/><rect x="146" y="28" width="4" height="8"/>
+            </g>
+            <circle cx="205" cy="16" r="4" fill="var(--red)"/>
+            <text x="214" y="19" font-family="var(--mono)" font-size="8" fill="var(--red)">LIVE</text>
+          </svg>
+        </div>
+        <div class="mod-foot"><span>broadcast</span><span class="go">open →</span></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============ MEMBERSHIP ============ -->
+  <section id="membership">
+    <div class="sec-head">
+      <span class="idx">03 /</span><h2>MEMBERSHIP</h2>
+      <span class="meta">capacity limited · founding cohort</span>
+    </div>
+    <div class="plans">
+
+      <div class="plan featured">
+        <span class="cap">FOUNDING</span>
+        <div class="ptag">TIER · FREE</div>
+        <h3>Free</h3>
+        <div class="price">$0 <small>/ first year</small></div>
+        <div class="sub">for the first 3,000 members</div>
+        <div class="cap-meter">
+          <div class="track"><div class="fill" id="capFill" data-pct="82"></div></div>
+          <div class="cl"><span>2,461 / 3,000 claimed</span><span id="capPct" class="accent-a">82%</span></div>
+        </div>
+        <ul>
+          <li><span class="tick">✓</span> Full engine access — analysis, snap-a-photo, pip count</li>
+          <li><span class="tick">✓</span> Unlimited online play &amp; post-game reports</li>
+          <li><span class="tick">✓</span> Beat the Grandmaster puzzle library</li>
+          <li><span class="tick">✓</span> One year, no card required</li>
+        </ul>
+        <a class="btn btn-p" href="#">Claim your free year</a>
+      </div>
+
+      <div class="plan">
+        <div class="ptag">TIER · PREMIUM</div>
+        <h3>Premium</h3>
+        <div class="price">~$1 <small>/ month</small></div>
+        <div class="sub">for everyone, forever after</div>
+        <div class="cap-meter" style="opacity:.5">
+          <div class="track"><div class="fill" style="width:100%;background:var(--dim)"></div></div>
+          <div class="cl"><span>unlimited capacity</span><span>∞</span></div>
+        </div>
+        <ul>
+          <li><span class="tick">✓</span> Everything in Free, permanently</li>
+          <li><span class="tick">✓</span> Deeper rollouts &amp; unlimited cloud analysis</li>
+          <li><span class="tick">✓</span> Gammon University coaching credits</li>
+          <li><span class="tick">✓</span> Run a Club — keep 100% of earnings</li>
+        </ul>
+        <a class="btn" href="#">Go Premium</a>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============ MISSION / FINAL CTA ============ -->
+  <section>
+    <div class="sec-head">
+      <span class="idx">04 /</span><h2>MISSION</h2>
+      <span class="meta">why we built this</span>
+    </div>
+    <div class="mission">
+      <div>
+        <h2>Backgammon deserves<br>a world-class instrument.</h2>
+        <p>For 5,000 years the game has been played on intuition. We give every player — from your kitchen table to the world championship — the same grandmaster-class engine, the same clear numbers, the same shot at getting better. Precise, honest, and free to start.</p>
+        <a class="btn btn-p" href="#">Claim your free year</a>
+      </div>
+      <div class="mission-side">
+        <div class="row"><span>Countries active</span> <b class="mono">148</b></div>
+        <div class="row"><span>Avg. session</span> <b class="mono">42 min</b></div>
+        <div class="row"><span>Coach hours logged</span> <b class="mono">61,204</b></div>
+        <div class="row"><span>Member NPS</span> <b class="mono accent-t">+74</b></div>
+        <div class="row"><span>Uptime · 90d</span> <b class="mono accent-t">99.98%</b></div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a href="#" class="brand">
+          <svg class="mk" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+            <rect x="1" y="1" width="38" height="38" rx="3" stroke="var(--line-2)"/>
+            <path d="M6 6 L14 20 L6 20 Z" fill="var(--teal)"/>
+            <path d="M20 6 L28 20 L20 20 Z" fill="var(--amber)"/>
+            <circle cx="20" cy="20" r="3" fill="var(--bg)" stroke="var(--teal)"/>
+          </svg>
+          Gammon
+        </a>
+        <p>The home of worldwide backgammon. A grandmaster-class engine, a global table, and a club in your pocket.</p>
+      </div>
+      <div class="foot-col">
+        <h4>Products</h4>
+        <a href="#modules">The Engine</a><a href="#modules">Play Online</a>
+        <a href="#modules">Beat the Grandmaster</a><a href="#modules">Gammon University</a>
+        <a href="#modules">Run a Club</a><a href="#modules">Record &amp; Stream</a>
+      </div>
+      <div class="foot-col">
+        <h4>Company</h4>
+        <a href="#">About</a><a href="#">Careers</a><a href="#">Press</a><a href="#">Contact</a>
+      </div>
+      <div class="foot-col">
+        <h4>Resources</h4>
+        <a href="#">Docs</a><a href="#">Status</a><a href="#">Community</a><a href="#">Terms</a>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 Gammon Systems · The home of worldwide backgammon</span>
+      <span><span class="dot live"></span> ALL SYSTEMS OPERATIONAL · <span id="clock2">--:--:--</span> UTC</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  /* ---- mobile menu ---- */
+  var burger=document.getElementById('burger'),mm=document.getElementById('mobileMenu');
+  burger&&burger.addEventListener('click',function(){
+    mm.style.display=(mm.style.display==='block')?'none':'block';
+  });
+  mm&&mm.querySelectorAll('a').forEach(function(a){a.addEventListener('click',function(){mm.style.display='none';});});
+
+  /* ---- clock (UTC) ---- */
+  function tick(){
+    var d=new Date();
+    var s=[d.getUTCHours(),d.getUTCMinutes(),d.getUTCSeconds()]
+      .map(function(n){return String(n).padStart(2,'0');}).join(':');
+    var c=document.getElementById('clock'); if(c)c.textContent=s+' UTC';
+    var c2=document.getElementById('clock2'); if(c2)c2.textContent=s;
+  }
+  tick(); setInterval(tick,1000);
+
+  /* ---- live tickers ---- */
+  var on=document.getElementById('ticker-online'), mt=document.getElementById('ticker-matches');
+  setInterval(function(){
+    if(on){var base=12847+Math.floor((Math.random()-.4)*40);on.textContent=base.toLocaleString();}
+    if(mt){mt.textContent=String(300+Math.floor(Math.random()*45));}
+  },2200);
+
+  /* ---- count-up numbers ---- */
+  function fmt(n,dec,compact){
+    if(compact){
+      if(n>=1e9)return (n/1e9).toFixed(1).replace(/\.0$/,'')+'B';
+      if(n>=1e6)return (n/1e6).toFixed(1).replace(/\.0$/,'')+'M';
+      if(n>=1e3)return (n/1e3).toFixed(1).replace(/\.0$/,'')+'K';
+    }
+    if(dec>0)return n.toFixed(dec);
+    return Math.round(n).toLocaleString();
+  }
+  function countUp(el){
+    var target=parseFloat(el.getAttribute('data-count'));
+    var dec=parseInt(el.getAttribute('data-dec')||'0',10);
+    var suf=el.getAttribute('data-suffix')||'';
+    var compact=el.getAttribute('data-compact')==='1';
+    var dur=1400,start=performance.now();
+    function step(t){
+      var p=Math.min((t-start)/dur,1);
+      var e=1-Math.pow(1-p,3); /* easeOutCubic */
+      el.textContent=fmt(target*e,dec,compact)+suf;
+      if(p<1)requestAnimationFrame(step);
+      else el.textContent=fmt(target,dec,compact)+suf;
+    }
+    requestAnimationFrame(step);
+  }
+
+  /* ---- reveal-on-scroll driver for animated bits ---- */
+  var seen=new WeakSet();
+  var io=new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if(!en.isIntersecting||seen.has(en.target))return;
+      seen.add(en.target);
+      var el=en.target;
+      if(el.hasAttribute('data-count'))countUp(el);
+      if(el.classList.contains('bar'))el.setAttribute('width',el.getAttribute('data-w'));
+      if(el.classList.contains('gauge-arc'))el.style.transition='stroke-dashoffset 1.6s cubic-bezier(.2,.7,.2,1)',el.style.strokeDashoffset='16';
+      if(el.id==='capFill')el.style.width=el.getAttribute('data-pct')+'%';
+      if(el.id==='equityLine'){
+        var len=el.getTotalLength();
+        el.style.strokeDasharray=len;el.style.strokeDashoffset=len;
+        el.getBoundingClientRect();
+        el.style.transition='stroke-dashoffset 1.8s ease-out';
+        el.style.strokeDashoffset='0';
+      }
+    });
+  },{threshold:.35});
+
+  document.querySelectorAll('[data-count],.bar,.gauge-arc,#capFill,#equityLine')
+    .forEach(function(el){io.observe(el);});
+})();
+</script>
+</body></html>

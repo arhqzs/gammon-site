@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>GAMMON — The Home of Worldwide Backgammon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Anton&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0a0a0a;
+  --paper:#f4f1ea;
+  --paper2:#ebe7dc;
+  --red:#e01b1b;
+  --red-dark:#a30f0f;
+  --line:#0a0a0a;
+  --tone:rgba(10,10,10,.16);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Zen Kaku Gothic New',system-ui,sans-serif;
+  background:var(--paper);
+  color:var(--ink);
+  overflow-x:hidden;
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:var(--red);color:#fff}
+
+/* ---------- INK / TONE UTILITIES ---------- */
+.screentone{
+  background-image:radial-gradient(var(--tone) 1.4px, transparent 1.5px);
+  background-size:7px 7px;
+}
+.screentone-red{
+  background-image:radial-gradient(rgba(224,27,27,.32) 1.6px, transparent 1.7px);
+  background-size:8px 8px;
+}
+.speedlines{
+  background:repeating-linear-gradient(
+    to right,
+    var(--ink) 0 2px,
+    transparent 2px 9px
+  );
+}
+.halftone-fade{
+  -webkit-mask-image:linear-gradient(to bottom, #000, transparent);
+  mask-image:linear-gradient(to bottom, #000, transparent);
+}
+
+/* ---------- INK BORDER (hand-drawn wobble) ---------- */
+.ink{
+  border:3px solid var(--ink);
+  box-shadow:6px 6px 0 var(--ink);
+  background:var(--paper);
+}
+
+/* ---------- NAV ---------- */
+header{
+  position:sticky;top:0;z-index:100;
+  background:var(--paper);
+  border-bottom:4px solid var(--ink);
+}
+nav{
+  max-width:1240px;margin:0 auto;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:.7rem 1.4rem;gap:1rem;
+}
+.logo{
+  font-family:'Bangers',cursive;
+  font-size:2.1rem;letter-spacing:2px;
+  color:var(--ink);text-decoration:none;
+  display:flex;align-items:center;gap:.45rem;
+  transform:rotate(-2deg);
+}
+.logo .dot{color:var(--red)}
+.logo svg{width:30px;height:30px}
+.nav-links{display:flex;align-items:center;gap:1.6rem}
+.nav-links a{
+  font-weight:700;color:var(--ink);text-decoration:none;
+  font-size:.98rem;text-transform:uppercase;letter-spacing:.5px;
+  position:relative;
+}
+.nav-links a:not(.btn)::after{
+  content:"";position:absolute;left:0;bottom:-4px;height:3px;width:0;
+  background:var(--red);transition:width .18s ease;
+}
+.nav-links a:not(.btn):hover::after{width:100%}
+.btn{
+  font-family:'Zen Kaku Gothic New',sans-serif;
+  font-weight:900;text-transform:uppercase;letter-spacing:.6px;
+  padding:.6rem 1.1rem;text-decoration:none;cursor:pointer;
+  border:3px solid var(--ink);background:var(--paper);color:var(--ink);
+  display:inline-block;transition:transform .12s ease, box-shadow .12s ease;
+  box-shadow:4px 4px 0 var(--ink);font-size:.92rem;
+}
+.btn:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink)}
+.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.btn-red{background:var(--red);color:#fff;border-color:var(--ink)}
+.btn-red:hover{background:var(--red-dark)}
+.burger{display:none;background:none;border:3px solid var(--ink);width:48px;height:44px;cursor:pointer;box-shadow:3px 3px 0 var(--ink)}
+.burger span{display:block;height:3px;background:var(--ink);margin:5px 8px}
+
+/* ---------- LAYOUT WRAP ---------- */
+.spread{max-width:1240px;margin:0 auto;padding:0 1.4rem}
+.panel{position:relative;overflow:hidden}
+
+/* ---------- ONOMATOPOEIA ---------- */
+.sfx{
+  font-family:'Bangers',cursive;
+  line-height:.85;
+  -webkit-text-stroke:2px var(--ink);
+  color:var(--paper);
+  pointer-events:none;user-select:none;
+  position:absolute;
+  text-shadow:5px 5px 0 var(--red);
+}
+.sfx-red{color:var(--red);-webkit-text-stroke:2px var(--ink);text-shadow:4px 4px 0 var(--ink)}
+
+/* ---------- HERO SPLASH ---------- */
+.hero{
+  position:relative;
+  border-bottom:5px solid var(--ink);
+  background:var(--paper);
+  padding:0;
+  overflow:hidden;
+}
+.hero-inner{
+  max-width:1240px;margin:0 auto;
+  display:grid;grid-template-columns:1.15fr .85fr;
+  min-height:78vh;position:relative;
+}
+.hero-left{
+  padding:3.4rem 1.8rem 3.4rem 1.4rem;
+  display:flex;flex-direction:column;justify-content:center;
+  position:relative;z-index:3;
+  border-right:4px solid var(--ink);
+}
+.hero-right{
+  position:relative;overflow:hidden;background:var(--ink);
+  display:flex;align-items:center;justify-content:center;
+}
+.hero-right .lines{
+  position:absolute;inset:-20% ;
+  background:repeating-conic-gradient(from 0deg at 62% 42%,
+     var(--red) 0deg 1.1deg, transparent 1.1deg 4.4deg);
+  opacity:.9;
+  animation:spin 60s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.hero-right .tone-over{
+  position:absolute;inset:0;
+  background-image:radial-gradient(rgba(0,0,0,.55) 2px, transparent 2.2px);
+  background-size:9px 9px;mix-blend-mode:multiply;opacity:.5;
+}
+.kicker{
+  display:inline-block;background:var(--red);color:#fff;
+  font-weight:900;text-transform:uppercase;letter-spacing:2px;
+  padding:.32rem .8rem;font-size:.78rem;transform:rotate(-2deg);
+  border:2px solid var(--ink);box-shadow:3px 3px 0 var(--ink);
+  margin-bottom:1.3rem;align-self:flex-start;
+}
+.hero h1{
+  font-family:'Anton',sans-serif;
+  font-size:clamp(2.9rem,6.4vw,5.4rem);
+  line-height:.92;text-transform:uppercase;
+  letter-spacing:-1px;transform:rotate(-1.6deg);
+  margin-bottom:.2rem;
+}
+.hero h1 .flick{color:var(--red);display:inline-block;transform:rotate(2deg)}
+.hero h1 .out{
+  -webkit-text-stroke:2px var(--ink);color:var(--paper);
+  text-shadow:4px 4px 0 var(--red);
+}
+.hero p.sub{
+  font-size:1.12rem;max-width:34ch;margin:1.5rem 0 2rem;
+  font-weight:500;line-height:1.5;
+}
+.hero .cta-row{display:flex;flex-wrap:wrap;gap:1rem;align-items:center}
+.hero .btn{font-size:1.02rem;padding:.85rem 1.4rem}
+.freenote{
+  margin-top:1.4rem;font-weight:700;font-size:.9rem;
+  border-left:5px solid var(--red);padding-left:.7rem;
+  transform:rotate(-.5deg);
+}
+/* board motif inside dark panel */
+.board-motif{position:relative;z-index:2;width:74%;max-width:360px}
+.board-motif svg{width:100%;height:auto;filter:drop-shadow(6px 6px 0 rgba(0,0,0,.5))}
+.hero-sfx{
+  position:absolute;top:8%;right:4%;z-index:4;
+  font-family:'Bangers',cursive;font-size:clamp(3rem,7vw,6rem);
+  color:var(--red);-webkit-text-stroke:2.5px var(--ink);
+  text-shadow:5px 5px 0 var(--ink);transform:rotate(9deg);line-height:.8;
+  pointer-events:none;
+}
+.hero-sfx small{display:block;font-size:.42em;transform:rotate(-4deg);margin-top:.1em}
+
+/* diagonal gutter divider */
+.gutter{
+  height:46px;background:var(--ink);position:relative;overflow:hidden;
+}
+.gutter::before{
+  content:"";position:absolute;inset:0;
+  background:repeating-linear-gradient(115deg,var(--red) 0 14px,var(--ink) 14px 34px);
+  opacity:.9;
+}
+.gutter.thin{height:26px}
+
+/* ---------- SECTION TITLES ---------- */
+.section-head{
+  display:flex;align-items:flex-end;gap:1rem;flex-wrap:wrap;
+  margin:2.6rem 0 1.6rem;position:relative;
+}
+.section-head .num{
+  font-family:'Anton',sans-serif;font-size:2.6rem;color:var(--red);
+  -webkit-text-stroke:1px var(--ink);line-height:.8;transform:rotate(-4deg);
+}
+.section-head h2{
+  font-family:'Anton',sans-serif;font-size:clamp(2rem,4.5vw,3.4rem);
+  text-transform:uppercase;line-height:.9;letter-spacing:-.5px;transform:rotate(-1deg);
+}
+.section-head .rtl{
+  margin-left:auto;font-size:.72rem;font-weight:700;letter-spacing:2px;
+  text-transform:uppercase;opacity:.6;writing-mode:horizontal-tb;
+}
+
+/* ---------- PRODUCTS = MANGA PANELS ---------- */
+.pages{
+  display:grid;
+  grid-template-columns:repeat(6,1fr);
+  grid-auto-rows:minmax(180px,auto);
+  gap:0;
+  border:4px solid var(--ink);
+  background:var(--ink);
+  margin-bottom:3rem;
+}
+.cell{
+  background:var(--paper);
+  border:3px solid var(--ink);margin:-1.5px;
+  padding:1.5rem 1.4rem;position:relative;overflow:hidden;
+  display:flex;flex-direction:column;justify-content:flex-end;
+  min-height:220px;transition:background .2s;
+}
+.cell:hover{background:var(--paper2)}
+.cell:hover .p-title{color:var(--red)}
+/* varied panel spans for dynamic manga rhythm */
+.c1{grid-column:span 3;grid-row:span 2}
+.c2{grid-column:span 3;grid-row:span 1}
+.c3{grid-column:span 3;grid-row:span 1}
+.c4{grid-column:span 2;grid-row:span 1}
+.c5{grid-column:span 2;grid-row:span 1}
+.c6{grid-column:span 2;grid-row:span 1}
+.cell .idx{
+  position:absolute;top:.6rem;right:.9rem;
+  font-family:'Bangers',cursive;font-size:1.5rem;color:var(--red);
+  transform:rotate(6deg);-webkit-text-stroke:1px var(--ink);
+}
+.cell .tone-bg{
+  position:absolute;inset:0;z-index:0;opacity:.6;
+  background-image:radial-gradient(var(--tone) 1.4px,transparent 1.5px);
+  background-size:7px 7px;
+}
+.cell .glyph{position:relative;z-index:1;margin-bottom:auto}
+.cell .glyph svg{width:56px;height:56px}
+.c1 .glyph svg{width:88px;height:88px}
+.p-title{
+  font-family:'Anton',sans-serif;font-size:1.55rem;text-transform:uppercase;
+  line-height:.95;position:relative;z-index:1;margin-bottom:.35rem;
+  transform:rotate(-1deg);transition:color .18s;
+}
+.c1 .p-title{font-size:2.4rem}
+.p-desc{position:relative;z-index:1;font-size:.94rem;font-weight:500;max-width:40ch}
+.c1 .p-desc{font-size:1.05rem}
+/* speech bubble caption */
+.bubble{
+  position:absolute;z-index:2;background:var(--paper);
+  border:3px solid var(--ink);padding:.4rem .7rem;
+  font-family:'Bangers',cursive;font-size:1rem;letter-spacing:.5px;
+  box-shadow:3px 3px 0 var(--ink);transform:rotate(-3deg);
+}
+.bubble.b1{top:1rem;left:1.2rem}
+.bubble.b-red{background:var(--red);color:#fff}
+.cell .sfx-mini{
+  position:absolute;font-family:'Bangers',cursive;color:var(--red);
+  -webkit-text-stroke:1.5px var(--ink);font-size:2.4rem;z-index:1;
+  transform:rotate(-8deg);opacity:.9;bottom:.5rem;right:.8rem;line-height:.8;
+}
+
+/* ---------- MEMBERSHIP ---------- */
+.member{
+  padding:0;position:relative;border-top:5px solid var(--ink);
+  border-bottom:5px solid var(--ink);
+  background:var(--paper2);
+}
+.member .screentone-strip{
+  position:absolute;inset:0;opacity:.5;
+  background-image:radial-gradient(var(--tone) 1.3px,transparent 1.4px);
+  background-size:8px 8px;pointer-events:none;
+}
+.plans{
+  max-width:1000px;margin:0 auto;padding:3rem 1.4rem;
+  display:grid;grid-template-columns:1fr 1fr;gap:2rem;position:relative;z-index:2;
+}
+.plan{
+  background:var(--paper);border:4px solid var(--ink);
+  box-shadow:8px 8px 0 var(--ink);padding:2rem 1.7rem;position:relative;
+  transform:rotate(-1deg);transition:transform .15s;
+}
+.plan:nth-child(2){transform:rotate(1deg)}
+.plan:hover{transform:rotate(0) translateY(-4px)}
+.plan .tag{
+  font-family:'Bangers',cursive;font-size:1.2rem;letter-spacing:1px;
+  background:var(--ink);color:var(--paper);display:inline-block;
+  padding:.15rem .7rem;transform:rotate(-2deg);margin-bottom:.9rem;
+}
+.plan.premium .tag{background:var(--red)}
+.plan h3{font-family:'Anton',sans-serif;font-size:2.1rem;text-transform:uppercase;line-height:.9}
+.plan .price{font-family:'Anton',sans-serif;font-size:2.6rem;margin:.4rem 0 .2rem}
+.plan .price small{font-size:.9rem;font-weight:700;font-family:'Zen Kaku Gothic New';display:block;opacity:.7}
+.plan ul{list-style:none;margin:1rem 0 1.4rem}
+.plan li{padding:.35rem 0 .35rem 1.6rem;position:relative;font-weight:500;font-size:.95rem;border-bottom:1.5px dashed rgba(10,10,10,.2)}
+.plan li::before{content:"▶";position:absolute;left:0;color:var(--red);font-size:.8rem;top:.5rem}
+.plan .stamp{
+  position:absolute;top:-18px;right:-14px;
+  font-family:'Bangers',cursive;background:var(--red);color:#fff;
+  border:3px solid var(--ink);padding:.3rem .7rem;transform:rotate(9deg);
+  box-shadow:3px 3px 0 var(--ink);font-size:.95rem;
+}
+
+/* ---------- MISSION / FINAL ---------- */
+.mission{
+  position:relative;background:var(--ink);color:var(--paper);
+  padding:4rem 1.4rem;text-align:center;overflow:hidden;
+  border-bottom:5px solid var(--ink);
+}
+.mission .burst{
+  position:absolute;inset:0;
+  background:repeating-conic-gradient(from 0deg at 50% 42%,
+    rgba(255,255,255,.06) 0 1.2deg, transparent 1.2deg 5deg);
+  animation:spin 90s linear infinite reverse;
+}
+.mission .tone-over{
+  position:absolute;inset:0;
+  background-image:radial-gradient(rgba(255,255,255,.09) 1.6px,transparent 1.7px);
+  background-size:10px 10px;
+}
+.mission-inner{position:relative;z-index:2;max-width:760px;margin:0 auto}
+.mission .lead{
+  font-family:'Anton',sans-serif;font-size:clamp(1.8rem,4.5vw,3rem);
+  text-transform:uppercase;line-height:.95;transform:rotate(-1deg);margin-bottom:1rem;
+}
+.mission .lead em{color:var(--red);font-style:normal}
+.mission p{font-size:1.08rem;font-weight:500;max-width:58ch;margin:0 auto 2rem;color:#ddd}
+.mission .btn{font-size:1.1rem;padding:1rem 1.8rem}
+.mission .finale-sfx{
+  position:absolute;bottom:-2%;left:50%;transform:translateX(-50%) rotate(-3deg);
+  font-family:'Bangers',cursive;font-size:clamp(4rem,14vw,11rem);
+  color:transparent;-webkit-text-stroke:2px rgba(224,27,27,.5);
+  z-index:1;pointer-events:none;white-space:nowrap;line-height:.7;
+}
+
+/* ---------- FOOTER ---------- */
+footer{
+  background:var(--paper);padding:2.6rem 1.4rem 2rem;
+}
+.foot-inner{
+  max-width:1240px;margin:0 auto;
+  display:flex;flex-wrap:wrap;justify-content:space-between;gap:1.6rem;align-items:flex-start;
+}
+.foot-brand .logo{font-size:2.4rem}
+.foot-brand p{font-weight:700;margin-top:.4rem;max-width:26ch;font-size:.9rem}
+.foot-cols{display:flex;gap:2.6rem;flex-wrap:wrap}
+.foot-col h4{font-family:'Anton';text-transform:uppercase;font-size:1rem;margin-bottom:.6rem;letter-spacing:.5px}
+.foot-col a{display:block;color:var(--ink);text-decoration:none;font-size:.9rem;font-weight:500;padding:.2rem 0;opacity:.8}
+.foot-col a:hover{opacity:1;color:var(--red)}
+.foot-bottom{
+  max-width:1240px;margin:2rem auto 0;border-top:3px solid var(--ink);
+  padding-top:1rem;display:flex;justify-content:space-between;flex-wrap:wrap;gap:.5rem;
+  font-size:.82rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;
+}
+
+/* ---------- REVEAL ANIM ---------- */
+.reveal{opacity:0;transform:translateY(26px) rotate(-1deg);transition:opacity .5s ease, transform .5s ease}
+.reveal.in{opacity:1;transform:none}
+
+/* ---------- MOBILE ---------- */
+@media(max-width:900px){
+  .hero-inner{grid-template-columns:1fr}
+  .hero-left{border-right:none;border-bottom:4px solid var(--ink)}
+  .hero-right{min-height:300px}
+  .pages{grid-template-columns:repeat(2,1fr)}
+  .c1,.c2,.c3,.c4,.c5,.c6{grid-column:span 2;grid-row:span 1}
+  .c1{grid-column:span 2}
+  .plans{grid-template-columns:1fr}
+}
+@media(max-width:640px){
+  .nav-links{
+    position:fixed;top:0;right:0;height:100vh;width:74%;max-width:320px;
+    background:var(--paper);border-left:4px solid var(--ink);
+    flex-direction:column;align-items:flex-start;justify-content:center;
+    padding:2rem;gap:1.6rem;transform:translateX(105%);transition:transform .28s ease;z-index:200;
+    box-shadow:-8px 0 0 rgba(10,10,10,.2);
+  }
+  .nav-links.open{transform:translateX(0)}
+  .nav-links a{font-size:1.3rem}
+  .burger{display:block}
+  .hero-sfx{font-size:2.6rem}
+  .section-head .rtl{display:none}
+  .foot-inner{flex-direction:column}
+}
+</style>
+</head>
+<body class="screentone">
+
+<!-- ============ NAV ============ -->
+<header>
+  <nav>
+    <a href="#top" class="logo" aria-label="Gammon home">
+      <svg viewBox="0 0 40 40" fill="none">
+        <rect x="2" y="2" width="36" height="36" fill="#f4f1ea" stroke="#0a0a0a" stroke-width="3"/>
+        <path d="M6 6 L11 20 L16 6 Z" fill="#0a0a0a"/>
+        <path d="M16 6 L21 20 L26 6 Z" fill="#e01b1b"/>
+        <path d="M26 6 L31 20 L36 6 Z" fill="#0a0a0a"/>
+        <path d="M6 34 L11 20 L16 34 Z" fill="#e01b1b"/>
+        <path d="M26 34 L31 20 L36 34 Z" fill="#e01b1b"/>
+        <path d="M16 34 L21 20 L26 34 Z" fill="#0a0a0a"/>
+        <circle cx="21" cy="20" r="3.2" fill="#0a0a0a"/>
+      </svg>
+      GAMM<span class="dot">O</span>N
+    </a>
+    <div class="nav-links" id="navLinks">
+      <a href="#products">Products</a>
+      <a href="#products">Engine</a>
+      <a href="#membership">Clubs</a>
+      <a href="#membership">Membership</a>
+      <a href="#" class="btn">Log in</a>
+      <a href="#membership" class="btn btn-red">Start free</a>
+    </div>
+    <button class="burger" id="burger" aria-label="Menu"><span></span><span></span><span></span></button>
+  </nav>
+</header>
+
+<!-- ============ HERO SPLASH PANEL ============ -->
+<section class="hero" id="top">
+  <div class="hero-inner">
+    <div class="hero-left">
+      <span class="kicker">Issue #01 · Worldwide Backgammon</span>
+      <h1>
+        THE <span class="flick">HOME</span> OF<br>
+        <span class="out">WORLDWIDE</span><br>
+        BACKGAMMON
+      </h1>
+      <p class="sub">
+        Play. Learn. Compete. Run your own club — all powered by a
+        <strong>grandmaster-class engine</strong> that lives in your pocket.
+      </p>
+      <div class="cta-row">
+        <a href="#membership" class="btn btn-red">Claim your free year »</a>
+        <a href="#products" class="btn">See the roster</a>
+      </div>
+      <div class="freenote">FREE FOR THE FIRST 3,000 MEMBERS · ONE YEAR ON US</div>
+    </div>
+    <div class="hero-right" aria-hidden="true">
+      <div class="lines"></div>
+      <div class="tone-over"></div>
+      <div class="board-motif">
+        <!-- backgammon board splash motif -->
+        <svg viewBox="0 0 300 320" fill="none">
+          <rect x="8" y="8" width="284" height="304" fill="#f4f1ea" stroke="#0a0a0a" stroke-width="5"/>
+          <rect x="142" y="8" width="16" height="304" fill="#0a0a0a"/>
+          <!-- top points -->
+          <g>
+            <path d="M20 12 L38 150 L56 12 Z" fill="#0a0a0a"/>
+            <path d="M56 12 L74 150 L92 12 Z" fill="#e01b1b"/>
+            <path d="M92 12 L110 150 L128 12 Z" fill="#0a0a0a"/>
+            <path d="M164 12 L182 150 L200 12 Z" fill="#e01b1b"/>
+            <path d="M200 12 L218 150 L236 12 Z" fill="#0a0a0a"/>
+            <path d="M236 12 L254 150 L272 12 Z" fill="#e01b1b"/>
+          </g>
+          <!-- bottom points -->
+          <g>
+            <path d="M20 308 L38 170 L56 308 Z" fill="#e01b1b"/>
+            <path d="M56 308 L74 170 L92 308 Z" fill="#0a0a0a"/>
+            <path d="M92 308 L110 170 L128 308 Z" fill="#e01b1b"/>
+            <path d="M164 308 L182 170 L200 308 Z" fill="#0a0a0a"/>
+            <path d="M200 308 L218 170 L236 308 Z" fill="#e01b1b"/>
+            <path d="M236 308 L254 170 L272 308 Z" fill="#0a0a0a"/>
+          </g>
+          <!-- checkers -->
+          <circle cx="38" cy="34" r="15" fill="#f4f1ea" stroke="#0a0a0a" stroke-width="4"/>
+          <circle cx="38" cy="66" r="15" fill="#f4f1ea" stroke="#0a0a0a" stroke-width="4"/>
+          <circle cx="254" cy="286" r="15" fill="#0a0a0a"/>
+          <circle cx="254" cy="254" r="15" fill="#0a0a0a"/>
+          <!-- rolling dice -->
+          <g transform="rotate(14 210 190)">
+            <rect x="188" y="168" width="44" height="44" rx="6" fill="#e01b1b" stroke="#0a0a0a" stroke-width="4"/>
+            <circle cx="200" cy="180" r="4" fill="#f4f1ea"/>
+            <circle cx="220" cy="200" r="4" fill="#f4f1ea"/>
+            <circle cx="210" cy="190" r="4" fill="#f4f1ea"/>
+          </g>
+          <g transform="rotate(-10 96 210)">
+            <rect x="74" y="188" width="44" height="44" rx="6" fill="#f4f1ea" stroke="#0a0a0a" stroke-width="4"/>
+            <circle cx="86" cy="200" r="4" fill="#0a0a0a"/>
+            <circle cx="106" cy="200" r="4" fill="#0a0a0a"/>
+            <circle cx="86" cy="220" r="4" fill="#0a0a0a"/>
+            <circle cx="106" cy="220" r="4" fill="#0a0a0a"/>
+          </g>
+        </svg>
+      </div>
+    </div>
+    <div class="hero-sfx">DORORO!<small>the dice roll…</small></div>
+  </div>
+</section>
+
+<div class="gutter"></div>
+
+<!-- ============ PRODUCTS = SEQUENTIAL MANGA PANELS ============ -->
+<main class="spread" id="products">
+  <div class="section-head reveal">
+    <span class="num">CH.2</span>
+    <h2>The Roster —<br>Six Ways To Play</h2>
+    <span class="rtl">◀ read the panels right&nbsp;to&nbsp;left</span>
+  </div>
+
+  <div class="pages">
+
+    <!-- PANEL 1 — The Engine (hero panel) -->
+    <article class="cell c1 reveal">
+      <div class="tone-bg"></div>
+      <span class="idx">01</span>
+      <div class="bubble b1 b-red">XG-CLASS BRAIN!</div>
+      <div class="glyph">
+        <svg viewBox="0 0 90 90" fill="none">
+          <circle cx="45" cy="45" r="40" fill="none" stroke="#0a0a0a" stroke-width="4"/>
+          <path d="M45 12 A33 33 0 0 1 45 78" fill="#e01b1b" opacity=".85"/>
+          <circle cx="45" cy="45" r="18" fill="#f4f1ea" stroke="#0a0a0a" stroke-width="4"/>
+          <path d="M45 27 L45 45 L58 52" stroke="#0a0a0a" stroke-width="4" fill="none" stroke-linecap="round"/>
+          <circle cx="45" cy="45" r="3" fill="#e01b1b"/>
+        </svg>
+      </div>
+      <h3 class="p-title">The Engine</h3>
+      <p class="p-desc">XG-class analysis in your pocket. Snap a photo of any board and get instant equity, plus a live pip count on every roll. The grandmaster you always wanted, on call.</p>
+      <div class="sfx-mini">ZUUN!</div>
+    </article>
+
+    <!-- PANEL 2 — Play Online -->
+    <article class="cell c2 reveal">
+      <div class="tone-bg"></div>
+      <span class="idx">02</span>
+      <div class="glyph">
+        <svg viewBox="0 0 60 60" fill="none">
+          <circle cx="22" cy="26" r="12" fill="none" stroke="#0a0a0a" stroke-width="4"/>
+          <circle cx="40" cy="34" r="12" fill="#e01b1b" stroke="#0a0a0a" stroke-width="4"/>
+          <path d="M8 52 Q30 40 52 52" stroke="#0a0a0a" stroke-width="4" fill="none"/>
+        </svg>
+      </div>
+      <h3 class="p-title">Play Online</h3>
+      <p class="p-desc">Ranked matches, money games and full chouettes against players in every timezone. The board never sleeps.</p>
+    </article>
+
+    <!-- PANEL 3 — Beat the Grandmaster -->
+    <article class="cell c3 reveal">
+      <div class="tone-bg"></div>
+      <span class="idx">03</span>
+      <div class="glyph">
+        <svg viewBox="0 0 60 60" fill="none">
+          <path d="M30 6 L37 24 L56 24 L41 36 L47 54 L30 42 L13 54 L19 36 L4 24 L23 24 Z" fill="#e01b1b" stroke="#0a0a0a" stroke-width="3.5"/>
+        </svg>
+      </div>
+      <h3 class="p-title">Beat the Grandmaster</h3>
+      <p class="p-desc">Puzzles forged from real masters' blunders. Find the move they wished they'd played.</p>
+      <div class="sfx-mini">GACHI!</div>
+    </article>
+
+    <!-- PANEL 4 — Gammon University -->
+    <article class="cell c4 reveal">
+      <div class="tone-bg"></div>
+      <span class="idx">04</span>
+      <div class="glyph">
+        <svg viewBox="0 0 60 60" fill="none">
+          <path d="M6 22 L30 12 L54 22 L30 32 Z" fill="#0a0a0a"/>
+          <path d="M16 27 L16 40 Q30 48 44 40 L44 27" fill="none" stroke="#0a0a0a" stroke-width="4"/>
+          <line x1="52" y1="24" x2="52" y2="40" stroke="#e01b1b" stroke-width="4"/>
+        </svg>
+      </div>
+      <h3 class="p-title">Gammon University</h3>
+      <p class="p-desc">Structured lessons with real coaches — from opening theory to cube mastery.</p>
+    </article>
+
+    <!-- PANEL 5 — Run a Club -->
+    <article class="cell c5 reveal">
+      <div class="tone-bg"></div>
+      <span class="idx">05</span>
+      <div class="glyph">
+        <svg viewBox="0 0 60 60" fill="none">
+          <circle cx="30" cy="22" r="13" fill="none" stroke="#0a0a0a" stroke-width="4"/>
+          <text x="30" y="28" font-size="16" font-family="Anton" text-anchor="middle" fill="#e01b1b">¢</text>
+          <path d="M10 54 Q30 38 50 54" stroke="#0a0a0a" stroke-width="4" fill="none"/>
+        </svg>
+      </div>
+      <h3 class="p-title">Run a Club</h3>
+      <p class="p-desc">Host tournaments, mint your own coins, and keep the earnings you raise.</p>
+    </article>
+
+    <!-- PANEL 6 — Record & Stream -->
+    <article class="cell c6 reveal">
+      <div class="tone-bg"></div>
+      <span class="idx">06</span>
+      <div class="glyph">
+        <svg viewBox="0 0 60 60" fill="none">
+          <rect x="8" y="18" width="34" height="26" rx="3" fill="none" stroke="#0a0a0a" stroke-width="4"/>
+          <path d="M42 26 L54 20 L54 42 L42 36 Z" fill="#e01b1b" stroke="#0a0a0a" stroke-width="3"/>
+          <circle cx="19" cy="31" r="5" fill="#e01b1b"/>
+        </svg>
+      </div>
+      <h3 class="p-title">Record &amp; Stream</h3>
+      <p class="p-desc">Capture over-the-board games and beam them live to your audience.</p>
+      <div class="sfx-mini">LIVE!</div>
+    </article>
+
+  </div>
+</main>
+
+<div class="gutter"></div>
+
+<!-- ============ MEMBERSHIP ============ -->
+<section class="member" id="membership">
+  <div class="screentone-strip"></div>
+  <div class="spread" style="position:relative;z-index:2">
+    <div class="section-head reveal">
+      <span class="num">CH.3</span>
+      <h2>Join The<br>Guild</h2>
+      <span class="rtl">◀ pick your path</span>
+    </div>
+  </div>
+  <div class="plans">
+    <article class="plan free reveal">
+      <span class="stamp">FIRST 3,000!</span>
+      <span class="tag">Free Recruit</span>
+      <h3>Free</h3>
+      <div class="price">$0<small>free for the first 3,000 members · one full year</small></div>
+      <ul>
+        <li>Full access to the Engine &amp; pip counter</li>
+        <li>Unlimited online play &amp; chouettes</li>
+        <li>Beat the Grandmaster puzzle vault</li>
+        <li>Join any club, no fees</li>
+      </ul>
+      <a href="#" class="btn btn-red" style="width:100%;text-align:center">Claim your free year »</a>
+    </article>
+
+    <article class="plan premium reveal">
+      <span class="tag">Premium Master</span>
+      <h3>Premium</h3>
+      <div class="price">~$1<small>per month · because it should be for everyone</small></div>
+      <ul>
+        <li>Everything in Free, forever</li>
+        <li>Deep post-match Engine reports</li>
+        <li>Gammon University full curriculum</li>
+        <li>Run clubs &amp; keep your earnings</li>
+        <li>Priority OTB record &amp; stream tools</li>
+      </ul>
+      <a href="#" class="btn" style="width:100%;text-align:center">Go Premium</a>
+    </article>
+  </div>
+</section>
+
+<!-- ============ MISSION + FINAL CTA ============ -->
+<section class="mission">
+  <div class="burst" aria-hidden="true"></div>
+  <div class="tone-over" aria-hidden="true"></div>
+  <div class="mission-inner reveal">
+    <div class="lead">Backgammon Is For <em>Everyone</em> —<br>So We're Giving It Away.</div>
+    <p>
+      Our mission is simple: put a grandmaster-class engine in every player's pocket and
+      make the world's oldest game the most alive it has ever been. Play it, learn it,
+      teach it, run it. The next 5,000 years start now.
+    </p>
+    <a href="#membership" class="btn btn-red">Claim your free year »</a>
+  </div>
+  <div class="finale-sfx" aria-hidden="true">GAMMON!!</div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+  <div class="foot-inner">
+    <div class="foot-brand">
+      <a href="#top" class="logo">GAMM<span class="dot">O</span>N</a>
+      <p>The home of worldwide backgammon. Ink &amp; dice since forever.</p>
+    </div>
+    <div class="foot-cols">
+      <div class="foot-col">
+        <h4>Play</h4>
+        <a href="#products">The Engine</a>
+        <a href="#products">Play Online</a>
+        <a href="#products">Beat the Grandmaster</a>
+      </div>
+      <div class="foot-col">
+        <h4>Learn</h4>
+        <a href="#products">Gammon University</a>
+        <a href="#products">Run a Club</a>
+        <a href="#products">Record &amp; Stream</a>
+      </div>
+      <div class="foot-col">
+        <h4>Join</h4>
+        <a href="#membership">Membership</a>
+        <a href="#">Log in</a>
+        <a href="#membership">Start free</a>
+      </div>
+    </div>
+  </div>
+  <div class="foot-bottom">
+    <span>© 2026 Gammon — Worldwide Backgammon</span>
+    <span>Read right to left ◀ · Ink · Dice · Play</span>
+  </div>
+</footer>
+
+<script>
+// ----- mobile menu -----
+const burger = document.getElementById('burger');
+const navLinks = document.getElementById('navLinks');
+burger.addEventListener('click', ()=> navLinks.classList.toggle('open'));
+navLinks.querySelectorAll('a').forEach(a=>{
+  a.addEventListener('click', ()=> navLinks.classList.remove('open'));
+});
+
+// ----- scroll reveal -----
+const io = new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); }
+  });
+},{threshold:.14});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+// ----- subtle parallax on hero speed-line burst -----
+const lines = document.querySelector('.hero-right .lines');
+window.addEventListener('scroll', ()=>{
+  if(!lines) return;
+  const y = window.scrollY;
+  if(y < 800) lines.style.transform = 'rotate('+(y*0.05)+'deg)';
+}, {passive:true});
+</script>
+</body>
+</html>

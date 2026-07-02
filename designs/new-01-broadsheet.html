@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gammon — The Home of Worldwide Backgammon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Spectral:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Oswald:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f4f1e9;
+    --paper-2:#efeadd;
+    --ink:#191512;
+    --ink-soft:#3b342d;
+    --ink-faint:#6b6153;
+    --rule:#1c1712;
+    --accent:#7a1f14;
+    --accent-2:#3a2c14;
+    --hair:rgba(25,21,18,.28);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Spectral',Georgia,serif;
+    font-size:18px;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+    position:relative;
+  }
+  /* paper / ink texture */
+  body::before{
+    content:"";
+    position:fixed;inset:0;pointer-events:none;z-index:9999;
+    opacity:.05;
+    background-image:
+      repeating-linear-gradient(0deg,transparent 0 2px,rgba(0,0,0,.5) 2px 3px);
+    mix-blend-mode:multiply;
+  }
+  body::after{
+    content:"";
+    position:fixed;inset:0;pointer-events:none;z-index:9998;
+    opacity:.35;
+    background:
+      radial-gradient(ellipse at 15% 10%,rgba(120,90,50,.10),transparent 40%),
+      radial-gradient(ellipse at 85% 80%,rgba(90,70,40,.12),transparent 45%),
+      radial-gradient(circle at 50% 50%,transparent 60%,rgba(70,55,35,.10));
+    mix-blend-mode:multiply;
+  }
+  .wrap{max-width:1200px;margin:0 auto;padding:0 22px;}
+  a{color:inherit;text-decoration:none;}
+  h1,h2,h3,h4{font-family:'Playfair Display',Georgia,serif;font-weight:900;line-height:1.02;margin:0;}
+  .label{font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.18em;font-weight:600;}
+  .serif-caps{font-family:'Playfair Display',serif;font-variant:small-caps;letter-spacing:.04em;}
+
+  /* ============ TOP RIBBON / NAV ============ */
+  .topbar{
+    border-bottom:1px solid var(--hair);
+    font-family:'Oswald',sans-serif;
+    text-transform:uppercase;
+    letter-spacing:.14em;
+    font-size:11px;
+    color:var(--ink-soft);
+    background:var(--paper-2);
+  }
+  .topbar .wrap{display:flex;justify-content:space-between;align-items:center;height:34px;}
+  .topbar .weather{display:flex;gap:18px;}
+  .topbar .price{font-weight:600;color:var(--ink);}
+
+  nav.mast-nav{
+    position:sticky;top:0;z-index:100;
+    background:var(--paper);
+    border-bottom:3px double var(--rule);
+  }
+  nav.mast-nav .wrap{display:flex;align-items:center;justify-content:space-between;height:56px;}
+  .nav-logo{font-family:'Playfair Display',serif;font-weight:900;font-size:26px;letter-spacing:-.01em;}
+  .nav-logo span{color:var(--accent);}
+  .nav-links{display:flex;gap:26px;align-items:center;}
+  .nav-links a.link{
+    font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.13em;font-size:12px;font-weight:500;
+    padding:4px 0;border-bottom:2px solid transparent;transition:border-color .2s,color .2s;
+  }
+  .nav-links a.link:hover{border-bottom-color:var(--accent);color:var(--accent);}
+  .nav-cta{display:flex;gap:14px;align-items:center;}
+  .btn-login{font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.12em;font-size:12px;font-weight:500;}
+  .btn-login:hover{color:var(--accent);}
+  .btn-ink{
+    font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.12em;font-size:12px;font-weight:600;
+    background:var(--ink);color:var(--paper);padding:9px 16px;border:1px solid var(--ink);
+    transition:background .2s,color .2s;cursor:pointer;
+  }
+  .btn-ink:hover{background:var(--paper);color:var(--ink);}
+  .hamburger{display:none;background:none;border:1px solid var(--ink);width:42px;height:38px;cursor:pointer;flex-direction:column;justify-content:center;gap:5px;align-items:center;}
+  .hamburger span{display:block;width:22px;height:2px;background:var(--ink);transition:.25s;}
+  .hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+  .hamburger.open span:nth-child(2){opacity:0;}
+  .hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+
+  .mobile-menu{display:none;border-bottom:3px double var(--rule);background:var(--paper-2);}
+  .mobile-menu.show{display:block;}
+  .mobile-menu a{display:block;padding:13px 22px;border-bottom:1px solid var(--hair);font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.13em;font-size:13px;}
+  .mobile-menu .btn-ink{display:block;margin:14px 22px 18px;text-align:center;}
+
+  /* ============ MASTHEAD ============ */
+  .masthead{padding:26px 0 10px;text-align:center;border-bottom:1px solid var(--hair);}
+  .mast-flags{display:flex;justify-content:space-between;align-items:flex-end;max-width:1200px;margin:0 auto;padding:0 22px;}
+  .mast-flag{flex:1;font-family:'Oswald',sans-serif;text-transform:uppercase;font-size:10.5px;letter-spacing:.16em;color:var(--ink-faint);line-height:1.5;}
+  .mast-flag.left{text-align:left;}
+  .mast-flag.right{text-align:right;}
+  .mast-flag strong{display:block;color:var(--ink);font-weight:600;font-size:11px;}
+  .nameplate{
+    font-family:'Playfair Display',serif;font-weight:900;
+    font-size:clamp(52px,13vw,150px);line-height:.9;letter-spacing:-.02em;
+    margin:6px 0 4px;
+    text-shadow:1px 1px 0 rgba(0,0,0,.12);
+  }
+  .dateline-rule{border:none;border-top:4px solid var(--rule);border-bottom:1px solid var(--rule);height:5px;margin:8px 0 0;}
+  .dateline{
+    font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.24em;font-size:11px;font-weight:500;
+    color:var(--ink-soft);padding:7px 0;display:flex;justify-content:center;gap:22px;flex-wrap:wrap;
+    border-bottom:2px solid var(--rule);
+  }
+  .dateline .star{color:var(--accent);}
+
+  /* ============ HERO ============ */
+  .hero{padding:0;border-bottom:3px double var(--rule);}
+  .hero-grid{display:grid;grid-template-columns:1fr 1.55fr 1fr;}
+  .hero-col{padding:26px 22px;}
+  .hero-col.mid{border-left:1px solid var(--rule);border-right:1px solid var(--rule);padding:30px 30px 34px;text-align:center;}
+  .kicker{font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.24em;font-size:12px;color:var(--accent);font-weight:600;margin-bottom:12px;}
+  .hero-head{font-size:clamp(38px,6vw,74px);line-height:.96;letter-spacing:-.015em;margin-bottom:8px;}
+  .hero-head em{font-style:italic;font-weight:700;}
+  .hero-deck{
+    font-size:19px;color:var(--ink-soft);font-weight:400;line-height:1.5;max-width:560px;margin:14px auto 0;
+    font-family:'Spectral',serif;
+  }
+  .hero-deck .lead{font-weight:500;}
+  .hero-cta-row{margin-top:24px;display:flex;flex-direction:column;align-items:center;gap:10px;}
+  .btn-hero{
+    font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.14em;font-size:15px;font-weight:600;
+    background:var(--accent);color:var(--paper);padding:15px 34px;border:2px solid var(--accent);cursor:pointer;
+    transition:background .2s,color .2s;
+  }
+  .btn-hero:hover{background:transparent;color:var(--accent);}
+  .free-note{font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.12em;font-size:11px;color:var(--ink-faint);}
+  .free-note .dot{color:var(--accent);}
+
+  /* left/right hero side columns */
+  .side-kicker{font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.14em;font-size:11px;font-weight:600;border-bottom:2px solid var(--rule);padding-bottom:6px;margin-bottom:10px;}
+  .side-note{font-size:14.5px;color:var(--ink-soft);line-height:1.5;}
+  .side-note + .side-note{margin-top:14px;padding-top:14px;border-top:1px solid var(--hair);}
+  .side-note h4{font-family:'Playfair Display',serif;font-size:19px;font-weight:700;line-height:1.05;margin-bottom:4px;}
+  .byline{font-family:'Playfair Display',serif;font-variant:small-caps;letter-spacing:.05em;font-size:12px;color:var(--ink-faint);margin-top:6px;}
+
+  /* SVG motif */
+  .motif{margin:18px auto 4px;max-width:420px;}
+  .motif svg{width:100%;height:auto;display:block;}
+
+  /* ============ SECTION HEADERS ============ */
+  .sec-head{
+    display:flex;align-items:baseline;justify-content:space-between;
+    border-top:3px solid var(--rule);border-bottom:1px solid var(--rule);
+    padding:8px 0;margin:0;
+  }
+  .sec-head h2{font-size:clamp(26px,4vw,40px);letter-spacing:-.01em;}
+  .sec-head .sec-tag{font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.2em;font-size:11px;color:var(--ink-faint);font-weight:500;}
+
+  /* ============ PRODUCTS ============ */
+  .products{padding:0 0 10px;}
+  .prod-grid{
+    display:grid;grid-template-columns:repeat(3,1fr);
+  }
+  .article{
+    padding:24px 26px 28px;position:relative;
+    border-bottom:1px solid var(--rule);
+  }
+  .prod-grid .article:not(:nth-child(3n)){border-right:1px solid var(--rule);}
+  .article .art-kicker{font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.2em;font-size:10.5px;font-weight:600;color:var(--accent);margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+  .art-num{font-family:'Playfair Display',serif;font-weight:900;font-style:italic;color:var(--ink-faint);font-size:14px;}
+  .article h3{font-size:29px;line-height:1.0;letter-spacing:-.01em;margin-bottom:10px;}
+  .article h3 a{transition:color .2s;}
+  .article:hover h3 a{color:var(--accent);}
+  .article .sub{font-family:'Playfair Display',serif;font-style:italic;font-weight:400;font-size:15px;color:var(--ink-faint);margin-bottom:12px;line-height:1.3;}
+  .article p{font-size:16px;color:var(--ink-soft);line-height:1.5;}
+  .article .readmore{font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.14em;font-size:11px;font-weight:600;color:var(--ink);margin-top:14px;display:inline-block;border-bottom:2px solid var(--accent);padding-bottom:2px;transition:transform .2s;}
+  .article .readmore:hover{transform:translateX(4px);}
+  /* drop cap on first article */
+  .article.lead-art p:first-of-type::first-letter{
+    font-family:'Playfair Display',serif;font-weight:900;
+    float:left;font-size:64px;line-height:.7;padding:6px 8px 0 0;color:var(--accent);
+  }
+
+  /* engraved mini glyph per article */
+  .art-glyph{position:absolute;top:22px;right:22px;width:30px;height:30px;opacity:.5;}
+  .art-glyph svg{width:100%;height:100%;}
+
+  /* ============ FEATURE / MISSION STRIP ============ */
+  .feature{padding:0;border-bottom:3px double var(--rule);}
+  .feature-grid{display:grid;grid-template-columns:1.2fr 1fr;}
+  .feature-main{padding:34px 30px;border-right:1px solid var(--rule);}
+  .feature-side{padding:34px 30px;}
+  .pullquote{
+    font-family:'Playfair Display',serif;font-style:italic;font-weight:700;
+    font-size:clamp(26px,3.4vw,40px);line-height:1.12;margin:0 0 16px;
+    border-left:4px solid var(--accent);padding-left:20px;
+  }
+  .pullquote-attr{font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.18em;font-size:11px;color:var(--ink-faint);font-weight:500;padding-left:24px;}
+  .feature-main p{font-size:17px;color:var(--ink-soft);margin-top:18px;line-height:1.55;}
+
+  /* ============ MEMBERSHIP ============ */
+  .membership{padding:0;}
+  .price-grid{display:grid;grid-template-columns:1fr 1fr;}
+  .price-col{padding:32px 30px 36px;}
+  .price-col.free{border-right:1px solid var(--rule);}
+  .price-col .plan-name{font-family:'Playfair Display',serif;font-weight:900;font-size:34px;letter-spacing:-.01em;margin-bottom:4px;}
+  .price-col .plan-name em{color:var(--accent);font-style:italic;}
+  .price-col .plan-tag{font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.16em;font-size:11px;color:var(--ink-faint);font-weight:600;margin-bottom:18px;}
+  .price-big{font-family:'Playfair Display',serif;font-weight:900;font-size:56px;line-height:1;margin-bottom:2px;}
+  .price-big small{font-size:18px;font-weight:400;font-style:italic;color:var(--ink-faint);font-family:'Spectral',serif;}
+  .plan-list{list-style:none;padding:0;margin:20px 0 24px;}
+  .plan-list li{padding:9px 0;border-bottom:1px dotted var(--hair);font-size:16px;color:var(--ink-soft);display:flex;gap:10px;align-items:baseline;}
+  .plan-list li::before{content:"§";color:var(--accent);font-weight:700;}
+  .plan-btn{
+    font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.14em;font-size:13px;font-weight:600;
+    display:inline-block;padding:13px 28px;border:2px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;transition:.2s;
+  }
+  .plan-btn:hover{background:var(--ink);color:var(--paper);}
+  .plan-btn.filled{background:var(--accent);border-color:var(--accent);color:var(--paper);}
+  .plan-btn.filled:hover{background:transparent;color:var(--accent);}
+
+  /* ============ FINAL CTA ============ */
+  .finale{
+    background:var(--ink);color:var(--paper);text-align:center;padding:56px 22px;
+    border-top:3px double var(--paper);border-bottom:3px double var(--rule);
+  }
+  .finale .kicker{color:#d8b48c;}
+  .finale h2{font-size:clamp(32px,5.5vw,64px);color:var(--paper);line-height:.98;letter-spacing:-.01em;max-width:900px;margin:0 auto 10px;}
+  .finale h2 em{font-style:italic;color:#e7c9a3;}
+  .finale p{color:#cfc6b8;font-size:18px;max-width:560px;margin:0 auto 26px;}
+  .btn-finale{
+    font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.14em;font-size:15px;font-weight:600;
+    background:var(--paper);color:var(--ink);padding:16px 40px;border:2px solid var(--paper);cursor:pointer;transition:.2s;
+  }
+  .btn-finale:hover{background:transparent;color:var(--paper);}
+
+  /* ============ FOOTER ============ */
+  footer{padding:0;}
+  .foot-plate{text-align:center;padding:30px 22px 6px;border-bottom:1px solid var(--hair);}
+  .foot-name{font-family:'Playfair Display',serif;font-weight:900;font-size:44px;letter-spacing:-.01em;}
+  .foot-name span{color:var(--accent);}
+  .foot-cols{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-bottom:1px solid var(--rule);}
+  .foot-col{padding:24px 26px;}
+  .foot-col:not(:last-child){border-right:1px solid var(--hair);}
+  .foot-col h4{font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.16em;font-size:11px;font-weight:600;border-bottom:2px solid var(--rule);padding-bottom:8px;margin-bottom:12px;}
+  .foot-col a{display:block;font-size:14.5px;color:var(--ink-soft);padding:5px 0;transition:color .2s;}
+  .foot-col a:hover{color:var(--accent);}
+  .colophon{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:18px 26px 40px;font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.12em;font-size:10.5px;color:var(--ink-faint);}
+
+  /* ============ scroll reveal ============ */
+  .reveal{opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .7s ease;}
+  .reveal.in{opacity:1;transform:none;}
+
+  /* ============ RESPONSIVE ============ */
+  @media(max-width:960px){
+    .hero-grid{grid-template-columns:1fr;}
+    .hero-col.mid{border-left:none;border-right:none;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);}
+    .prod-grid{grid-template-columns:1fr 1fr;}
+    .prod-grid .article:not(:nth-child(3n)){border-right:none;}
+    .prod-grid .article:nth-child(odd){border-right:1px solid var(--rule);}
+    .feature-grid{grid-template-columns:1fr;}
+    .feature-main{border-right:none;border-bottom:1px solid var(--rule);}
+    .foot-cols{grid-template-columns:1fr 1fr;}
+    .foot-col:nth-child(2){border-right:none;}
+  }
+  @media(max-width:680px){
+    body{font-size:17px;}
+    .nav-links,.topbar .weather{display:none;}
+    .hamburger{display:flex;}
+    .prod-grid{grid-template-columns:1fr;}
+    .prod-grid .article{border-right:none!important;}
+    .price-grid{grid-template-columns:1fr;}
+    .price-col.free{border-right:none;border-bottom:1px solid var(--rule);}
+    .foot-cols{grid-template-columns:1fr;}
+    .foot-col{border-right:none!important;border-bottom:1px solid var(--hair);}
+    .dateline{gap:12px;font-size:9.5px;letter-spacing:.16em;}
+    .mast-flags{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ======== TOP RIBBON ======== -->
+<div class="topbar">
+  <div class="wrap">
+    <div class="weather">
+      <span>Vol. I &mdash; No. 01</span>
+      <span>Fair &amp; Rolling Dice</span>
+      <span>Board Temp: Hot</span>
+    </div>
+    <div class="price">Late City Edition &middot; Free for Members</div>
+  </div>
+</div>
+
+<!-- ======== NAV ======== -->
+<nav class="mast-nav">
+  <div class="wrap">
+    <a href="#" class="nav-logo">Gam<span>·</span>mon</a>
+    <div class="nav-links">
+      <a href="#products" class="link">Products</a>
+      <a href="#engine" class="link">Engine</a>
+      <a href="#clubs" class="link">Clubs</a>
+      <a href="#membership" class="link">Membership</a>
+    </div>
+    <div class="nav-cta">
+      <a href="#" class="btn-login">Log in</a>
+      <button class="btn-ink" onclick="document.getElementById('membership').scrollIntoView()">Start free</button>
+      <button class="hamburger" id="hamburger" aria-label="Menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- ======== MOBILE MENU ======== -->
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#products">Products</a>
+  <a href="#engine">Engine</a>
+  <a href="#clubs">Clubs</a>
+  <a href="#membership">Membership</a>
+  <a href="#">Log in</a>
+  <button class="btn-ink" onclick="document.getElementById('membership').scrollIntoView()">Start free</button>
+</div>
+
+<!-- ======== MASTHEAD ======== -->
+<header class="masthead">
+  <div class="mast-flags">
+    <div class="mast-flag left">
+      <strong>The Standing Rule</strong>
+      Doubling cube in play<br>Crawford observed
+    </div>
+    <div class="mast-flag right">
+      <strong>Circulation</strong>
+      Read in 190 nations<br>Millions at the board
+    </div>
+  </div>
+  <div class="nameplate">Gammon</div>
+  <hr class="dateline-rule">
+  <div class="dateline">
+    <span class="serif-caps">The Home of Worldwide Backgammon</span>
+    <span><span class="star">&#9733;</span> Worldwide Edition &middot; Est. 2026 <span class="star">&#9733;</span></span>
+    <span>Thursday, July 2, 2026</span>
+  </div>
+</header>
+
+<!-- ======== HERO ======== -->
+<section class="hero">
+  <div class="hero-grid">
+    <!-- LEFT COLUMN -->
+    <div class="hero-col left">
+      <div class="side-kicker">In This Edition</div>
+      <div class="side-note">
+        <h4>The engine goes to your pocket</h4>
+        Grandmaster-class analysis, once locked in the lab, now travels with every player alive.
+        <div class="byline">Filed by the Technology Desk</div>
+      </div>
+      <div class="side-note">
+        <h4>Clubs keep what they earn</h4>
+        Organisers run tournaments, mint coins and keep the take. The board room comes home.
+        <div class="byline">Filed by the Clubs Desk</div>
+      </div>
+    </div>
+
+    <!-- MIDDLE COLUMN (LEAD) -->
+    <div class="hero-col mid">
+      <div class="kicker">The Front Page &middot; Special Report</div>
+      <h1 class="hero-head">The Home of <em>Worldwide</em> Backgammon</h1>
+      <p class="hero-deck">
+        <span class="lead">Play. Learn. Compete. Run your own club.</span>
+        One platform for the whole ancient game &mdash; matches, money games and chouettes,
+        lessons from world-class coaches, and a grandmaster-class engine that lives in your pocket.
+      </p>
+
+      <!-- INLINE SVG MOTIF: backgammon board, points, checkers, dice -->
+      <div class="motif" aria-hidden="true">
+        <svg viewBox="0 0 420 200" xmlns="http://www.w3.org/2000/svg">
+          <!-- board frame -->
+          <rect x="4" y="4" width="412" height="192" fill="none" stroke="#191512" stroke-width="3"/>
+          <rect x="12" y="12" width="396" height="176" fill="none" stroke="#191512" stroke-width="1"/>
+          <!-- center bar -->
+          <rect x="203" y="12" width="14" height="176" fill="none" stroke="#191512" stroke-width="1.5"/>
+          <line x1="210" y1="12" x2="210" y2="188" stroke="#191512" stroke-width="1" stroke-dasharray="3 4"/>
+          <!-- top points (alternating fill via hatch/solid) -->
+          <g stroke="#191512" stroke-width="1">
+            <polygon points="24,14 52,14 38,92" fill="#191512"/>
+            <polygon points="60,14 88,14 74,92" fill="none"/>
+            <polygon points="96,14 124,14 110,92" fill="#191512"/>
+            <polygon points="132,14 160,14 146,92" fill="none"/>
+            <polygon points="168,14 196,14 182,92" fill="#191512"/>
+            <polygon points="224,14 252,14 238,92" fill="none"/>
+            <polygon points="260,14 288,14 274,92" fill="#191512"/>
+            <polygon points="296,14 324,14 310,92" fill="none"/>
+            <polygon points="332,14 360,14 346,92" fill="#191512"/>
+            <polygon points="368,14 396,14 382,92" fill="none"/>
+          </g>
+          <!-- bottom points -->
+          <g stroke="#191512" stroke-width="1">
+            <polygon points="24,186 52,186 38,108" fill="none"/>
+            <polygon points="60,186 88,186 74,108" fill="#191512"/>
+            <polygon points="96,186 124,186 110,108" fill="none"/>
+            <polygon points="132,186 160,186 146,108" fill="#191512"/>
+            <polygon points="168,186 196,186 182,108" fill="none"/>
+            <polygon points="224,186 252,186 238,108" fill="#191512"/>
+            <polygon points="260,186 288,186 274,108" fill="none"/>
+            <polygon points="296,186 324,186 310,108" fill="#191512"/>
+            <polygon points="332,186 360,186 346,108" fill="none"/>
+            <polygon points="368,186 396,186 382,108" fill="#191512"/>
+          </g>
+          <!-- checkers stacked -->
+          <g stroke="#191512" stroke-width="1.4">
+            <circle cx="38" cy="26" r="10" fill="#7a1f14"/>
+            <circle cx="38" cy="46" r="10" fill="#7a1f14"/>
+            <circle cx="38" cy="66" r="10" fill="#7a1f14"/>
+            <circle cx="382" cy="174" r="10" fill="#f4f1e9"/>
+            <circle cx="382" cy="154" r="10" fill="#f4f1e9"/>
+            <circle cx="274" cy="26" r="10" fill="#f4f1e9"/>
+            <circle cx="146" cy="174" r="10" fill="#7a1f14"/>
+          </g>
+          <!-- dice -->
+          <g stroke="#191512" stroke-width="1.6">
+            <rect x="120" y="82" width="34" height="34" rx="4" fill="#f4f1e9" transform="rotate(-8 137 99)"/>
+            <rect x="262" y="86" width="34" height="34" rx="4" fill="#f4f1e9" transform="rotate(11 279 103)"/>
+          </g>
+          <g fill="#191512">
+            <circle cx="130" cy="92" r="2.6"/><circle cx="146" cy="106" r="2.6"/><circle cx="137" cy="99" r="2.6"/>
+            <circle cx="271" cy="95" r="2.6"/><circle cx="287" cy="95" r="2.6"/><circle cx="271" cy="111" r="2.6"/><circle cx="287" cy="111" r="2.6"/>
+          </g>
+        </svg>
+      </div>
+
+      <div class="hero-cta-row">
+        <button class="btn-hero" onclick="document.getElementById('membership').scrollIntoView()">Claim your free year</button>
+        <div class="free-note"><span class="dot">&#9670;</span> Free for the first 3,000 members &middot; one year on us</div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="hero-col right">
+      <div class="side-kicker">By the Numbers</div>
+      <div class="side-note">
+        <h4>3,000</h4>
+        Founding members admitted free &mdash; a full year on the house, no cube turned.
+      </div>
+      <div class="side-note">
+        <h4>~ $1 / mo.</h4>
+        Premium thereafter. The whole game, for less than a coffee, forever.
+      </div>
+      <div class="side-note">
+        <h4>Millions</h4>
+        The ambition is not hundreds of players. It is the world, gathered at one board.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======== PRODUCTS ======== -->
+<section class="products" id="products">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>The Six Departments</h2>
+      <span class="sec-tag">Products &middot; Full Coverage</span>
+    </div>
+  </div>
+  <div class="wrap" style="padding:0;">
+    <div class="prod-grid">
+
+      <!-- 1 THE ENGINE (lead article w/ drop cap) -->
+      <article class="article lead-art reveal" id="engine">
+        <div class="art-glyph" aria-hidden="true"><svg viewBox="0 0 40 40"><rect x="6" y="6" width="28" height="28" rx="4" fill="none" stroke="#191512" stroke-width="2"/><circle cx="14" cy="14" r="2.6" fill="#191512"/><circle cx="26" cy="26" r="2.6" fill="#191512"/><circle cx="20" cy="20" r="2.6" fill="#191512"/></svg></div>
+        <div class="art-kicker"><span class="art-num">I.</span> Analysis</div>
+        <h3><a href="#">The Engine</a></h3>
+        <div class="sub">XG-class insight, snap a photo, done.</div>
+        <p>Read the position like a grandmaster reads a rival. The Engine delivers XG-class analysis of every move and cube decision &mdash; and when the board is real wood, simply snap a photo and it reconstructs the layout, counts the pips, and tells you the play.</p>
+        <a href="#" class="readmore">Read the full analysis</a>
+      </article>
+
+      <!-- 2 PLAY ONLINE -->
+      <article class="article reveal">
+        <div class="art-glyph" aria-hidden="true"><svg viewBox="0 0 40 40"><circle cx="14" cy="20" r="8" fill="#7a1f14" stroke="#191512" stroke-width="1.6"/><circle cx="26" cy="20" r="8" fill="none" stroke="#191512" stroke-width="1.6"/></svg></div>
+        <div class="art-kicker"><span class="art-num">II.</span> Competition</div>
+        <h3><a href="#">Play Online</a></h3>
+        <div class="sub">Matches, money games &amp; chouettes, worldwide.</div>
+        <p>Sit down at any table on Earth. Rated matches for the ladder, money games for the nerve, and rowdy chouettes for the whole crew &mdash; the pace of over-the-board, at the speed of the wire.</p>
+        <a href="#" class="readmore">Enter the tables</a>
+      </article>
+
+      <!-- 3 BEAT THE GRANDMASTER -->
+      <article class="article reveal">
+        <div class="art-glyph" aria-hidden="true"><svg viewBox="0 0 40 40"><path d="M20 6 L34 14 V26 L20 34 L6 26 V14 Z" fill="none" stroke="#191512" stroke-width="1.8"/><text x="20" y="26" font-family="Playfair Display,serif" font-size="16" font-weight="900" text-anchor="middle" fill="#7a1f14">?</text></svg></div>
+        <div class="art-kicker"><span class="art-num">III.</span> Puzzles</div>
+        <h3><a href="#">Beat the Grandmaster</a></h3>
+        <div class="sub">Puzzles drawn from real masters' mistakes.</div>
+        <p>History's finest players erred &mdash; and every blunder is a lesson waiting. Face the exact positions where champions went wrong, choose your move, and learn whether you would have found the line they missed.</p>
+        <a href="#" class="readmore">Take the challenge</a>
+      </article>
+
+      <!-- 4 GAMMON UNIVERSITY -->
+      <article class="article reveal">
+        <div class="art-glyph" aria-hidden="true"><svg viewBox="0 0 40 40"><path d="M6 16 L20 10 L34 16 L20 22 Z" fill="#191512"/><path d="M12 19 V27 C12 27 16 30 20 30 C24 30 28 27 28 27 V19" fill="none" stroke="#191512" stroke-width="1.8"/></svg></div>
+        <div class="art-kicker"><span class="art-num">IV.</span> Education</div>
+        <h3><a href="#">Gammon University</a></h3>
+        <div class="sub">Lessons with world-class coaches.</div>
+        <p>Enrol in the academy of the doubling cube. Structured courses and clinics from world-class coaches take you from opening rolls to expert equity &mdash; the theory, the technique, the temperament of a champion.</p>
+        <a href="#" class="readmore">Browse the curriculum</a>
+      </article>
+
+      <!-- 5 RUN A CLUB -->
+      <article class="article reveal" id="clubs">
+        <div class="art-glyph" aria-hidden="true"><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="13" fill="none" stroke="#191512" stroke-width="1.8"/><circle cx="20" cy="20" r="5" fill="#7a1f14"/><text x="20" y="14" font-family="Oswald,sans-serif" font-size="7" text-anchor="middle" fill="#191512">§</text></svg></div>
+        <div class="art-kicker"><span class="art-num">V.</span> Community</div>
+        <h3><a href="#">Run a Club</a></h3>
+        <div class="sub">Host tournaments, mint coins, keep what you earn.</div>
+        <p>Become the proprietor of your own backgammon house. Spin up tournaments, issue club coins, seat your regulars &mdash; and keep the earnings. The tools of a grand organiser, handed to any table.</p>
+        <a href="#" class="readmore">Found your club</a>
+      </article>
+
+      <!-- 6 RECORD & STREAM -->
+      <article class="article reveal">
+        <div class="art-glyph" aria-hidden="true"><svg viewBox="0 0 40 40"><rect x="6" y="12" width="20" height="16" rx="2" fill="none" stroke="#191512" stroke-width="1.8"/><path d="M26 18 L34 13 V27 L26 22 Z" fill="#7a1f14" stroke="#191512" stroke-width="1.4"/></svg></div>
+        <div class="art-kicker"><span class="art-num">VI.</span> Broadcast</div>
+        <h3><a href="#">Record &amp; Stream</a></h3>
+        <div class="sub">Capture the board, then live-stream it.</div>
+        <p>Turn the over-the-board classic into a broadcast. Record your live matches move by move, replay them for study, and stream to the world &mdash; the felt table finally gets its own front-row audience.</p>
+        <a href="#" class="readmore">Go on the air</a>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<!-- ======== FEATURE / MISSION ======== -->
+<section class="feature">
+  <div class="wrap" style="padding:0;">
+    <div class="feature-grid">
+      <div class="feature-main reveal">
+        <blockquote class="pullquote">&ldquo;The whole game, under one roof &mdash; and the roof is the size of the world.&rdquo;</blockquote>
+        <div class="pullquote-attr">&mdash; The Gammon Editorial Board</div>
+        <p>For too long the ancient game lived in scattered rooms: an app to play, a program to analyse, a club that met on Tuesdays, a coach if you were lucky. Gammon gathers every one of them into a single edition &mdash; play and study, teach and organise, record and broadcast &mdash; and puts a grandmaster in your pocket while it does.</p>
+        <p>The measure of success was never hundreds of enthusiasts. It is millions of players, from the café champion to the world finalist, meeting at the same living board.</p>
+      </div>
+      <div class="feature-side reveal">
+        <div class="side-kicker">Editorial &middot; The Mission</div>
+        <div class="side-note">
+          <h4>One roof</h4>
+          Every corner of backgammon &mdash; play, learn, compete, run a club, record, stream &mdash; on a single platform, no seams showing.
+        </div>
+        <div class="side-note">
+          <h4>Millions, not hundreds</h4>
+          We are building for the whole world of the game, not a small circle of it. The board has always been global; now the home is, too.
+        </div>
+        <div class="side-note">
+          <h4>A master in your pocket</h4>
+          The strongest analysis ever made, walking beside every player on Earth &mdash; free to begin.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======== MEMBERSHIP ======== -->
+<section class="membership" id="membership">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>Terms of Membership</h2>
+      <span class="sec-tag">Subscriptions &middot; The Notice</span>
+    </div>
+  </div>
+  <div class="wrap" style="padding:0;">
+    <div class="price-grid">
+      <div class="price-col free reveal">
+        <div class="plan-name">The <em>Founding</em> Member</div>
+        <div class="plan-tag">First 3,000 Only &middot; Charter Rate</div>
+        <div class="price-big">Free <small>&mdash; one year on us</small></div>
+        <ul class="plan-list">
+          <li>Full access to all six departments for twelve months</li>
+          <li>The Engine, with photo-to-board and pip count</li>
+          <li>Online play: matches, money games &amp; chouettes</li>
+          <li>Puzzles, University lessons &amp; club tools included</li>
+          <li>No cube turned &mdash; no card required to begin</li>
+        </ul>
+        <button class="plan-btn filled" onclick="alert('Welcome, Founding Member.')">Claim your free year</button>
+      </div>
+      <div class="price-col premium reveal">
+        <div class="plan-name">The Premium Reader</div>
+        <div class="plan-tag">After the Charter &middot; Standing Subscription</div>
+        <div class="price-big">~ $1 <small>/ month, thereafter</small></div>
+        <ul class="plan-list">
+          <li>Everything in the Founding tier, kept forever</li>
+          <li>Deeper Engine rollouts &amp; unlimited analysis</li>
+          <li>Priority seating in tournaments and events</li>
+          <li>Advanced club administration &amp; earnings tools</li>
+          <li>The whole game, for less than a coffee</li>
+        </ul>
+        <button class="plan-btn" onclick="alert('Premium — ~$1 a month.')">See premium terms</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======== FINAL CTA ======== -->
+<section class="finale">
+  <div class="kicker">Late Bulletin &middot; Act Before the Presses Roll</div>
+  <h2>Take your seat at the <em>world's</em> board.</h2>
+  <p>Three thousand founding memberships. One year, free. The whole game of backgammon, gathered under one roof at last.</p>
+  <button class="btn-finale" onclick="document.getElementById('membership').scrollIntoView()">Claim your free year</button>
+</section>
+
+<!-- ======== FOOTER ======== -->
+<footer>
+  <div class="foot-plate">
+    <div class="foot-name">Gam<span>·</span>mon</div>
+    <div class="label" style="font-size:11px;color:var(--ink-faint);margin-top:6px;letter-spacing:.24em;">The Home of Worldwide Backgammon</div>
+  </div>
+  <div class="wrap" style="padding:0;">
+    <div class="foot-cols">
+      <div class="foot-col">
+        <h4>The Game</h4>
+        <a href="#engine">The Engine</a>
+        <a href="#products">Play Online</a>
+        <a href="#products">Beat the Grandmaster</a>
+        <a href="#products">Gammon University</a>
+      </div>
+      <div class="foot-col">
+        <h4>Organise</h4>
+        <a href="#clubs">Run a Club</a>
+        <a href="#products">Record &amp; Stream</a>
+        <a href="#">Tournaments</a>
+        <a href="#">Club Coins</a>
+      </div>
+      <div class="foot-col">
+        <h4>Membership</h4>
+        <a href="#membership">Founding Member</a>
+        <a href="#membership">Premium Reader</a>
+        <a href="#">Log in</a>
+        <a href="#">Gift a Year</a>
+      </div>
+      <div class="foot-col">
+        <h4>The Paper</h4>
+        <a href="#">About Gammon</a>
+        <a href="#">Press &amp; Media</a>
+        <a href="#">Careers</a>
+        <a href="#">Contact the Desk</a>
+      </div>
+    </div>
+    <div class="colophon">
+      <span>&copy; 2026 The Gammon Company &middot; Printed for a Worldwide Readership</span>
+      <span>Terms &middot; Privacy &middot; All the Game That's Fit to Play</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // ===== Mobile menu =====
+  (function(){
+    var ham = document.getElementById('hamburger');
+    var menu = document.getElementById('mobileMenu');
+    function close(){ menu.classList.remove('show'); ham.classList.remove('open'); ham.setAttribute('aria-expanded','false'); }
+    ham.addEventListener('click', function(){
+      var open = menu.classList.toggle('show');
+      ham.classList.toggle('open', open);
+      ham.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    menu.querySelectorAll('a, .btn-ink').forEach(function(el){
+      el.addEventListener('click', close);
+    });
+    window.addEventListener('resize', function(){ if(window.innerWidth > 680) close(); });
+  })();
+
+  // ===== Scroll reveal =====
+  (function(){
+    var els = document.querySelectorAll('.reveal');
+    if(!('IntersectionObserver' in window)){ els.forEach(function(e){e.classList.add('in');}); return; }
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); }
+      });
+    }, {threshold:.14});
+    els.forEach(function(e){ io.observe(e); });
+  })();
+</script>
+</body>
+</html>
