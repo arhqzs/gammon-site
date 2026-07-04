@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DeepGammon — Lobby</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0a0b14;
+    --bg2: #0d0f1e;
+    --panel: rgba(22, 24, 42, 0.55);
+    --panel-solid: rgba(28, 30, 52, 0.72);
+    --stroke: rgba(255, 255, 255, 0.08);
+    --stroke-bright: rgba(255, 255, 255, 0.14);
+    --text: #eef0fb;
+    --muted: #9aa0c4;
+    --faint: #6b6f96;
+    --indigo: #6366f1;
+    --violet: #a855f7;
+    --teal: #2dd4bf;
+    --accent-grad: linear-gradient(135deg, #6366f1 0%, #a855f7 55%, #2dd4bf 130%);
+    --live: #34d399;
+    --amber: #fbbf24;
+    --radius: 18px;
+    --radius-sm: 12px;
+    --shadow: 0 20px 60px -20px rgba(0, 0, 0, 0.7);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body { height: 100%; }
+
+  body {
+    font-family: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+    line-height: 1.45;
+    position: relative;
+  }
+
+  /* ---------- AURORA BACKDROP ---------- */
+  .aurora {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .aurora::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(38% 44% at 18% 12%, rgba(99, 102, 241, 0.42), transparent 70%),
+      radial-gradient(42% 48% at 82% 8%, rgba(168, 85, 247, 0.38), transparent 68%),
+      radial-gradient(46% 52% at 72% 88%, rgba(45, 212, 191, 0.30), transparent 70%),
+      radial-gradient(40% 46% at 8% 82%, rgba(99, 102, 241, 0.22), transparent 72%);
+    filter: blur(20px);
+    animation: drift 22s ease-in-out infinite alternate;
+  }
+  @keyframes drift {
+    0%   { transform: translate3d(0,0,0) scale(1); }
+    50%  { transform: translate3d(2%, -1.5%, 0) scale(1.08); }
+    100% { transform: translate3d(-1.5%, 2%, 0) scale(1.04); }
+  }
+  /* fine grid */
+  .grid-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.028) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.028) 1px, transparent 1px);
+    background-size: 46px 46px;
+    mask-image: radial-gradient(120% 100% at 50% 0%, #000 40%, transparent 100%);
+  }
+
+  /* ---------- SHELL ---------- */
+  .shell {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 244px minmax(0, 1fr) 300px;
+    gap: 18px;
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 18px;
+    min-height: 100vh;
+  }
+
+  .glass {
+    background: var(--panel);
+    border: 1px solid var(--stroke);
+    border-radius: var(--radius);
+    backdrop-filter: blur(22px) saturate(140%);
+    -webkit-backdrop-filter: blur(22px) saturate(140%);
+    box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,0.06);
+  }
+
+  /* ---------- LEFT SIDEBAR ---------- */
+  .sidebar {
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 18px;
+    height: calc(100vh - 36px);
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 4px 6px 18px;
+  }
+  .logo-mark {
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    background: var(--accent-grad);
+    display: grid; place-items: center;
+    font-weight: 800; font-size: 16px;
+    color: #fff;
+    letter-spacing: -0.5px;
+    box-shadow: 0 8px 24px -6px rgba(99,102,241,0.6), inset 0 1px 0 rgba(255,255,255,0.4);
+  }
+  .logo-txt b { display:block; font-size: 15px; font-weight: 800; letter-spacing:-0.3px;}
+  .logo-txt span { font-size: 11px; color: var(--muted); font-weight: 500; }
+
+  .nav { display: flex; flex-direction: column; gap: 3px; margin-top: 6px; }
+  .nav-label {
+    font-size: 10.5px; text-transform: uppercase; letter-spacing: 1.4px;
+    color: var(--faint); font-weight: 700; padding: 8px 10px 6px;
+  }
+  .nav a {
+    display: flex; align-items: center; gap: 12px;
+    padding: 9px 11px; border-radius: 11px;
+    color: var(--muted); text-decoration: none;
+    font-size: 13.5px; font-weight: 600;
+    position: relative;
+    transition: all 0.18s ease;
+  }
+  .nav a svg { width: 18px; height: 18px; stroke-width: 1.8; flex-shrink: 0; }
+  .nav a:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+  .nav a.active {
+    color: #fff;
+    background: linear-gradient(135deg, rgba(99,102,241,0.22), rgba(168,85,247,0.14));
+    border: 1px solid rgba(139,120,255,0.28);
+  }
+  .nav a.active::before {
+    content:""; position:absolute; left:-16px; top:50%; transform:translateY(-50%);
+    width:3px; height:20px; border-radius:3px; background: var(--accent-grad);
+  }
+
+  .sidebar-bottom { margin-top: auto; display:flex; flex-direction:column; gap:3px; }
+  .user-row {
+    display:flex; align-items:center; gap:11px;
+    margin-top: 10px; padding: 10px;
+    border-radius: 13px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--stroke);
+  }
+  .avatar {
+    width: 34px; height:34px; border-radius: 10px;
+    background: linear-gradient(135deg, #a855f7, #2dd4bf);
+    display:grid; place-items:center; font-weight:700; font-size:14px; color:#fff;
+  }
+  .user-row .u-name { font-size: 13px; font-weight:700; }
+  .user-row .u-sub { font-size: 11px; color: var(--muted); }
+  .status-dot { width:7px;height:7px;border-radius:50%;background:var(--live);box-shadow:0 0 8px var(--live); }
+
+  /* ---------- CENTER ---------- */
+  .center { display:flex; flex-direction:column; gap:18px; min-width:0; padding-bottom: 8px; }
+
+  .topbar {
+    display:flex; align-items:center; justify-content:space-between;
+    gap: 16px; padding: 14px 20px;
+  }
+  .topbar h1 { font-size: 19px; font-weight: 800; letter-spacing:-0.4px; }
+  .topbar .sub { font-size: 12.5px; color: var(--muted); margin-top:2px; }
+  .search {
+    display:flex; align-items:center; gap:9px;
+    background: rgba(255,255,255,0.05);
+    border:1px solid var(--stroke);
+    padding: 9px 14px; border-radius: 12px;
+    color: var(--muted); font-size:13px; min-width: 220px;
+  }
+  .search svg{width:16px;height:16px;}
+  .search input{ background:none;border:none;outline:none;color:var(--text);font-family:inherit;font-size:13px;width:100%; }
+  .search input::placeholder{color:var(--faint);}
+
+  .card { padding: 20px 22px; }
+  .card-head {
+    display:flex; align-items:flex-start; justify-content:space-between;
+    gap: 16px; margin-bottom: 16px;
+  }
+  .card-head .title-wrap { display:flex; align-items:center; gap:12px; }
+  .card-icon {
+    width: 38px; height:38px; border-radius: 11px;
+    display:grid; place-items:center; flex-shrink:0;
+    background: rgba(255,255,255,0.05);
+    border:1px solid var(--stroke-bright);
+  }
+  .card-icon svg { width:19px; height:19px; }
+  .ci-indigo { color:#a5b4fc; } .ci-violet{color:#d8b4fe;} .ci-teal{color:#5eead4;} .ci-amber{color:#fcd34d;}
+  .card h2 { font-size: 15.5px; font-weight:800; letter-spacing:-0.3px; }
+  .card .desc { font-size:12.5px; color:var(--muted); margin-top:3px; }
+
+  .btn {
+    font-family:inherit; font-weight:700; font-size:12.5px;
+    border:none; cursor:pointer; border-radius:11px;
+    padding: 9px 15px; color:#fff;
+    display:inline-flex; align-items:center; gap:7px;
+    transition: transform .15s ease, box-shadow .2s ease, filter .2s ease;
+    white-space:nowrap;
+  }
+  .btn svg{width:15px;height:15px;}
+  .btn-primary {
+    background: var(--accent-grad);
+    box-shadow: 0 10px 26px -10px rgba(120,90,255,0.7), inset 0 1px 0 rgba(255,255,255,0.35);
+  }
+  .btn-primary:hover { transform: translateY(-1px); filter:brightness(1.08); box-shadow:0 16px 32px -10px rgba(120,90,255,0.85), inset 0 1px 0 rgba(255,255,255,0.4); }
+  .btn-ghost {
+    background: rgba(255,255,255,0.06);
+    border:1px solid var(--stroke-bright);
+    color: var(--text);
+  }
+  .btn-ghost:hover{ background:rgba(255,255,255,0.11); transform:translateY(-1px); }
+  .head-actions{display:flex;gap:9px;flex-shrink:0;}
+
+  /* list rows */
+  .rows { display:flex; flex-direction:column; gap:9px; }
+  .row {
+    display:flex; align-items:center; gap:14px;
+    padding: 13px 15px;
+    background: rgba(255,255,255,0.035);
+    border:1px solid var(--stroke);
+    border-radius: 14px;
+    transition: all .18s ease;
+  }
+  .row:hover { background: rgba(255,255,255,0.06); border-color: var(--stroke-bright); transform: translateX(2px); }
+  .row-badge {
+    width:44px;height:44px;border-radius:12px;flex-shrink:0;
+    display:grid;place-items:center;font-weight:800;font-size:13px;
+    background: linear-gradient(135deg, rgba(99,102,241,0.3), rgba(168,85,247,0.2));
+    border:1px solid rgba(139,120,255,0.3); color:#c7bfff;
+  }
+  .row-main{ flex:1; min-width:0; }
+  .row-title{ font-size:13.5px; font-weight:700; display:flex; align-items:center; gap:9px; flex-wrap:wrap; }
+  .row-meta{ font-size:11.5px; color:var(--muted); margin-top:3px; }
+  .pill {
+    font-size:9.5px; font-weight:800; letter-spacing:0.6px; text-transform:uppercase;
+    padding: 3px 8px; border-radius: 999px;
+  }
+  .pill-live { background: rgba(52,211,153,0.16); color:var(--live); border:1px solid rgba(52,211,153,0.35); }
+  .pill-live .status-dot{display:inline-block;margin-right:4px;vertical-align:middle;animation:pulse 1.6s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+  .pill-done { background: rgba(255,255,255,0.07); color:var(--faint); border:1px solid var(--stroke); }
+
+  .empty {
+    display:flex; flex-direction:column; align-items:center; gap:10px;
+    padding: 30px 20px; text-align:center;
+    border: 1.5px dashed var(--stroke-bright); border-radius: 14px;
+    color: var(--muted); font-size:13px;
+  }
+  .empty svg{width:30px;height:30px;color:var(--faint);}
+  .empty b{color:var(--text);font-size:13.5px;}
+
+  /* tables (cash) */
+  .table-row .row-badge{ background:linear-gradient(135deg,rgba(45,212,191,0.28),rgba(99,102,241,0.2)); border-color:rgba(45,212,191,0.35); color:#7bead9;}
+  .seats { display:flex; gap:8px; align-items:center; flex-shrink:0; }
+  .seat {
+    font-size:11px; font-weight:700; color:var(--muted);
+    padding: 7px 12px; border-radius:10px;
+    background: rgba(255,255,255,0.04); border:1px dashed var(--stroke-bright);
+  }
+  .btn-sit {
+    background: linear-gradient(135deg,#2dd4bf,#6366f1);
+    color:#04121a; font-weight:800; font-size:11.5px;
+    padding:7px 14px; border-radius:10px; border:none; cursor:pointer;
+    box-shadow:0 8px 20px -8px rgba(45,212,191,0.6);
+    transition:transform .15s ease, filter .2s;
+  }
+  .btn-sit:hover{ transform:translateY(-1px); filter:brightness(1.1); }
+
+  /* find a match */
+  .match-card { position:relative; overflow:hidden; }
+  .match-top{ display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; margin-bottom:16px;}
+  .ranked-tag{ display:flex; align-items:center; gap:8px; }
+  .ranked-tag .rk{ font-size:10px;font-weight:800;letter-spacing:1px;color:#5eead4; background:rgba(45,212,191,0.14); padding:4px 9px; border-radius:6px; border:1px solid rgba(45,212,191,0.3);}
+  .ranked-tag .gr{ font-size:10px;font-weight:800;letter-spacing:1px;color:var(--muted);}
+  .btn-find{ font-size:13.5px; padding:11px 22px; }
+  .speed-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:11px; }
+  .speed {
+    padding:15px 13px; border-radius:14px; cursor:pointer;
+    background: rgba(255,255,255,0.035);
+    border:1px solid var(--stroke);
+    transition: all .2s ease;
+    position:relative; overflow:hidden;
+  }
+  .speed::after{ content:""; position:absolute; inset:0; opacity:0; background:var(--accent-grad); transition:opacity .25s; z-index:0; }
+  .speed:hover{ transform:translateY(-3px); border-color:rgba(139,120,255,0.4); box-shadow:0 16px 30px -14px rgba(99,102,241,0.5); }
+  .speed.sel{ border-color:transparent; box-shadow:0 16px 34px -14px rgba(139,120,255,0.7); }
+  .speed.sel::after{ opacity:0.16; }
+  .speed > * { position:relative; z-index:1; }
+  .speed .sp-ico{ width:30px;height:30px;border-radius:9px;display:grid;place-items:center;margin-bottom:10px;
+    background:rgba(255,255,255,0.06); border:1px solid var(--stroke-bright); }
+  .speed .sp-ico svg{width:16px;height:16px;}
+  .speed .sp-name{ font-size:14px;font-weight:800;letter-spacing:-0.2px;}
+  .speed .sp-meta{ font-size:11px; color:var(--muted); margin-top:3px;}
+
+  /* ---------- RIGHT PANEL ---------- */
+  .rightcol{ display:flex; flex-direction:column; gap:18px; position:sticky; top:18px; height: calc(100vh - 36px); overflow-y:auto; padding-right:2px; }
+  .rightcol::-webkit-scrollbar{width:6px;} .rightcol::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px;}
+  .club-card{ padding:20px; }
+  .club-head{ display:flex; align-items:center; gap:13px; }
+  .club-badge{
+    width:52px;height:52px;border-radius:15px; flex-shrink:0;
+    background:var(--accent-grad); display:grid;place-items:center;
+    font-weight:800; font-size:18px; color:#fff; letter-spacing:-0.5px;
+    box-shadow:0 10px 26px -8px rgba(120,90,255,0.6), inset 0 1px 0 rgba(255,255,255,0.4);
+  }
+  .club-name{ font-size:15.5px; font-weight:800; letter-spacing:-0.3px;}
+  .club-tag{ font-size:11px; color:var(--muted); font-weight:600; letter-spacing:0.5px;}
+  .rating-line{ display:flex; align-items:center; gap:7px; margin-top:16px; font-size:12px; }
+  .rating-line b{ font-size:14px; }
+  .prov{ font-size:10px; color:var(--amber); background:rgba(251,191,36,0.12); padding:2px 7px;border-radius:5px;border:1px solid rgba(251,191,36,0.28); font-weight:700;}
+  .chips-box{
+    margin-top:14px; padding:14px; border-radius:14px;
+    background: linear-gradient(135deg, rgba(45,212,191,0.12), rgba(99,102,241,0.08));
+    border:1px solid rgba(45,212,191,0.25);
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .chips-box .amt{ font-size:22px; font-weight:800; letter-spacing:-0.5px; background:linear-gradient(135deg,#5eead4,#a5b4fc); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;}
+  .chips-box .lbl{ font-size:11px; color:var(--muted); font-weight:600;}
+  .chips-box svg{width:26px;height:26px;color:#5eead4;}
+
+  .club-nav{ display:flex; flex-direction:column; gap:2px; padding:8px; }
+  .club-nav a{
+    display:flex; align-items:center; gap:11px; padding:9px 11px; border-radius:10px;
+    color:var(--muted); text-decoration:none; font-size:13px; font-weight:600;
+    transition: all .16s;
+  }
+  .club-nav a svg{width:16px;height:16px;}
+  .club-nav a:hover{ background:rgba(255,255,255,0.05); color:var(--text);}
+  .club-nav a.active{ background:linear-gradient(135deg,rgba(99,102,241,0.2),rgba(168,85,247,0.12)); color:#fff; border:1px solid rgba(139,120,255,0.25);}
+
+  .club-foot{
+    padding:14px 18px; display:flex; align-items:center; gap:8px; justify-content:center;
+    font-size:11.5px; color:var(--muted); flex-wrap:wrap;
+  }
+  .club-foot .tier{ color:#fcd34d; font-weight:700; }
+  .club-foot .sep{ color:var(--faint); }
+
+  /* mobile */
+  .mobile-nav{ display:none; }
+  @media (max-width: 1080px){
+    .shell{ grid-template-columns: 1fr; }
+    .sidebar, .rightcol{ position:static; height:auto; }
+    .speed-grid{ grid-template-columns:repeat(2,1fr); }
+  }
+  @media (max-width:560px){
+    .search{display:none;}
+    .card-head{ flex-direction:column; }
+    .head-actions{ width:100%; }
+  }
+
+  .fade { opacity:0; transform:translateY(14px); animation: rise .6s cubic-bezier(.2,.7,.3,1) forwards; }
+  @keyframes rise{ to{ opacity:1; transform:none; } }
+</style>
+</head>
+<body>
+  <div class="aurora"></div>
+  <div class="grid-overlay"></div>
+
+  <div class="shell">
+    <!-- ================= LEFT SIDEBAR ================= -->
+    <aside class="sidebar glass fade" style="animation-delay:.02s">
+      <div class="logo">
+        <div class="logo-mark">DG</div>
+        <div class="logo-txt">
+          <b>DeepGammon</b>
+          <span>Club Play · v2.4</span>
+        </div>
+      </div>
+
+      <div class="nav-label">Menu</div>
+      <nav class="nav">
+        <a href="#" class="active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>
+          Home
+        </a>
+        <a href="#">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3l8 4v6c0 5-3.5 7.5-8 8-4.5-.5-8-3-8-8V7z"/></svg>
+          Clubs
+        </a>
+        <a href="#">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l2.5 2.5M16.5 16.5 19 19M19 5l-2.5 2.5M7.5 16.5 5 19"/><circle cx="12" cy="12" r="3.2"/></svg>
+          Practice
+        </a>
+        <a href="#">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16 4.5a3 3 0 0 1 0 6M17 14c2.5.6 4 2.8 4 5.5"/></svg>
+          Friends
+        </a>
+        <a href="#">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v16"/></svg>
+          Matches
+        </a>
+        <a href="#">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M8 21h8M12 17v4M6 4h12v4a6 6 0 0 1-12 0zM6 6H3v1a4 4 0 0 0 3 3.8M18 6h3v1a4 4 0 0 1-3 3.8"/></svg>
+          Rankings
+        </a>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <div class="nav-label">Account</div>
+        <nav class="nav">
+          <a href="#">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+            Notifications
+            <span style="margin-left:auto;background:var(--accent-grad);font-size:10px;font-weight:800;padding:1px 7px;border-radius:999px;color:#fff;">3</span>
+          </a>
+          <a href="#">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-2.7-1.1l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 4.6 15H4.4a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.1-2.7l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.6 1.6 0 0 0 11 4.6V4.4a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0 1.1 2.7h.2a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.1.9z"/></svg>
+            Settings
+          </a>
+        </nav>
+        <div class="user-row">
+          <div class="avatar">D</div>
+          <div style="flex:1;">
+            <div class="u-name">Dani</div>
+            <div class="u-sub">DeepGammon Club</div>
+          </div>
+          <span class="status-dot" title="online"></span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ================= CENTER ================= -->
+    <main class="center">
+      <div class="topbar glass fade" style="animation-delay:.06s">
+        <div>
+          <h1>Lobby</h1>
+          <div class="sub">Welcome back, Dani — pick your battle.</div>
+        </div>
+        <div class="search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
+          <input type="text" placeholder="Search clubs, players, tables…" />
+        </div>
+      </div>
+
+      <!-- TOURNAMENTS -->
+      <section class="card glass fade" style="animation-delay:.10s">
+        <div class="card-head">
+          <div class="title-wrap">
+            <div class="card-icon ci-amber">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M8 21h8M12 17v4M6 4h12v4a6 6 0 0 1-12 0zM6 6H3v1a4 4 0 0 0 3 3.8M18 6h3v1a4 4 0 0 1-3 3.8"/></svg>
+            </div>
+            <div>
+              <h2>Tournaments</h2>
+              <div class="desc">Single-elimination cups — register and battle to the title.</div>
+            </div>
+          </div>
+          <div class="head-actions">
+            <button class="btn btn-ghost">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M9 20 3 17V4l6 3 6-3 6 3v13l-6-3-6 3zM9 7v13M15 4v13"/></svg>
+              Map
+            </button>
+            <button class="btn btn-primary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
+              Create Tournament
+            </button>
+          </div>
+        </div>
+        <div class="rows">
+          <div class="row">
+            <div class="row-badge">CC</div>
+            <div class="row-main">
+              <div class="row-title">Club Cup <span class="pill pill-live"><span class="status-dot"></span>LIVE</span></div>
+              <div class="row-meta">to 3 · 1/8 players · starts in 18h</div>
+            </div>
+            <button class="btn btn-ghost">Register</button>
+          </div>
+          <div class="row">
+            <div class="row-badge">CC</div>
+            <div class="row-main">
+              <div class="row-title">Club Cup <span class="pill pill-done">Finished</span></div>
+              <div class="row-meta">to 3 · 8/8 players · won by Marco V.</div>
+            </div>
+            <button class="btn btn-ghost">Recap</button>
+          </div>
+          <div class="row">
+            <div class="row-badge">CC</div>
+            <div class="row-main">
+              <div class="row-title">Club Cup <span class="pill pill-done">Finished</span></div>
+              <div class="row-meta">to 3 · 8/8 players · won by Dani</div>
+            </div>
+            <button class="btn btn-ghost">Recap</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- CHOUETTES -->
+      <section class="card glass fade" style="animation-delay:.14s">
+        <div class="card-head">
+          <div class="title-wrap">
+            <div class="card-icon ci-violet">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8" cy="8" r="1.4" fill="currentColor"/><circle cx="16" cy="16" r="1.4" fill="currentColor"/><circle cx="16" cy="8" r="1.4" fill="currentColor"/><circle cx="8" cy="16" r="1.4" fill="currentColor"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/></svg>
+            </div>
+            <div>
+              <h2>Chouettes</h2>
+              <div class="desc">Everyone vs the box — independent cubes, one shared board.</div>
+            </div>
+          </div>
+          <div class="head-actions">
+            <button class="btn btn-primary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
+              Create Chouette
+            </button>
+          </div>
+        </div>
+        <div class="empty">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M8 12h8M12 8v8" stroke-dasharray="2 2"/></svg>
+          <b>No chouettes running — start one!</b>
+          <span>Rally the club, everyone piles on the box.</span>
+        </div>
+      </section>
+
+      <!-- TABLES -->
+      <section class="card glass fade" style="animation-delay:.18s">
+        <div class="card-head">
+          <div class="title-wrap">
+            <div class="card-icon ci-teal">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg>
+            </div>
+            <div>
+              <h2>Tables</h2>
+              <div class="desc">Cash games at the club's stakes — winnings move real chips.</div>
+            </div>
+          </div>
+        </div>
+        <div class="rows">
+          <div class="row table-row">
+            <div class="row-badge">AFK</div>
+            <div class="row-main">
+              <div class="row-title">AFK Demo Table</div>
+              <div class="row-meta">1/pt · cap 5 · rake 5% · Jacoby · buy-in 5</div>
+            </div>
+            <div class="seats">
+              <span class="seat">Open seat</span>
+              <span class="seat">Open seat</span>
+              <button class="btn-sit">Sit (5)</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- FIND A MATCH -->
+      <section class="card glass match-card fade" style="animation-delay:.22s">
+        <div class="match-top">
+          <div class="title-wrap">
+            <div class="card-icon ci-indigo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="9"/><path d="m9 12 2 2 4-4"/></svg>
+            </div>
+            <div>
+              <h2>Find a Match</h2>
+              <div class="ranked-tag" style="margin-top:5px;">
+                <span class="rk">RANKED</span>
+                <span class="gr">GLOBAL RATING</span>
+              </div>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-find" id="findBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
+            Find a match
+          </button>
+        </div>
+        <div class="speed-grid">
+          <div class="speed sel" data-speed="Bullet">
+            <div class="sp-ico" style="color:#fcd34d;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg></div>
+            <div class="sp-name">Bullet</div>
+            <div class="sp-meta">1pt · 2min</div>
+          </div>
+          <div class="speed" data-speed="Blitz">
+            <div class="sp-ico" style="color:#a5b4fc;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M11 2 3 13h6l-1 9 9-13h-6z"/></svg></div>
+            <div class="sp-name">Blitz</div>
+            <div class="sp-meta">3pt · 3min</div>
+          </div>
+          <div class="speed" data-speed="Rapid">
+            <div class="sp-ico" style="color:#5eead4;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg></div>
+            <div class="sp-name">Rapid</div>
+            <div class="sp-meta">5pt · 5min</div>
+          </div>
+          <div class="speed" data-speed="Classic">
+            <div class="sp-ico" style="color:#d8b4fe;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+            <div class="sp-name">Classic</div>
+            <div class="sp-meta">7pt · 10min</div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- ================= RIGHT PANEL ================= -->
+    <aside class="rightcol">
+      <section class="club-card glass fade" style="animation-delay:.10s">
+        <div class="club-head">
+          <div class="club-badge">DE</div>
+          <div>
+            <div class="club-name">DeepGammon Club</div>
+            <div class="club-tag">DGCLUB</div>
+          </div>
+        </div>
+        <div class="rating-line">
+          <b>1500</b> · <span style="color:var(--muted)">Intermediate</span>
+          <span class="prov">provisional</span>
+        </div>
+        <div class="chips-box">
+          <div>
+            <div class="amt">1,000</div>
+            <div class="lbl">Your chips</div>
+          </div>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg>
+        </div>
+      </section>
+
+      <nav class="club-nav glass fade" style="animation-delay:.14s">
+        <a href="#" class="active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>
+          Lobby
+        </a>
+        <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Leaderboard</a>
+        <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>History</a>
+        <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 21h8M12 17v4M6 4h12v4a6 6 0 0 1-12 0z"/></svg>Tournaments</a>
+        <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Chat</a>
+        <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M16 5a3 3 0 0 1 0 6"/></svg>Members</a>
+        <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M16 15h2"/></svg>Wallet</a>
+      </nav>
+
+      <div class="club-foot glass fade" style="animation-delay:.18s">
+        <span><b style="color:var(--text)">47</b> Members</span>
+        <span class="sep">·</span>
+        <span><b style="color:var(--text)">1</b> Table</span>
+        <span class="sep">·</span>
+        <span class="tier">Premier tier</span>
+      </div>
+    </aside>
+  </div>
+
+  <script>
+    // speed card selection
+    document.querySelectorAll('.speed').forEach(function(card){
+      card.addEventListener('click', function(){
+        document.querySelectorAll('.speed').forEach(function(c){ c.classList.remove('sel'); });
+        card.classList.add('sel');
+      });
+    });
+
+    // find a match — playful searching state
+    var findBtn = document.getElementById('findBtn');
+    var searching = false;
+    findBtn.addEventListener('click', function(){
+      if (searching) return;
+      searching = true;
+      var sel = document.querySelector('.speed.sel');
+      var mode = sel ? sel.getAttribute('data-speed') : 'Bullet';
+      var original = findBtn.innerHTML;
+      findBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 1s linear infinite;transform-origin:center;"><path d="M21 12a9 9 0 1 1-6.2-8.5"/></svg> Searching ' + mode + '…';
+      findBtn.style.opacity = '0.85';
+      setTimeout(function(){
+        findBtn.innerHTML = original;
+        findBtn.style.opacity = '1';
+        searching = false;
+      }, 2600);
+    });
+
+    // inject spin keyframe
+    var st = document.createElement('style');
+    st.textContent = '@keyframes spin{to{transform:rotate(360deg);}}';
+    document.head.appendChild(st);
+
+    // subtle parallax on aurora
+    document.addEventListener('mousemove', function(e){
+      var x = (e.clientX / window.innerWidth - 0.5) * 14;
+      var y = (e.clientY / window.innerHeight - 0.5) * 14;
+      var a = document.querySelector('.aurora');
+      if (a) a.style.transform = 'translate(' + x + 'px,' + y + 'px)';
+    });
+  </script>
+</body>
+</html>

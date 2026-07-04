@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DeepGammon · Lobby</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    /* Nordic Slate palette — cool, desaturated, misty */
+    --ice:        #f4f6f9;   /* app backdrop, misty ice */
+    --paper:      #fbfcfd;   /* off-white card face */
+    --paper-2:    #ffffff;
+    --mist:       #eef1f5;   /* faint fill */
+    --line:       #e2e7ee;   /* hairline borders */
+    --line-soft:  #eaeef3;
+    --slate-900:  #2a323d;   /* primary text, slate blue-gray */
+    --slate-700:  #4a5563;
+    --slate-500:  #6b7686;   /* secondary text */
+    --slate-400:  #8a94a3;   /* muted */
+    --slate-300:  #aab2be;
+    /* single muted accent — dusty blue, with a soft amber highlight */
+    --accent:     #6f8faf;   /* dusty blue */
+    --accent-deep:#5a789a;
+    --accent-soft:#e6edf4;
+    --amber:      #c99a5b;   /* soft amber, used very sparingly */
+    --amber-soft: #f4ecdf;
+    --live:       #8aa27f;   /* muted sage for "live" — calm, not alarming */
+    --live-soft:  #e9efe6;
+
+    --radius:     18px;
+    --radius-sm:  12px;
+    --radius-xs:  9px;
+    --shadow:     0 1px 2px rgba(42,50,61,.04), 0 8px 24px -14px rgba(42,50,61,.18);
+    --shadow-sm:  0 1px 2px rgba(42,50,61,.05);
+    --ring:       0 0 0 3px rgba(111,143,175,.16);
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    font-family:'Hanken Grotesk','Inter',system-ui,sans-serif;
+    background:
+      radial-gradient(1200px 700px at 78% -8%, #eef3f8 0%, transparent 55%),
+      radial-gradient(900px 600px at -6% 100%, #f0f2ee 0%, transparent 52%),
+      var(--ice);
+    color:var(--slate-900);
+    -webkit-font-smoothing:antialiased;
+    letter-spacing:-.01em;
+    min-height:100vh;
+  }
+  ::selection{ background:var(--accent-soft); }
+
+  /* scrollbars — quiet */
+  *::-webkit-scrollbar{ width:9px; height:9px; }
+  *::-webkit-scrollbar-thumb{ background:#d7dde4; border-radius:20px; border:2px solid transparent; background-clip:padding-box; }
+  *::-webkit-scrollbar-thumb:hover{ background:#c4ccd6; background-clip:padding-box; }
+
+  .app{
+    display:grid;
+    grid-template-columns:248px minmax(0,1fr) 296px;
+    gap:22px;
+    max-width:1400px;
+    margin:0 auto;
+    padding:22px;
+    min-height:100vh;
+  }
+
+  /* ---------- generic card ---------- */
+  .card{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow-sm);
+  }
+
+  /* =========================================================
+     LEFT SIDEBAR
+     ========================================================= */
+  .sidebar{
+    position:sticky; top:22px; align-self:start;
+    height:calc(100vh - 44px);
+    display:flex; flex-direction:column;
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:20px 14px;
+    box-shadow:var(--shadow-sm);
+  }
+  .brand{ display:flex; align-items:center; gap:11px; padding:6px 8px 18px; }
+  .brand .glyph{
+    width:38px; height:38px; border-radius:12px; flex:0 0 auto;
+    background:linear-gradient(150deg,#7a97b6,#5f7d9f);
+    color:#fff; font-weight:700; font-size:15px;
+    display:grid; place-items:center;
+    box-shadow:0 4px 12px -4px rgba(95,125,159,.5);
+    letter-spacing:.5px;
+  }
+  .brand .name{ font-weight:700; font-size:16px; letter-spacing:-.02em; color:var(--slate-900); }
+  .brand .name span{ display:block; font-size:11px; font-weight:500; color:var(--slate-400); letter-spacing:.02em; margin-top:1px; }
+
+  .nav{ display:flex; flex-direction:column; gap:2px; margin-top:6px; }
+  .nav-label{ font-size:10.5px; text-transform:uppercase; letter-spacing:.13em; color:var(--slate-300); font-weight:600; padding:8px 10px 4px; }
+  .nav a{
+    display:flex; align-items:center; gap:12px;
+    padding:10px 11px; border-radius:var(--radius-sm);
+    color:var(--slate-500); font-size:14px; font-weight:500;
+    text-decoration:none; position:relative;
+    transition:background .16s ease, color .16s ease;
+  }
+  .nav a svg{ width:18px; height:18px; flex:0 0 auto; stroke-width:1.6; }
+  .nav a:hover{ background:var(--mist); color:var(--slate-900); }
+  .nav a.active{ background:var(--accent-soft); color:var(--accent-deep); font-weight:600; }
+  .nav a.active::before{
+    content:""; position:absolute; left:-14px; top:50%; transform:translateY(-50%);
+    width:3px; height:20px; border-radius:0 3px 3px 0; background:var(--accent);
+  }
+
+  .side-spacer{ flex:1 1 auto; }
+  .side-bottom{ display:flex; flex-direction:column; gap:2px; }
+  .side-bottom .divider{ height:1px; background:var(--line-soft); margin:10px 6px; }
+  .user-row{
+    display:flex; align-items:center; gap:11px;
+    padding:9px 10px; border-radius:var(--radius-sm);
+    cursor:pointer; transition:background .16s ease;
+  }
+  .user-row:hover{ background:var(--mist); }
+  .user-row .ava{
+    width:32px; height:32px; border-radius:10px; flex:0 0 auto;
+    background:linear-gradient(150deg,#c2b39a,#a98f6d); color:#fff;
+    display:grid; place-items:center; font-weight:600; font-size:13px;
+  }
+  .user-row .who{ line-height:1.2; }
+  .user-row .who b{ font-size:13.5px; font-weight:600; color:var(--slate-900); }
+  .user-row .who span{ font-size:11px; color:var(--slate-400); }
+  .user-row .chev{ margin-left:auto; color:var(--slate-300); }
+
+  /* =========================================================
+     CENTER
+     ========================================================= */
+  .center{ display:flex; flex-direction:column; gap:22px; min-width:0; }
+
+  .greeting{ padding:2px 2px 0; }
+  .greeting h1{ margin:0; font-size:22px; font-weight:700; letter-spacing:-.03em; }
+  .greeting p{ margin:4px 0 0; color:var(--slate-400); font-size:13.5px; }
+
+  .panel{ padding:20px 20px 18px; }
+  .panel > .head{ display:flex; align-items:flex-start; gap:14px; margin-bottom:16px; }
+  .panel .titles{ min-width:0; }
+  .panel .titles h2{
+    margin:0; font-size:15.5px; font-weight:700; letter-spacing:-.02em;
+    display:flex; align-items:center; gap:9px;
+  }
+  .panel .titles .ic{
+    width:26px; height:26px; border-radius:8px; flex:0 0 auto;
+    display:grid; place-items:center; background:var(--accent-soft); color:var(--accent-deep);
+  }
+  .panel .titles .ic svg{ width:15px; height:15px; stroke-width:1.7; }
+  .panel .titles p{ margin:5px 0 0 35px; font-size:12.5px; color:var(--slate-400); }
+  .panel .head .actions{ margin-left:auto; display:flex; gap:8px; flex:0 0 auto; }
+
+  /* buttons */
+  .btn{
+    font-family:inherit; font-size:12.5px; font-weight:600; letter-spacing:-.01em;
+    border:1px solid var(--line); background:var(--paper-2); color:var(--slate-700);
+    padding:8px 13px; border-radius:10px; cursor:pointer;
+    display:inline-flex; align-items:center; gap:7px;
+    transition:all .16s ease; white-space:nowrap;
+  }
+  .btn svg{ width:14px; height:14px; stroke-width:1.8; }
+  .btn:hover{ background:var(--mist); border-color:#d6dde5; }
+  .btn:active{ transform:translateY(.5px); }
+  .btn.primary{
+    background:var(--accent); border-color:var(--accent); color:#fff;
+    box-shadow:0 4px 12px -5px rgba(111,143,175,.7);
+  }
+  .btn.primary:hover{ background:var(--accent-deep); border-color:var(--accent-deep); }
+  .btn.ghost{ background:transparent; border-color:transparent; color:var(--slate-500); }
+  .btn.ghost:hover{ background:var(--mist); color:var(--slate-900); }
+
+  /* pills / meta */
+  .pill{
+    font-size:11px; font-weight:600; letter-spacing:.01em;
+    padding:3px 9px; border-radius:20px; display:inline-flex; align-items:center; gap:5px;
+    background:var(--mist); color:var(--slate-500);
+  }
+  .pill.live{ background:var(--live-soft); color:#5f7852; }
+  .pill.live .dot{ width:6px; height:6px; border-radius:50%; background:var(--live); box-shadow:0 0 0 3px rgba(138,162,127,.2); animation:pulse 2.4s ease-in-out infinite; }
+  .pill.amber{ background:var(--amber-soft); color:#9a7238; }
+  @keyframes pulse{ 0%,100%{ opacity:1; } 50%{ opacity:.45; } }
+
+  .meta{ font-size:12.5px; color:var(--slate-400); }
+  .meta .sep{ color:var(--slate-300); margin:0 7px; }
+
+  /* list rows */
+  .row{
+    display:flex; align-items:center; gap:14px;
+    padding:13px 14px; border-radius:var(--radius-sm);
+    border:1px solid var(--line-soft); background:var(--paper-2);
+    margin-top:9px; transition:border-color .16s ease, background .16s ease, transform .16s ease;
+  }
+  .row:hover{ border-color:#d8dfe7; background:#fff; transform:translateX(1px); }
+  .row .rw-ic{
+    width:38px; height:38px; border-radius:11px; flex:0 0 auto;
+    display:grid; place-items:center; background:var(--mist); color:var(--slate-500);
+  }
+  .row .rw-ic svg{ width:18px; height:18px; stroke-width:1.7; }
+  .row.finished .rw-ic{ background:var(--mist); color:var(--slate-300); }
+  .row .rw-body{ min-width:0; flex:1 1 auto; }
+  .row .rw-title{ font-size:13.5px; font-weight:600; letter-spacing:-.01em; display:flex; align-items:center; gap:9px; flex-wrap:wrap; }
+  .row .rw-sub{ font-size:12px; color:var(--slate-400); margin-top:3px; }
+  .row .rw-cta{ flex:0 0 auto; }
+  .row.finished{ opacity:.72; }
+  .row.finished .rw-title{ color:var(--slate-500); }
+
+  /* empty state */
+  .empty{
+    margin-top:9px; padding:26px 20px; text-align:center;
+    border:1px dashed var(--line); border-radius:var(--radius-sm);
+    background:repeating-linear-gradient(135deg,transparent,transparent 10px,rgba(238,241,245,.5) 10px,rgba(238,241,245,.5) 20px);
+  }
+  .empty .em-ic{ width:44px; height:44px; margin:0 auto 10px; border-radius:14px; background:var(--paper-2); border:1px solid var(--line); display:grid; place-items:center; color:var(--slate-300); }
+  .empty .em-ic svg{ width:20px; height:20px; stroke-width:1.6; }
+  .empty p{ margin:0; font-size:13px; color:var(--slate-500); font-weight:500; }
+  .empty span{ font-size:12px; color:var(--slate-400); }
+
+  /* tables — seats */
+  .seat-grid{ display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-top:11px; }
+  .seat{
+    border:1px dashed var(--line); border-radius:var(--radius-sm);
+    padding:14px; display:flex; align-items:center; justify-content:space-between; gap:10px;
+    background:var(--paper-2); transition:border-color .16s ease, background .16s ease;
+  }
+  .seat:hover{ border-color:var(--accent); border-style:solid; background:var(--paper); }
+  .seat .st-label{ display:flex; align-items:center; gap:10px; font-size:13px; font-weight:600; color:var(--slate-500); }
+  .seat .st-ic{ width:30px; height:30px; border-radius:9px; background:var(--mist); display:grid; place-items:center; color:var(--slate-400); }
+  .seat .st-ic svg{ width:15px; height:15px; stroke-width:1.6; }
+
+  /* find a match */
+  .find-top{
+    display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+    padding:16px 18px; border-radius:var(--radius-sm);
+    background:linear-gradient(120deg,#eef3f8,#f3f0ea);
+    border:1px solid var(--line); margin-bottom:14px;
+  }
+  .find-top .ft-txt b{ font-size:14px; font-weight:700; letter-spacing:-.01em; display:block; }
+  .find-top .ft-txt span{ font-size:11.5px; letter-spacing:.13em; text-transform:uppercase; color:var(--accent-deep); font-weight:600; }
+  .find-top .btn{ margin-left:auto; }
+
+  .speed-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+  .speed{
+    border:1px solid var(--line); border-radius:var(--radius-sm);
+    padding:15px 14px; cursor:pointer; background:var(--paper-2);
+    transition:all .16s ease; position:relative;
+  }
+  .speed:hover{ border-color:var(--accent); box-shadow:var(--ring); transform:translateY(-2px); }
+  .speed.sel{ border-color:var(--accent); background:var(--accent-soft); }
+  .speed .sp-ic{ color:var(--accent-deep); margin-bottom:9px; }
+  .speed .sp-ic svg{ width:19px; height:19px; stroke-width:1.7; }
+  .speed .sp-name{ font-size:13.5px; font-weight:700; letter-spacing:-.01em; }
+  .speed .sp-meta{ font-size:11.5px; color:var(--slate-400); margin-top:2px; }
+  .speed .sp-check{
+    position:absolute; top:12px; right:12px; width:16px; height:16px; border-radius:50%;
+    background:var(--accent); display:none; place-items:center; color:#fff;
+  }
+  .speed .sp-check svg{ width:10px; height:10px; stroke-width:2.6; }
+  .speed.sel .sp-check{ display:grid; }
+
+  /* =========================================================
+     RIGHT PANEL
+     ========================================================= */
+  .rightbar{ position:sticky; top:22px; align-self:start; display:flex; flex-direction:column; gap:18px; }
+
+  .club-card{ padding:20px; text-align:center; }
+  .club-badge{
+    width:60px; height:60px; margin:0 auto 12px; border-radius:18px;
+    background:linear-gradient(150deg,#7a97b6,#5a789a); color:#fff;
+    display:grid; place-items:center; font-weight:700; font-size:20px; letter-spacing:.5px;
+    box-shadow:0 8px 20px -8px rgba(90,120,154,.6);
+  }
+  .club-card h3{ margin:0; font-size:16px; font-weight:700; letter-spacing:-.02em; }
+  .club-card .handle{ font-size:12px; color:var(--slate-400); margin-top:2px; letter-spacing:.04em; }
+  .rating-row{
+    display:inline-flex; align-items:center; gap:8px; margin-top:12px;
+    padding:6px 12px; border-radius:20px; background:var(--mist); font-size:12px; font-weight:600; color:var(--slate-600); color:var(--slate-500);
+  }
+  .rating-row b{ color:var(--slate-900); }
+  .rating-row .prov{ color:var(--amber); font-weight:600; }
+
+  .chips-card{
+    margin-top:14px; padding:14px 16px; border-radius:var(--radius-sm);
+    background:linear-gradient(120deg,#f3f0ea,#f7f4ee);
+    border:1px solid var(--line); display:flex; align-items:center; gap:12px; text-align:left;
+  }
+  .chips-card .ch-ic{ width:36px; height:36px; border-radius:11px; background:#fff; border:1px solid var(--amber-soft); display:grid; place-items:center; color:var(--amber); flex:0 0 auto; }
+  .chips-card .ch-ic svg{ width:18px; height:18px; }
+  .chips-card b{ font-size:19px; font-weight:700; letter-spacing:-.02em; display:block; }
+  .chips-card span{ font-size:11.5px; color:var(--slate-400); }
+
+  .club-nav{ padding:8px; }
+  .club-nav a{
+    display:flex; align-items:center; gap:11px; padding:9px 11px; border-radius:10px;
+    font-size:13px; font-weight:500; color:var(--slate-500); text-decoration:none;
+    transition:background .16s ease, color .16s ease;
+  }
+  .club-nav a svg{ width:16px; height:16px; stroke-width:1.7; }
+  .club-nav a:hover{ background:var(--mist); color:var(--slate-900); }
+  .club-nav a.active{ background:var(--accent-soft); color:var(--accent-deep); font-weight:600; }
+  .club-nav a .badge{ margin-left:auto; font-size:10.5px; font-weight:600; padding:1px 7px; border-radius:20px; background:var(--paper-2); border:1px solid var(--line); color:var(--slate-400); }
+  .club-nav a.active .badge{ background:#fff; border-color:var(--accent-soft); }
+
+  .club-foot{
+    padding:14px 16px; display:flex; align-items:center; justify-content:center; gap:0;
+    font-size:12px; color:var(--slate-400); text-align:center; flex-wrap:wrap;
+  }
+  .club-foot .sep{ color:var(--line); margin:0 8px; }
+  .club-foot b{ color:var(--slate-700); font-weight:600; }
+  .club-foot .tier{ color:var(--amber); font-weight:600; }
+
+  /* responsive */
+  @media (max-width:1120px){
+    .app{ grid-template-columns:220px minmax(0,1fr); }
+    .rightbar{ display:none; }
+  }
+  @media (max-width:820px){
+    .app{ grid-template-columns:1fr; padding:14px; gap:16px; }
+    .sidebar{ display:none; }
+    .speed-grid{ grid-template-columns:1fr 1fr; }
+    .seat-grid{ grid-template-columns:1fr; }
+    .panel .titles p{ margin-left:0; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ============ LEFT SIDEBAR ============ -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="glyph">DG</div>
+      <div class="name">DeepGammon<span>Backgammon, refined</span></div>
+    </div>
+
+    <nav class="nav">
+      <div class="nav-label">Menu</div>
+      <a href="#" class="active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/><path d="M9.5 20v-6h5v6"/></svg>
+        Home
+      </a>
+      <a href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 20v-1a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v1"/><circle cx="9.5" cy="7.5" r="3.5"/><path d="M22 20v-1a4 4 0 0 0-3-3.85"/><path d="M16 3.5A3.5 3.5 0 0 1 16 11"/></svg>
+        Clubs
+      </a>
+      <a href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3v18"/><path d="M5 7l7-4 7 4"/><circle cx="12" cy="14" r="3"/></svg>
+        Practice
+      </a>
+      <a href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 20a8 8 0 0 1 16 0"/></svg>
+        Friends
+      </a>
+      <a href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M3 9h18"/><path d="M8 4v5"/><path d="M16 4v5"/></svg>
+        Matches
+      </a>
+      <a href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 20V10"/><path d="M12 20V4"/><path d="M18 20v-7"/></svg>
+        Rankings
+      </a>
+    </nav>
+
+    <div class="side-spacer"></div>
+
+    <div class="side-bottom">
+      <a href="#" class="nav-a"></a>
+      <div class="nav">
+        <a href="#">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+          Notifications
+          <span style="margin-left:auto;font-size:10px;font-weight:600;background:var(--accent-soft);color:var(--accent-deep);border-radius:20px;padding:1px 7px;">3</span>
+        </a>
+        <a href="#">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-2.9-1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0-1.2-2.9H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.2-2.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 2.9-1.2V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 2.9 1.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0 1.2 2.9H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5.9Z"/></svg>
+          Settings
+        </a>
+      </div>
+      <div class="divider"></div>
+      <div class="user-row">
+        <div class="ava">DA</div>
+        <div class="who"><b>Dani</b><span>@dani_dg</span></div>
+        <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m6 9 6 6 6-6"/></svg>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============ CENTER ============ -->
+  <main class="center">
+    <div class="greeting">
+      <h1>Good evening, Dani</h1>
+      <p>Here's what's happening at DeepGammon Club tonight.</p>
+    </div>
+
+    <!-- TOURNAMENTS -->
+    <section class="card panel">
+      <div class="head">
+        <div class="titles">
+          <h2><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3"/><path d="M7 5H4v2a3 3 0 0 0 3 3"/></svg></span>Tournaments</h2>
+          <p>Single-elimination cups — register and battle to the title.</p>
+        </div>
+        <div class="actions">
+          <button class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 20 3 17V4l6 3 6-3 6 3v13l-6-3-6 3z"/><path d="M9 7v13"/><path d="M15 4v13"/></svg>Map</button>
+          <button class="btn primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg>Create Tournament</button>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="rw-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M8 21h8M12 17v4"/></svg></div>
+        <div class="rw-body">
+          <div class="rw-title">Club Cup <span class="pill live"><span class="dot"></span>LIVE</span></div>
+          <div class="rw-sub">to 3 <span class="sep" style="color:var(--slate-300)">·</span> 1/8 players <span style="color:var(--slate-300)">·</span> starts in 18h</div>
+        </div>
+        <div class="rw-cta"><button class="btn">Register</button></div>
+      </div>
+
+      <div class="row finished">
+        <div class="rw-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 6 9 17l-5-5"/></svg></div>
+        <div class="rw-body">
+          <div class="rw-title">Club Cup <span class="pill">finished</span></div>
+          <div class="rw-sub">to 5 <span style="color:var(--slate-300)">·</span> 8/8 players <span style="color:var(--slate-300)">·</span> won by Sigrid_N</div>
+        </div>
+        <div class="rw-cta"><button class="btn ghost">Results</button></div>
+      </div>
+
+      <div class="row finished">
+        <div class="rw-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 6 9 17l-5-5"/></svg></div>
+        <div class="rw-body">
+          <div class="rw-title">Club Cup <span class="pill">finished</span></div>
+          <div class="rw-sub">to 3 <span style="color:var(--slate-300)">·</span> 8/8 players <span style="color:var(--slate-300)">·</span> won by Halvard</div>
+        </div>
+        <div class="rw-cta"><button class="btn ghost">Results</button></div>
+      </div>
+    </section>
+
+    <!-- CHOUETTES -->
+    <section class="card panel">
+      <div class="head">
+        <div class="titles">
+          <h2><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/></svg></span>Chouettes</h2>
+          <p>Everyone vs the box — independent cubes, one shared board.</p>
+        </div>
+        <div class="actions">
+          <button class="btn primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg>Create Chouette</button>
+        </div>
+      </div>
+
+      <div class="empty">
+        <div class="em-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg></div>
+        <p>No chouettes running — start one!</p>
+        <span>Rally the club around a single board and take on the box.</span>
+      </div>
+    </section>
+
+    <!-- TABLES -->
+    <section class="card panel">
+      <div class="head">
+        <div class="titles">
+          <h2><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="6" width="18" height="12" rx="3"/><path d="M8 6v12M16 6v12"/><circle cx="5.5" cy="12" r=".8" fill="currentColor" stroke="none"/><circle cx="18.5" cy="12" r=".8" fill="currentColor" stroke="none"/></svg></span>Tables</h2>
+          <p>Cash games at the club's stakes — winnings move real chips.</p>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="rw-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="6" width="18" height="12" rx="3"/><path d="M8 6v12M16 6v12"/></svg></div>
+        <div class="rw-body">
+          <div class="rw-title">AFK Demo Table <span class="pill amber">1/pt</span></div>
+          <div class="rw-sub">cap 5 <span style="color:var(--slate-300)">·</span> rake 5% <span style="color:var(--slate-300)">·</span> Jacoby <span style="color:var(--slate-300)">·</span> buy-in 5</div>
+        </div>
+      </div>
+
+      <div class="seat-grid">
+        <div class="seat">
+          <div class="st-label"><span class="st-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 20a8 8 0 0 1 16 0"/></svg></span>Open seat</div>
+          <button class="btn primary">Sit (5)</button>
+        </div>
+        <div class="seat">
+          <div class="st-label"><span class="st-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 20a8 8 0 0 1 16 0"/></svg></span>Open seat</div>
+          <button class="btn primary">Sit (5)</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- FIND A MATCH -->
+    <section class="card panel">
+      <div class="head">
+        <div class="titles">
+          <h2><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span>Find a Match</h2>
+          <p>Jump into a rated game against a player near your level.</p>
+        </div>
+      </div>
+
+      <div class="find-top">
+        <div class="ft-txt">
+          <span>Ranked · Global Rating</span>
+          <b>Matchmaking by skill</b>
+        </div>
+        <button class="btn primary" id="findBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Find a match</button>
+      </div>
+
+      <div class="speed-grid" id="speeds">
+        <div class="speed sel" data-name="Bullet">
+          <div class="sp-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 6 9 17l-5-5"/></svg></div>
+          <div class="sp-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg></div>
+          <div class="sp-name">Bullet</div>
+          <div class="sp-meta">1pt · 2min</div>
+        </div>
+        <div class="speed" data-name="Blitz">
+          <div class="sp-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 6 9 17l-5-5"/></svg></div>
+          <div class="sp-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg></div>
+          <div class="sp-name">Blitz</div>
+          <div class="sp-meta">3pt · 3min</div>
+        </div>
+        <div class="speed" data-name="Rapid">
+          <div class="sp-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 6 9 17l-5-5"/></svg></div>
+          <div class="sp-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg></div>
+          <div class="sp-name">Rapid</div>
+          <div class="sp-meta">5pt · 5min</div>
+        </div>
+        <div class="speed" data-name="Classic">
+          <div class="sp-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 6 9 17l-5-5"/></svg></div>
+          <div class="sp-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+          <div class="sp-name">Classic</div>
+          <div class="sp-meta">7pt · 10min</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============ RIGHT PANEL ============ -->
+  <aside class="rightbar">
+    <section class="card club-card">
+      <div class="club-badge">DE</div>
+      <h3>DeepGammon Club</h3>
+      <div class="handle">DGCLUB</div>
+      <div class="rating-row"><b>1500</b> · Intermediate · <span class="prov">provisional</span></div>
+
+      <div class="chips-card">
+        <div class="ch-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg></div>
+        <div><b>1,000</b><span>Your chips</span></div>
+      </div>
+    </section>
+
+    <section class="card club-nav">
+      <a href="#" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/></svg>Lobby</a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 20V10M12 20V4M18 20v-7"/></svg>Leaderboard</a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 8v4l3 2"/><circle cx="12" cy="12" r="9"/></svg>History</a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M8 21h8M12 17v4"/></svg>Tournaments</a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Chat<span class="badge">12</span></a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 20v-1a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v1"/><circle cx="9.5" cy="7.5" r="3.5"/><path d="M22 20v-1a4 4 0 0 0-3-3.85"/></svg>Members<span class="badge">47</span></a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M16 12h.01M3 10h18"/></svg>Wallet</a>
+    </section>
+
+    <section class="card club-foot">
+      <span><b>47</b> Members</span><span class="sep">·</span>
+      <span><b>1</b> Table</span><span class="sep">·</span>
+      <span class="tier">Premier tier</span>
+    </section>
+  </aside>
+
+</div>
+
+<script>
+  // speed selection
+  const speeds = document.getElementById('speeds');
+  speeds.addEventListener('click', e => {
+    const card = e.target.closest('.speed');
+    if(!card) return;
+    speeds.querySelectorAll('.speed').forEach(s => s.classList.remove('sel'));
+    card.classList.add('sel');
+  });
+
+  // find a match — gentle searching state
+  const findBtn = document.getElementById('findBtn');
+  let searching = false;
+  findBtn.addEventListener('click', () => {
+    const sel = speeds.querySelector('.speed.sel');
+    const name = sel ? sel.dataset.name : 'a';
+    searching = !searching;
+    if(searching){
+      findBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="animation:spin 1s linear infinite"><path d="M21 12a9 9 0 1 1-6.2-8.5"/></svg> Searching · ' + name + '…';
+      findBtn.style.opacity = '.85';
+    } else {
+      findBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg> Find a match';
+      findBtn.style.opacity = '1';
+    }
+  });
+
+  // spinner keyframes
+  const st = document.createElement('style');
+  st.textContent = '@keyframes spin{to{transform:rotate(360deg)}}';
+  document.head.appendChild(st);
+
+  // subtle row / seat feedback
+  document.querySelectorAll('.btn.primary').forEach(b => {
+    if(b.id === 'findBtn') return;
+    b.addEventListener('click', () => {
+      const orig = b.textContent;
+      if(b.textContent.trim().startsWith('Sit')){
+        b.textContent = 'Seated ✓';
+        setTimeout(() => { b.textContent = orig; }, 1400);
+      }
+    });
+  });
+</script>
+</body>
+</html>

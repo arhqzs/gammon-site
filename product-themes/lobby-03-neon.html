@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DeepGammon — Lobby</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#06070f;
+  --bg2:#0a0c1a;
+  --panel:#0d1022;
+  --panel2:#11152b;
+  --panel3:#161b38;
+  --line:#20264d;
+  --line2:#2b3266;
+  --txt:#e7ecff;
+  --dim:#8b93c4;
+  --dim2:#5b6296;
+  --cyan:#22e0ff;
+  --cyan-d:#0aa9cc;
+  --mag:#ff3ec9;
+  --lime:#b6ff3a;
+  --gold:#ffd447;
+  --danger:#ff4d6d;
+  --glow-cyan:0 0 12px rgba(34,224,255,.55);
+  --glow-mag:0 0 12px rgba(255,62,201,.5);
+  --radius:4px;
+  --disp:'Space Grotesk',system-ui,sans-serif;
+  --body:'Inter',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:var(--body);
+  background:var(--bg);
+  color:var(--txt);
+  -webkit-font-smoothing:antialiased;
+  overflow:hidden;
+  position:relative;
+}
+/* ambient background grid + scanlines */
+body::before{
+  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:
+    linear-gradient(rgba(34,224,255,.035) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(34,224,255,.035) 1px,transparent 1px);
+  background-size:44px 44px;
+  mask-image:radial-gradient(ellipse 90% 80% at 50% 0%,#000 30%,transparent 85%);
+}
+body::after{
+  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(700px 500px at 15% -5%,rgba(34,224,255,.10),transparent 70%),
+    radial-gradient(700px 600px at 100% 110%,rgba(255,62,201,.09),transparent 70%),
+    repeating-linear-gradient(0deg,rgba(0,0,0,0) 0px,rgba(0,0,0,0) 2px,rgba(0,0,0,.14) 3px,rgba(0,0,0,0) 4px);
+}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line2);border-radius:20px}
+::-webkit-scrollbar-thumb:hover{background:var(--cyan-d)}
+
+.app{
+  position:relative;z-index:1;
+  display:grid;
+  grid-template-columns:236px 1fr 288px;
+  height:100vh;
+  gap:0;
+}
+.clip{clip-path:polygon(0 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%)}
+
+/* ============ LEFT SIDEBAR ============ */
+.sidebar{
+  background:linear-gradient(180deg,var(--panel),var(--bg2));
+  border-right:1px solid var(--line);
+  display:flex;flex-direction:column;
+  padding:20px 16px;
+  position:relative;
+}
+.sidebar::after{content:"";position:absolute;top:0;right:0;width:1px;height:100%;background:linear-gradient(180deg,transparent,rgba(34,224,255,.4),transparent)}
+.brand{display:flex;align-items:center;gap:12px;padding:0 4px 22px}
+.brand-mark{
+  width:44px;height:44px;flex:none;display:grid;place-items:center;
+  font-family:var(--disp);font-weight:700;font-size:17px;letter-spacing:1px;
+  color:#04121a;
+  background:linear-gradient(135deg,var(--cyan),#7bf1ff);
+  clip-path:polygon(0 0,100% 0,100% 70%,70% 100%,0 100%);
+  box-shadow:var(--glow-cyan),inset 0 0 8px rgba(255,255,255,.4);
+}
+.brand-txt b{font-family:var(--disp);font-size:18px;letter-spacing:.5px;display:block;line-height:1}
+.brand-txt span{font-size:10px;letter-spacing:3px;color:var(--cyan);text-transform:uppercase}
+.nav-label{font-size:10px;letter-spacing:2.5px;color:var(--dim2);text-transform:uppercase;padding:6px 8px 8px}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav a{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 12px;border-radius:var(--radius);
+  color:var(--dim);font-size:13.5px;font-weight:500;text-decoration:none;
+  position:relative;transition:.15s;letter-spacing:.2px;
+}
+.nav a svg{width:18px;height:18px;flex:none;stroke-width:1.8}
+.nav a:hover{color:var(--txt);background:var(--panel2)}
+.nav a.active{
+  color:var(--cyan);background:linear-gradient(90deg,rgba(34,224,255,.14),rgba(34,224,255,.02));
+}
+.nav a.active::before{
+  content:"";position:absolute;left:0;top:6px;bottom:6px;width:3px;border-radius:3px;
+  background:var(--cyan);box-shadow:var(--glow-cyan);
+}
+.nav a.active svg{filter:drop-shadow(0 0 4px rgba(34,224,255,.8))}
+.spacer{flex:1}
+.side-bottom{display:flex;flex-direction:column;gap:2px;padding-top:14px;border-top:1px solid var(--line)}
+.user-row{
+  display:flex;align-items:center;gap:11px;margin-top:10px;
+  padding:9px 10px;border-radius:var(--radius);
+  background:var(--panel2);border:1px solid var(--line);cursor:pointer;transition:.15s;
+}
+.user-row:hover{border-color:var(--line2)}
+.avatar{
+  width:34px;height:34px;flex:none;border-radius:var(--radius);
+  display:grid;place-items:center;font-family:var(--disp);font-weight:700;font-size:14px;color:#04121a;
+  background:linear-gradient(135deg,var(--mag),#ff8fe0);box-shadow:var(--glow-mag);
+}
+.user-row .u-name{font-size:13px;font-weight:600;line-height:1.2}
+.user-row .u-sub{font-size:10.5px;color:var(--dim2)}
+.dot-online{width:7px;height:7px;border-radius:50%;background:var(--lime);box-shadow:0 0 6px var(--lime);margin-left:auto}
+
+/* ============ CENTER ============ */
+.center{overflow-y:auto;padding:24px 28px 60px}
+.center-head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:22px}
+.center-head h1{font-family:var(--disp);font-size:24px;font-weight:700;letter-spacing:.3px}
+.center-head h1 .sub{display:block;font-size:12px;font-weight:400;color:var(--dim);letter-spacing:.4px;margin-top:4px;font-family:var(--body)}
+.live-pill{display:flex;align-items:center;gap:7px;font-family:var(--disp);font-size:11px;letter-spacing:2px;color:var(--lime);
+  padding:6px 12px;border:1px solid rgba(182,255,58,.4);border-radius:20px;background:rgba(182,255,58,.06)}
+.live-pill .blip{width:7px;height:7px;border-radius:50%;background:var(--lime);box-shadow:0 0 8px var(--lime);animation:pulse 1.6s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+.section{margin-bottom:26px}
+.sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:13px}
+.sec-title{display:flex;align-items:center;gap:12px}
+.sec-title .bar{width:4px;height:22px;border-radius:3px;background:var(--cyan);box-shadow:var(--glow-cyan)}
+.sec-title.mag .bar{background:var(--mag);box-shadow:var(--glow-mag)}
+.sec-title.lime .bar{background:var(--lime);box-shadow:0 0 12px rgba(182,255,58,.5)}
+.sec-title h2{font-family:var(--disp);font-size:15px;letter-spacing:1.5px;text-transform:uppercase;font-weight:600}
+.sec-title p{font-size:11.5px;color:var(--dim);margin-top:2px;letter-spacing:.2px}
+.sec-actions{display:flex;gap:9px}
+
+.btn{
+  font-family:var(--disp);font-size:12px;font-weight:600;letter-spacing:.6px;
+  padding:8px 16px;border-radius:var(--radius);cursor:pointer;transition:.15s;
+  border:1px solid var(--line2);background:var(--panel2);color:var(--txt);
+  display:inline-flex;align-items:center;gap:7px;text-transform:uppercase;
+}
+.btn svg{width:14px;height:14px}
+.btn:hover{border-color:var(--cyan);color:var(--cyan);box-shadow:var(--glow-cyan)}
+.btn.ghost{background:transparent}
+.btn.primary{
+  background:linear-gradient(135deg,var(--cyan),var(--cyan-d));color:#04121a;border-color:transparent;
+  box-shadow:0 0 14px rgba(34,224,255,.4);
+}
+.btn.primary:hover{box-shadow:0 0 22px rgba(34,224,255,.65);color:#04121a}
+.btn.mag{background:linear-gradient(135deg,var(--mag),#c81f97);color:#fff;border-color:transparent;box-shadow:0 0 14px rgba(255,62,201,.4)}
+.btn.mag:hover{box-shadow:0 0 22px rgba(255,62,201,.6);color:#fff}
+.btn.sm{padding:6px 12px;font-size:11px}
+
+/* generic card */
+.card{
+  background:linear-gradient(160deg,var(--panel2),var(--panel));
+  border:1px solid var(--line);border-radius:var(--radius);
+  position:relative;overflow:hidden;
+}
+.card::before{content:"";position:absolute;top:0;left:0;width:100%;height:1px;background:linear-gradient(90deg,transparent,rgba(34,224,255,.35),transparent)}
+
+/* tournament rows */
+.rows{display:flex;flex-direction:column;gap:9px}
+.row{
+  display:flex;align-items:center;gap:16px;
+  padding:14px 16px;
+  background:linear-gradient(120deg,var(--panel2),var(--panel));
+  border:1px solid var(--line);border-radius:var(--radius);
+  transition:.15s;position:relative;overflow:hidden;
+}
+.row:hover{border-color:var(--line2);transform:translateX(2px)}
+.row.live{border-color:rgba(182,255,58,.35)}
+.row.live::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--lime);box-shadow:0 0 10px var(--lime)}
+.row .r-icon{
+  width:38px;height:38px;flex:none;border-radius:var(--radius);display:grid;place-items:center;
+  background:var(--panel3);border:1px solid var(--line2);color:var(--cyan);
+}
+.row .r-icon svg{width:19px;height:19px}
+.row .r-icon.done{color:var(--dim2)}
+.row .r-main{flex:1;min-width:0}
+.row .r-name{font-family:var(--disp);font-size:14px;font-weight:600;display:flex;align-items:center;gap:10px;letter-spacing:.3px}
+.row .r-meta{font-size:11.5px;color:var(--dim);margin-top:3px;letter-spacing:.2px}
+.tag{font-family:var(--disp);font-size:9.5px;font-weight:600;letter-spacing:1.5px;padding:3px 8px;border-radius:3px;text-transform:uppercase}
+.tag.live{color:var(--lime);background:rgba(182,255,58,.12);border:1px solid rgba(182,255,58,.4)}
+.tag.done{color:var(--dim2);background:var(--panel3);border:1px solid var(--line)}
+.row .r-cta{font-family:var(--disp);font-size:11px;letter-spacing:1px;color:var(--dim2);text-transform:uppercase}
+.chevron{color:var(--dim2)}
+
+/* empty state */
+.empty{
+  padding:30px 20px;text-align:center;border:1px dashed var(--line2);border-radius:var(--radius);
+  background:repeating-linear-gradient(45deg,transparent,transparent 10px,rgba(255,62,201,.02) 10px,rgba(255,62,201,.02) 20px);
+}
+.empty svg{width:34px;height:34px;color:var(--mag);opacity:.7;margin-bottom:10px}
+.empty p{color:var(--dim);font-size:13px;font-family:var(--disp);letter-spacing:.5px}
+
+/* table card */
+.table-card{padding:16px 18px}
+.table-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.table-top .t-name{font-family:var(--disp);font-size:15px;font-weight:600;display:flex;align-items:center;gap:10px}
+.table-top .t-meta{font-size:11px;color:var(--dim);margin-top:4px;letter-spacing:.3px}
+.chips-strip{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.chip{font-size:10px;color:var(--dim);background:var(--panel3);border:1px solid var(--line);padding:3px 8px;border-radius:3px;letter-spacing:.4px}
+.chip b{color:var(--cyan);font-weight:600}
+.seats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
+.seat{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:12px 14px;border:1px dashed var(--line2);border-radius:var(--radius);
+  background:rgba(34,224,255,.03);transition:.15s;
+}
+.seat:hover{border-style:solid;border-color:var(--cyan);box-shadow:inset 0 0 20px rgba(34,224,255,.06)}
+.seat .s-label{display:flex;align-items:center;gap:9px;color:var(--dim);font-size:12.5px;font-family:var(--disp);letter-spacing:.5px}
+.seat .s-icon{width:26px;height:26px;border-radius:50%;border:1px solid var(--line2);display:grid;place-items:center;color:var(--dim2)}
+.seat .s-icon svg{width:14px;height:14px}
+
+/* find a match */
+.match-panel{padding:20px}
+.match-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px}
+.ranked-badge{display:flex;align-items:center;gap:10px}
+.ranked-badge .rb-tag{font-family:var(--disp);font-size:11px;letter-spacing:2.5px;font-weight:600;color:var(--gold);
+  padding:5px 12px;border:1px solid rgba(255,212,71,.35);border-radius:3px;background:rgba(255,212,71,.06)}
+.ranked-badge .rb-sub{font-size:11px;letter-spacing:2px;color:var(--dim);font-family:var(--disp)}
+.speed-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.speed-card{
+  padding:16px 14px;border:1px solid var(--line);border-radius:var(--radius);cursor:pointer;
+  background:linear-gradient(165deg,var(--panel2),var(--panel));position:relative;overflow:hidden;transition:.18s;
+}
+.speed-card::after{content:"";position:absolute;inset:0;background:radial-gradient(120px 80px at 50% 0%,var(--acc,rgba(34,224,255,.16)),transparent 70%);opacity:0;transition:.18s}
+.speed-card:hover,.speed-card.sel{border-color:var(--sc,var(--cyan));transform:translateY(-3px)}
+.speed-card:hover::after,.speed-card.sel::after{opacity:1}
+.speed-card.sel{box-shadow:0 0 0 1px var(--sc,var(--cyan)),0 8px 24px rgba(0,0,0,.4)}
+.speed-card .sc-ico{width:30px;height:30px;color:var(--sc);margin-bottom:12px;filter:drop-shadow(0 0 6px var(--scg))}
+.speed-card .sc-name{font-family:var(--disp);font-size:15px;font-weight:700;letter-spacing:.5px}
+.speed-card .sc-mode{font-size:10px;letter-spacing:1.5px;color:var(--dim2);text-transform:uppercase;margin-top:2px;font-family:var(--disp)}
+.speed-card .sc-stats{display:flex;gap:8px;margin-top:12px;font-size:11px;color:var(--dim)}
+.speed-card .sc-stats span{display:flex;align-items:center;gap:4px}
+.speed-card .sc-stats b{color:var(--txt);font-family:var(--disp);font-weight:600}
+.match-foot{margin-top:16px;display:flex;align-items:center;gap:14px}
+.match-foot .queue-note{font-size:11px;color:var(--dim);font-family:var(--disp);letter-spacing:.5px}
+.match-foot .queue-note b{color:var(--cyan)}
+
+/* ============ RIGHT PANEL ============ */
+.rightbar{
+  background:linear-gradient(200deg,var(--panel),var(--bg2));
+  border-left:1px solid var(--line);
+  overflow-y:auto;padding:22px 18px;position:relative;
+}
+.rightbar::before{content:"";position:absolute;top:0;left:0;width:1px;height:100%;background:linear-gradient(180deg,transparent,rgba(255,62,201,.4),transparent)}
+.club-hero{text-align:center;padding:6px 0 18px;position:relative}
+.club-badge{
+  width:66px;height:66px;margin:0 auto 12px;display:grid;place-items:center;
+  font-family:var(--disp);font-weight:700;font-size:22px;letter-spacing:1px;color:#04121a;
+  background:linear-gradient(135deg,var(--cyan),var(--mag));
+  clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);
+  box-shadow:0 0 18px rgba(34,224,255,.35),0 0 26px rgba(255,62,201,.2);
+}
+.club-hero h3{font-family:var(--disp);font-size:17px;letter-spacing:.4px}
+.club-hero .club-tag{font-size:10px;letter-spacing:3px;color:var(--cyan);text-transform:uppercase;margin-top:3px}
+.club-hero .club-rank{font-size:11px;color:var(--dim);margin-top:10px;letter-spacing:.3px}
+.club-hero .club-rank .prov{color:var(--gold)}
+
+.chips-box{
+  margin:16px 0;padding:14px 16px;border-radius:var(--radius);
+  background:linear-gradient(135deg,rgba(255,212,71,.09),rgba(34,224,255,.04));
+  border:1px solid rgba(255,212,71,.28);display:flex;align-items:center;justify-content:space-between;
+}
+.chips-box .cb-l{display:flex;align-items:center;gap:11px}
+.chips-box .cb-ico{width:32px;height:32px;color:var(--gold);filter:drop-shadow(0 0 6px rgba(255,212,71,.5))}
+.chips-box .cb-num{font-family:var(--disp);font-size:22px;font-weight:700;line-height:1;letter-spacing:.5px}
+.chips-box .cb-lbl{font-size:10px;letter-spacing:1.5px;color:var(--dim2);text-transform:uppercase;margin-top:3px}
+
+.rtabs{display:flex;flex-direction:column;gap:3px;margin:14px 0}
+.rtab{
+  display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:var(--radius);
+  color:var(--dim);font-size:13px;font-weight:500;cursor:pointer;transition:.15s;position:relative;letter-spacing:.2px;
+}
+.rtab svg{width:16px;height:16px;flex:none;stroke-width:1.8}
+.rtab:hover{background:var(--panel2);color:var(--txt)}
+.rtab.active{color:var(--mag);background:linear-gradient(90deg,rgba(255,62,201,.13),transparent)}
+.rtab.active::before{content:"";position:absolute;left:0;top:6px;bottom:6px;width:3px;border-radius:3px;background:var(--mag);box-shadow:var(--glow-mag)}
+.rtab .rt-badge{margin-left:auto;font-size:10px;font-family:var(--disp);background:var(--panel3);border:1px solid var(--line);padding:1px 7px;border-radius:10px;color:var(--dim)}
+
+.club-foot{
+  margin-top:14px;padding-top:14px;border-top:1px solid var(--line);
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;
+}
+.stat-mini{text-align:center;flex:1}
+.stat-mini .sm-num{font-family:var(--disp);font-size:16px;font-weight:700;color:var(--cyan)}
+.stat-mini .sm-lbl{font-size:9px;letter-spacing:1.5px;color:var(--dim2);text-transform:uppercase;margin-top:2px}
+.tier-pill{width:100%;text-align:center;margin-top:10px;font-family:var(--disp);font-size:11px;letter-spacing:2px;
+  color:var(--mag);padding:6px;border:1px solid rgba(255,62,201,.3);border-radius:3px;text-transform:uppercase;background:rgba(255,62,201,.05)}
+
+@media(max-width:1180px){
+  .app{grid-template-columns:70px 1fr 288px}
+  .brand-txt,.nav a span,.nav-label,.user-row .u-meta,.side-bottom .rtxt{display:none}
+  .nav a{justify-content:center}
+  .brand{justify-content:center}.brand-mark{margin:0}
+  .user-row{justify-content:center}
+}
+@media(max-width:940px){
+  .app{grid-template-columns:70px 1fr}
+  .rightbar{display:none}
+  .speed-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:640px){
+  .app{grid-template-columns:1fr}.sidebar{display:none}
+  .seats{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ============ LEFT SIDEBAR ============ -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">DG</div>
+      <div class="brand-txt"><b>DeepGammon</b><span>Arena</span></div>
+    </div>
+    <div class="nav-label">Play</div>
+    <nav class="nav">
+      <a href="#" class="active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+        <span>Home</span>
+      </a>
+      <a href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span>Clubs</span>
+      </a>
+      <a href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2v4"/><path d="M12 18v4"/><path d="m4.9 4.9 2.9 2.9"/><path d="m16.2 16.2 2.9 2.9"/><path d="M2 12h4"/><path d="M18 12h4"/><path d="m4.9 19.1 2.9-2.9"/><path d="m16.2 7.8 2.9-2.9"/></svg>
+        <span>Practice</span>
+      </a>
+      <a href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span>Friends</span>
+      </a>
+      <a href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M9 14h6"/></svg>
+        <span>Matches</span>
+      </a>
+      <a href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 15l-3.5 2 1-4L6 10l4-.5L12 6l2 3.5 4 .5-3.5 3 1 4z"/></svg>
+        <span>Rankings</span>
+      </a>
+    </nav>
+    <div class="spacer"></div>
+    <div class="side-bottom">
+      <div class="nav">
+        <a href="#">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+          <span class="rtxt">Notifications</span>
+        </a>
+        <a href="#">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span class="rtxt">Settings</span>
+        </a>
+      </div>
+      <div class="user-row">
+        <div class="avatar">D</div>
+        <div class="u-meta">
+          <div class="u-name">Dani</div>
+          <div class="u-sub">1500 · lvl 12</div>
+        </div>
+        <div class="dot-online"></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============ CENTER ============ -->
+  <main class="center">
+    <div class="center-head">
+      <h1>Lobby<span class="sub">Pick your battle — cups, chouettes, cash tables and ranked queue.</span></h1>
+      <div class="live-pill"><span class="blip"></span>ARENA LIVE</div>
+    </div>
+
+    <!-- TOURNAMENTS -->
+    <section class="section">
+      <div class="sec-head">
+        <div class="sec-title">
+          <div class="bar"></div>
+          <div><h2>Tournaments</h2><p>Single-elimination cups — register and battle to the title</p></div>
+        </div>
+        <div class="sec-actions">
+          <button class="btn primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>Create Tournament
+          </button>
+          <button class="btn ghost">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3 3 6v15l6-3 6 3 6-3V3l-6 3-6-3z"/><path d="M9 3v15M15 6v15"/></svg>Map
+          </button>
+        </div>
+      </div>
+      <div class="rows">
+        <div class="row live">
+          <div class="r-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9H4a2 2 0 0 1-2-2V5h4"/><path d="M18 9h2a2 2 0 0 0 2-2V5h-4"/><path d="M6 5h12v6a6 6 0 0 1-12 0z"/><path d="M9 21h6M12 17v4"/></svg></div>
+          <div class="r-main">
+            <div class="r-name">Club Cup <span class="tag live">Live</span></div>
+            <div class="r-meta">to 3 · 1/8 players · starts in 18h</div>
+          </div>
+          <div class="r-cta">Register</div>
+          <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+        </div>
+        <div class="row">
+          <div class="r-icon done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9H4a2 2 0 0 1-2-2V5h4"/><path d="M18 9h2a2 2 0 0 0 2-2V5h-4"/><path d="M6 5h12v6a6 6 0 0 1-12 0z"/><path d="M9 21h6M12 17v4"/></svg></div>
+          <div class="r-main">
+            <div class="r-name">Club Cup <span class="tag done">Finished</span></div>
+            <div class="r-meta">to 3 · 8/8 players · won by Mika</div>
+          </div>
+          <div class="r-cta">Bracket</div>
+          <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+        </div>
+        <div class="row">
+          <div class="r-icon done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9H4a2 2 0 0 1-2-2V5h4"/><path d="M18 9h2a2 2 0 0 0 2-2V5h-4"/><path d="M6 5h12v6a6 6 0 0 1-12 0z"/><path d="M9 21h6M12 17v4"/></svg></div>
+          <div class="r-main">
+            <div class="r-name">Club Cup <span class="tag done">Finished</span></div>
+            <div class="r-meta">to 5 · 16/16 players · won by Dani</div>
+          </div>
+          <div class="r-cta">Bracket</div>
+          <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+        </div>
+      </div>
+    </section>
+
+    <!-- CHOUETTES -->
+    <section class="section">
+      <div class="sec-head">
+        <div class="sec-title mag">
+          <div class="bar"></div>
+          <div><h2>Chouettes</h2><p>Everyone vs the box — independent cubes, one shared board</p></div>
+        </div>
+        <div class="sec-actions">
+          <button class="btn mag">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>Create Chouette
+          </button>
+        </div>
+      </div>
+      <div class="empty">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.3"/><circle cx="15.5" cy="15.5" r="1.3"/><path d="M8 16 16 8"/></svg>
+        <p>No chouettes running — start one!</p>
+      </div>
+    </section>
+
+    <!-- TABLES -->
+    <section class="section">
+      <div class="sec-head">
+        <div class="sec-title lime">
+          <div class="bar"></div>
+          <div><h2>Tables</h2><p>Cash games at the club's stakes — winnings move real chips</p></div>
+        </div>
+      </div>
+      <div class="card table-card">
+        <div class="table-top">
+          <div>
+            <div class="t-name">AFK Demo Table <span class="tag live">Live</span></div>
+            <div class="chips-strip">
+              <span class="chip"><b>1</b>/pt</span>
+              <span class="chip">cap <b>5</b></span>
+              <span class="chip">rake <b>5%</b></span>
+              <span class="chip">Jacoby</span>
+              <span class="chip">buy-in <b>5</b></span>
+            </div>
+          </div>
+          <button class="btn primary sm">Sit (5)</button>
+        </div>
+        <div class="seats">
+          <div class="seat">
+            <div class="s-label"><span class="s-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></span>Open seat</div>
+            <button class="btn sm">Sit (5)</button>
+          </div>
+          <div class="seat">
+            <div class="s-label"><span class="s-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></span>Open seat</div>
+            <button class="btn sm">Sit (5)</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FIND A MATCH -->
+    <section class="section" style="margin-bottom:0">
+      <div class="card match-panel">
+        <div class="match-head">
+          <div class="ranked-badge">
+            <span class="rb-tag">RANKED</span>
+            <span class="rb-sub">· GLOBAL RATING</span>
+          </div>
+          <button class="btn primary" id="findBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>Find a match
+          </button>
+        </div>
+        <div class="speed-grid">
+          <div class="speed-card sel" style="--sc:var(--cyan);--scg:rgba(34,224,255,.7);--acc:rgba(34,224,255,.16)" data-mode="Bullet">
+            <svg class="sc-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z"/></svg>
+            <div class="sc-name">Bullet</div>
+            <div class="sc-mode">Lightning</div>
+            <div class="sc-stats"><span><b>1</b>pt</span><span>·</span><span><b>2</b>min</span></div>
+          </div>
+          <div class="speed-card" style="--sc:var(--mag);--scg:rgba(255,62,201,.7);--acc:rgba(255,62,201,.16)" data-mode="Blitz">
+            <svg class="sc-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M9 2h6"/></svg>
+            <div class="sc-name">Blitz</div>
+            <div class="sc-mode">Fast</div>
+            <div class="sc-stats"><span><b>3</b>pt</span><span>·</span><span><b>3</b>min</span></div>
+          </div>
+          <div class="speed-card" style="--sc:var(--lime);--scg:rgba(182,255,58,.7);--acc:rgba(182,255,58,.16)" data-mode="Rapid">
+            <svg class="sc-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+            <div class="sc-name">Rapid</div>
+            <div class="sc-mode">Standard</div>
+            <div class="sc-stats"><span><b>5</b>pt</span><span>·</span><span><b>5</b>min</span></div>
+          </div>
+          <div class="speed-card" style="--sc:var(--gold);--scg:rgba(255,212,71,.7);--acc:rgba(255,212,71,.16)" data-mode="Classic">
+            <svg class="sc-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 6v6l4 2"/><path d="M17 3h5v5"/></svg>
+            <div class="sc-name">Classic</div>
+            <div class="sc-mode">Deep</div>
+            <div class="sc-stats"><span><b>7</b>pt</span><span>·</span><span><b>10</b>min</span></div>
+          </div>
+        </div>
+        <div class="match-foot">
+          <span class="queue-note">Mode: <b id="modeLabel">Bullet</b> · <span id="queueState">142 in queue</span></span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============ RIGHT PANEL ============ -->
+  <aside class="rightbar">
+    <div class="club-hero">
+      <div class="club-badge">DE</div>
+      <h3>DeepGammon Club</h3>
+      <div class="club-tag">DGCLUB</div>
+      <div class="club-rank">1500 · Intermediate · <span class="prov">provisional</span></div>
+    </div>
+
+    <div class="chips-box">
+      <div class="cb-l">
+        <svg class="cb-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/><path d="M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg>
+        <div>
+          <div class="cb-num">1,000</div>
+          <div class="cb-lbl">Your chips</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rtabs">
+      <div class="rtab active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+        Lobby
+      </div>
+      <div class="rtab">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+        Leaderboard
+      </div>
+      <div class="rtab">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>
+        History
+      </div>
+      <div class="rtab">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 9H4a2 2 0 0 1-2-2V5h4"/><path d="M18 9h2a2 2 0 0 0 2-2V5h-4"/><path d="M6 5h12v6a6 6 0 0 1-12 0z"/><path d="M9 21h6M12 17v4"/></svg>
+        Tournaments
+      </div>
+      <div class="rtab">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Chat<span class="rt-badge">3</span>
+      </div>
+      <div class="rtab">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>
+        Members<span class="rt-badge">47</span>
+      </div>
+      <div class="rtab">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/><circle cx="17" cy="15" r="1.4"/></svg>
+        Wallet
+      </div>
+    </div>
+
+    <div class="tier-pill">Premier Tier</div>
+    <div class="club-foot">
+      <div class="stat-mini"><div class="sm-num">47</div><div class="sm-lbl">Members</div></div>
+      <div class="stat-mini"><div class="sm-num">1</div><div class="sm-lbl">Table</div></div>
+      <div class="stat-mini"><div class="sm-num">8</div><div class="sm-lbl">Online</div></div>
+    </div>
+  </aside>
+
+</div>
+
+<script>
+// speed-card selection
+const cards=document.querySelectorAll('.speed-card');
+const modeLabel=document.getElementById('modeLabel');
+const queueState=document.getElementById('queueState');
+const queues={Bullet:142,Blitz:88,Rapid:51,Classic:23};
+cards.forEach(c=>{
+  c.addEventListener('click',()=>{
+    cards.forEach(x=>x.classList.remove('sel'));
+    c.classList.add('sel');
+    const m=c.dataset.mode;
+    modeLabel.textContent=m;
+    queueState.textContent=queues[m]+' in queue';
+  });
+});
+
+// find match -> playful searching state
+const findBtn=document.getElementById('findBtn');
+let searching=false,tmr=null;
+findBtn.addEventListener('click',()=>{
+  searching=!searching;
+  if(searching){
+    findBtn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 1s linear infinite"><path d="M21 12a9 9 0 1 1-6.2-8.5"/></svg>Searching…';
+    let d=0;
+    tmr=setInterval(()=>{d=(d+1)%4;queueState.textContent='matching'+'.'.repeat(d);},400);
+  }else{
+    clearInterval(tmr);
+    findBtn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>Find a match';
+    const m=document.querySelector('.speed-card.sel').dataset.mode;
+    queueState.textContent=queues[m]+' in queue';
+  }
+});
+// nav / rtab active toggle
+document.querySelectorAll('.nav a').forEach(a=>a.addEventListener('click',e=>{
+  e.preventDefault();document.querySelectorAll('.nav a').forEach(x=>x.classList.remove('active'));a.classList.add('active');
+}));
+document.querySelectorAll('.rtab').forEach(t=>t.addEventListener('click',()=>{
+  document.querySelectorAll('.rtab').forEach(x=>x.classList.remove('active'));t.classList.add('active');
+}));
+const st=document.createElement('style');st.textContent='@keyframes spin{to{transform:rotate(360deg)}}';document.head.appendChild(st);
+</script>
+</body>
+</html>

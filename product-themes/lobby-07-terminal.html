@@ -1,0 +1,555 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DeepGammon :: ~/lobby</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#050807;
+    --bg2:#070d0a;
+    --panel:#08110c;
+    --panel2:#0a1610;
+    --ink:#7dffb0;          /* phosphor green */
+    --ink-dim:#3f8a5f;
+    --ink-faint:#255a3d;
+    --amber:#ffb454;        /* single warm accent */
+    --amber-dim:#a5712f;
+    --red:#ff5f6a;
+    --line:#123b26;
+    --line-soft:#0f2a1c;
+    --glow:0 0 6px rgba(125,255,176,.35);
+    --glow-strong:0 0 12px rgba(125,255,176,.5);
+    --mono:'JetBrains Mono','Space Mono',ui-monospace,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:var(--mono);
+    background:var(--bg);
+    color:var(--ink);
+    font-size:13px;
+    line-height:1.5;
+    letter-spacing:.2px;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  /* CRT overlays */
+  .crt-scan{
+    pointer-events:none;position:fixed;inset:0;z-index:9998;
+    background:repeating-linear-gradient(to bottom,
+      rgba(0,0,0,0) 0px,rgba(0,0,0,0) 2px,rgba(0,0,0,.16) 3px,rgba(0,0,0,0) 4px);
+    mix-blend-mode:multiply;
+  }
+  .crt-vig{
+    pointer-events:none;position:fixed;inset:0;z-index:9997;
+    background:radial-gradient(120% 120% at 50% 42%,rgba(0,0,0,0) 55%,rgba(0,0,0,.55) 100%);
+  }
+  .crt-flick{
+    pointer-events:none;position:fixed;inset:0;z-index:9999;
+    background:rgba(125,255,176,.015);animation:flick 7s infinite steps(60);
+  }
+  @keyframes flick{0%,96%{opacity:1}97%{opacity:.85}98%{opacity:1}99%{opacity:.9}100%{opacity:1}}
+
+  a{color:inherit;text-decoration:none}
+  ::selection{background:var(--ink);color:var(--bg)}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-track{background:#040605}
+  ::-webkit-scrollbar-thumb{background:var(--line);border:2px solid #040605}
+  ::-webkit-scrollbar-thumb:hover{background:var(--ink-faint)}
+
+  .cursor{display:inline-block;width:.62em;height:1.05em;vertical-align:-.16em;
+    background:var(--ink);box-shadow:var(--glow);animation:blink 1.05s steps(1) infinite;margin-left:2px}
+  @keyframes blink{0%,50%{opacity:1}51%,100%{opacity:0}}
+
+  /* ---- shell / grid ---- */
+  .shell{max-width:1360px;margin:0 auto;min-height:100vh;
+    display:grid;grid-template-columns:232px 1fr 268px;gap:0;
+    border-left:1px solid var(--line);border-right:1px solid var(--line);
+    background:linear-gradient(180deg,var(--bg),var(--bg2));}
+
+  .col{padding:16px 14px}
+  .sidebar{border-right:1px solid var(--line);background:var(--panel)}
+  .center{background:transparent}
+  .rightbar{border-left:1px solid var(--line);background:var(--panel)}
+
+  /* box-drawing panel */
+  .box{border:1px solid var(--line);background:var(--panel2);margin-bottom:16px;position:relative}
+  .box::before{content:attr(data-label);position:absolute;top:-1px;left:12px;
+    transform:translateY(-52%);background:var(--bg2);padding:0 8px;
+    color:var(--ink-dim);font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase}
+  .box-body{padding:14px 14px 15px}
+
+  .glow{text-shadow:var(--glow)}
+  .amber{color:var(--amber)}
+  .dim{color:var(--ink-dim)}
+  .faint{color:var(--ink-faint)}
+  .red{color:var(--red)}
+
+  /* ===== SIDEBAR ===== */
+  .brand{display:flex;align-items:center;gap:10px;padding:4px 4px 16px;border-bottom:1px dashed var(--line);margin-bottom:14px}
+  .brand .mark{width:38px;height:38px;border:1px solid var(--ink);display:grid;place-items:center;
+    font-weight:700;color:var(--ink);box-shadow:var(--glow),inset 0 0 8px rgba(125,255,176,.12);background:#03110a}
+  .brand .mark span{font-size:15px;letter-spacing:1px}
+  .brand h1{font-size:14px;font-weight:700;letter-spacing:1px}
+  .brand small{display:block;color:var(--ink-dim);font-size:9.5px;letter-spacing:2px;text-transform:uppercase}
+
+  .navlbl{color:var(--ink-faint);font-size:10px;letter-spacing:2px;margin:2px 4px 8px}
+  nav.main{display:flex;flex-direction:column;gap:1px}
+  .navitem{display:flex;align-items:center;gap:11px;padding:7px 8px;color:var(--ink-dim);
+    border:1px solid transparent;cursor:pointer;transition:.12s;position:relative}
+  .navitem .pfx{width:12px;color:var(--ink-faint);font-size:11px}
+  .navitem svg{width:16px;height:16px;flex:0 0 16px;stroke:currentColor;fill:none;stroke-width:1.6}
+  .navitem span.t{flex:1}
+  .navitem:hover{color:var(--ink);background:var(--panel2);border-color:var(--line-soft)}
+  .navitem:hover .pfx{color:var(--amber)}
+  .navitem.active{color:var(--ink);background:#04140c;border-color:var(--line);text-shadow:var(--glow)}
+  .navitem.active .pfx{color:var(--amber)}
+  .navitem.active::before{content:"";position:absolute;left:-1px;top:-1px;bottom:-1px;width:2px;background:var(--ink);box-shadow:var(--glow)}
+  .navitem .badge{font-size:9px;color:var(--bg);background:var(--amber);padding:0 5px;border-radius:1px}
+
+  .sb-bottom{margin-top:16px;border-top:1px dashed var(--line);padding-top:12px;display:flex;flex-direction:column;gap:1px}
+  .userrow{display:flex;align-items:center;gap:10px;padding:8px;margin-top:10px;border:1px solid var(--line);background:var(--panel2)}
+  .avatar{width:30px;height:30px;border:1px solid var(--ink-dim);display:grid;place-items:center;color:var(--ink);
+    font-weight:700;font-size:12px;background:#03110a;box-shadow:inset 0 0 6px rgba(125,255,176,.1)}
+  .userrow .u{flex:1}
+  .userrow .u b{font-size:12px;font-weight:700}
+  .userrow .u small{display:block;color:var(--ink-dim);font-size:9.5px}
+  .status-dot{width:7px;height:7px;background:var(--ink);border-radius:50%;box-shadow:var(--glow-strong);animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+  /* ===== CENTER ===== */
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;
+    border-bottom:1px solid var(--line);padding-bottom:12px}
+  .prompt{font-size:12px;color:var(--ink-dim)}
+  .prompt .path{color:var(--ink)}
+  .prompt .sym{color:var(--amber)}
+  .clock{color:var(--ink-dim);font-size:11px;letter-spacing:1px}
+  .clock b{color:var(--ink);text-shadow:var(--glow)}
+
+  .sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+  .sec-title{font-size:14px;font-weight:700;letter-spacing:.5px;text-shadow:var(--glow)}
+  .sec-title .car{color:var(--amber);margin-right:6px}
+  .sec-sub{color:var(--ink-dim);font-size:11px;margin:0 0 12px 20px;padding-left:12px;border-left:1px solid var(--line-soft)}
+  .sec-sub::before{content:"# ";color:var(--ink-faint)}
+
+  .btn{font-family:var(--mono);font-size:11px;letter-spacing:.5px;color:var(--ink);background:#04140c;
+    border:1px solid var(--line);padding:6px 12px;cursor:pointer;transition:.12s;display:inline-flex;align-items:center;gap:7px}
+  .btn:hover{border-color:var(--ink-dim);background:#06180e;box-shadow:var(--glow)}
+  .btn:active{transform:translateY(1px)}
+  .btn.amber{color:var(--amber);border-color:var(--amber-dim)}
+  .btn.amber:hover{box-shadow:0 0 8px rgba(255,180,84,.35);border-color:var(--amber)}
+  .btn.ghost{background:transparent;color:var(--ink-dim)}
+  .btn.ghost:hover{color:var(--ink)}
+  .btn.sm{padding:4px 9px;font-size:10.5px}
+  .head-actions{display:flex;gap:8px}
+
+  /* rows */
+  .row{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--line-soft);
+    background:var(--panel2);margin-top:8px;transition:.12s}
+  .row:hover{border-color:var(--line);background:#0b1a12}
+  .row .glyph{color:var(--ink-faint);font-size:13px;flex:0 0 auto}
+  .row .main{flex:1;min-width:0}
+  .row .main b{font-size:12.5px;font-weight:700}
+  .row .meta{color:var(--ink-dim);font-size:10.5px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .row .meta .sep{color:var(--ink-faint);margin:0 5px}
+  .tag{font-size:9px;letter-spacing:1px;padding:2px 6px;border:1px solid currentColor;text-transform:uppercase}
+  .tag.live{color:var(--red)}
+  .tag.live::before{content:"● ";}
+  .tag.done{color:var(--ink-faint)}
+  .tag.wait{color:var(--amber)}
+
+  .empty{border:1px dashed var(--line);background:repeating-linear-gradient(45deg,#060f0a,#060f0a 10px,#081409 10px,#081409 20px);
+    padding:22px 16px;text-align:center;color:var(--ink-dim);font-size:11.5px;margin-top:8px}
+  .empty .big{color:var(--ink);font-size:13px;display:block;margin-bottom:4px}
+  .empty .big::before{content:"[ ! ] ";color:var(--amber)}
+
+  /* tables / seats */
+  .seat-wrap{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+  .seat{flex:1;min-width:120px;border:1px dashed var(--line);background:#050d08;padding:10px;
+    display:flex;align-items:center;justify-content:space-between;color:var(--ink-dim);font-size:11px}
+  .seat.open:hover{border-style:solid;border-color:var(--ink-dim);color:var(--ink);cursor:pointer;box-shadow:var(--glow)}
+
+  /* find a match */
+  .fm-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px}
+  .pill{font-size:9.5px;letter-spacing:1.5px;border:1px solid var(--line);padding:3px 8px;color:var(--ink-dim)}
+  .pill.rank{color:var(--amber);border-color:var(--amber-dim)}
+  .speeds{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
+  .speed{border:1px solid var(--line-soft);background:var(--panel2);padding:12px 10px;cursor:pointer;transition:.14s;text-align:left}
+  .speed:hover{border-color:var(--ink-dim);background:#0b1a12;transform:translateY(-2px);box-shadow:var(--glow)}
+  .speed.on{border-color:var(--ink);background:#04140c;box-shadow:var(--glow)}
+  .speed.on::after{content:"◀ sel";position:absolute}
+  .speed .sp-name{font-weight:700;font-size:12.5px;text-shadow:var(--glow)}
+  .speed .sp-sub{color:var(--ink-dim);font-size:10px;margin-top:4px}
+  .speed .sp-ascii{color:var(--ink-faint);font-size:10px;margin-top:8px;letter-spacing:2px}
+  .fm-cmd{margin-top:14px;border:1px solid var(--line);background:#020604;padding:9px 12px;font-size:11.5px;display:flex;align-items:center;gap:8px}
+  .fm-cmd .sym{color:var(--amber)}
+  .fm-cmd .arg{color:var(--ink)}
+
+  /* ===== RIGHT ===== */
+  .club-head{display:flex;align-items:center;gap:11px;padding-bottom:12px;border-bottom:1px dashed var(--line);margin-bottom:12px}
+  .club-badge{width:42px;height:42px;border:1px solid var(--amber-dim);display:grid;place-items:center;color:var(--amber);
+    font-weight:700;font-size:15px;background:#150e03;box-shadow:0 0 8px rgba(255,180,84,.2)}
+  .club-head .ci b{font-size:13px}
+  .club-head .ci small{display:block;color:var(--ink-dim);font-size:9.5px;letter-spacing:1.5px}
+
+  .stat{display:flex;align-items:baseline;justify-content:space-between;padding:6px 0;border-bottom:1px dotted var(--line-soft);font-size:11px}
+  .stat .k{color:var(--ink-dim)}
+  .stat .v{color:var(--ink);text-shadow:var(--glow)}
+  .rating{margin:12px 0;border:1px solid var(--line);padding:10px 12px;background:var(--panel2)}
+  .rating .num{font-size:24px;font-weight:700;color:var(--ink);text-shadow:var(--glow-strong);line-height:1}
+  .rating .lbl{color:var(--ink-dim);font-size:10px;margin-top:5px}
+  .rating .prov{color:var(--amber);font-size:9.5px}
+  .chips{display:flex;align-items:center;justify-content:space-between;border:1px solid var(--amber-dim);
+    padding:10px 12px;margin:12px 0;background:#120c02}
+  .chips .n{font-size:18px;font-weight:700;color:var(--amber);text-shadow:0 0 8px rgba(255,180,84,.4)}
+  .chips .l{color:var(--amber-dim);font-size:10px;letter-spacing:1px}
+
+  .rnav{display:flex;flex-direction:column;gap:1px;margin:6px 0 12px}
+  .rnav a{padding:6px 8px;color:var(--ink-dim);font-size:11px;display:flex;align-items:center;gap:9px;border:1px solid transparent;cursor:pointer}
+  .rnav a .pfx{color:var(--ink-faint)}
+  .rnav a:hover{color:var(--ink);background:var(--panel2);border-color:var(--line-soft)}
+  .rnav a.active{color:var(--ink);background:#04140c;border-color:var(--line);text-shadow:var(--glow)}
+  .rnav a.active .pfx{color:var(--amber)}
+
+  .rfoot{border-top:1px dashed var(--line);padding-top:10px;color:var(--ink-dim);font-size:10.5px;text-align:center;letter-spacing:.5px}
+  .rfoot b{color:var(--ink)}
+
+  .ascii-div{color:var(--ink-faint);font-size:10px;letter-spacing:0;white-space:nowrap;overflow:hidden;margin:10px 0}
+
+  /* responsive */
+  @media(max-width:1080px){
+    .shell{grid-template-columns:200px 1fr}
+    .rightbar{display:none}
+    .speeds{grid-template-columns:repeat(2,1fr)}
+  }
+  @media(max-width:720px){
+    .shell{grid-template-columns:1fr}
+    .sidebar{display:none}
+    .speeds{grid-template-columns:1fr 1fr}
+  }
+  .mobtog{display:none}
+</style>
+</head>
+<body>
+<div class="crt-scan"></div>
+<div class="crt-vig"></div>
+<div class="crt-flick"></div>
+
+<div class="shell">
+
+  <!-- ===================== SIDEBAR ===================== -->
+  <aside class="col sidebar">
+    <div class="brand">
+      <div class="mark"><span>DG</span></div>
+      <div>
+        <h1 class="glow">DeepGammon</h1>
+        <small>v2.6 // secure shell</small>
+      </div>
+    </div>
+
+    <div class="navlbl">// NAVIGATION</div>
+    <nav class="main" id="mainnav">
+      <div class="navitem active">
+        <span class="pfx">></span>
+        <svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>
+        <span class="t">Home</span>
+      </div>
+      <div class="navitem">
+        <span class="pfx">~</span>
+        <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3 3-5 6-5s6 2 6 5"/><path d="M15 20c0-2 2-3.5 4-3.5"/></svg>
+        <span class="t">Clubs</span>
+      </div>
+      <div class="navitem">
+        <span class="pfx">~</span>
+        <svg viewBox="0 0 24 24"><path d="M4 4h16v12H4z"/><path d="M8 20h8"/><path d="M12 16v4"/><path d="M8 8l3 3 5-5"/></svg>
+        <span class="t">Practice</span>
+      </div>
+      <div class="navitem">
+        <span class="pfx">~</span>
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="3.2"/><path d="M5 20c0-4 3.5-6 7-6s7 2 7 6"/></svg>
+        <span class="t">Friends</span>
+        <span class="badge">3</span>
+      </div>
+      <div class="navitem">
+        <span class="pfx">~</span>
+        <svg viewBox="0 0 24 24"><path d="M4 5h16v14H4z"/><path d="M4 10h16"/><path d="M9 5v14"/></svg>
+        <span class="t">Matches</span>
+      </div>
+      <div class="navitem">
+        <span class="pfx">~</span>
+        <svg viewBox="0 0 24 24"><path d="M6 20V10"/><path d="M12 20V4"/><path d="M18 20v-7"/></svg>
+        <span class="t">Rankings</span>
+      </div>
+    </nav>
+
+    <div class="sb-bottom">
+      <div class="navitem">
+        <span class="pfx">$</span>
+        <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 10-12 0c0 7-3 8-3 8h18s-3-1-3-8"/><path d="M10 21a2 2 0 004 0"/></svg>
+        <span class="t">Notifications</span>
+        <span class="badge">5</span>
+      </div>
+      <div class="navitem">
+        <span class="pfx">$</span>
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg>
+        <span class="t">Settings</span>
+      </div>
+    </div>
+
+    <div class="userrow">
+      <div class="avatar">D</div>
+      <div class="u"><b>Dani</b><small>uid:1042 · online</small></div>
+      <div class="status-dot"></div>
+    </div>
+  </aside>
+
+  <!-- ===================== CENTER ===================== -->
+  <main class="col center">
+    <div class="topbar">
+      <div class="prompt"><span class="sym">dani@deepgammon</span>:<span class="path">~/lobby</span><span class="sym">$</span> ls --active<span class="cursor"></span></div>
+      <div class="clock">SYS <b id="clock">00:00:00</b></div>
+    </div>
+
+    <!-- TOURNAMENTS -->
+    <section class="box" data-label="proc :: tournaments">
+      <div class="box-body">
+        <div class="sec-head">
+          <div class="sec-title"><span class="car">></span>TOURNAMENTS</div>
+          <div class="head-actions">
+            <button class="btn amber">+ Create Tournament</button>
+            <button class="btn ghost sm">◎ Map</button>
+          </div>
+        </div>
+        <div class="sec-sub">Single-elimination cups — register and battle to the title</div>
+
+        <div class="row">
+          <span class="glyph">┌─◆</span>
+          <div class="main">
+            <b>Club Cup</b>
+            <div class="meta">to 3<span class="sep">│</span>1/8 players<span class="sep">│</span>starts in 18h</div>
+          </div>
+          <span class="tag live">LIVE</span>
+          <button class="btn sm">Register</button>
+        </div>
+        <div class="row">
+          <span class="glyph">├─◇</span>
+          <div class="main">
+            <b>Club Cup</b>
+            <div class="meta">to 5<span class="sep">│</span>8/8 players<span class="sep">│</span>won by nova_e</div>
+          </div>
+          <span class="tag done">FINISHED</span>
+          <button class="btn ghost sm">Bracket</button>
+        </div>
+        <div class="row">
+          <span class="glyph">└─◇</span>
+          <div class="main">
+            <b>Club Cup</b>
+            <div class="meta">to 3<span class="sep">│</span>4/4 players<span class="sep">│</span>won by Dani</div>
+          </div>
+          <span class="tag done">FINISHED</span>
+          <button class="btn ghost sm">Bracket</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- CHOUETTES -->
+    <section class="box" data-label="proc :: chouettes">
+      <div class="box-body">
+        <div class="sec-head">
+          <div class="sec-title"><span class="car">></span>CHOUETTES</div>
+          <div class="head-actions">
+            <button class="btn amber">+ Create Chouette</button>
+          </div>
+        </div>
+        <div class="sec-sub">Everyone vs the box — independent cubes, one shared board</div>
+
+        <div class="empty">
+          <span class="big">No chouettes running — start one!</span>
+          <span class="dim">$ chouette --new --box self &nbsp; # spin up a table and rally the club</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- TABLES -->
+    <section class="box" data-label="proc :: cash-tables">
+      <div class="box-body">
+        <div class="sec-head">
+          <div class="sec-title"><span class="car">></span>TABLES</div>
+        </div>
+        <div class="sec-sub">Cash games at the club's stakes — winnings move real chips</div>
+
+        <div class="row" style="flex-wrap:wrap">
+          <span class="glyph">▚▚▚</span>
+          <div class="main">
+            <b>AFK Demo Table</b>
+            <div class="meta">1/pt<span class="sep">│</span>cap 5<span class="sep">│</span>rake 5%<span class="sep">│</span>Jacoby<span class="sep">│</span>buy-in 5</div>
+          </div>
+          <span class="tag wait">OPEN</span>
+          <div class="seat-wrap" style="flex-basis:100%;margin-top:10px">
+            <div class="seat open"><span>[ 01 ] Open seat</span><b class="glow">Sit (5)</b></div>
+            <div class="seat open"><span>[ 02 ] Open seat</span><b class="glow">Sit (5)</b></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FIND A MATCH -->
+    <section class="box" data-label="proc :: matchmaker">
+      <div class="box-body">
+        <div class="fm-head">
+          <div class="sec-title"><span class="car">></span>FIND A MATCH</div>
+          <div style="display:flex;gap:6px">
+            <span class="pill rank">RANKED</span>
+            <span class="pill">GLOBAL RATING</span>
+          </div>
+        </div>
+
+        <div class="speeds" id="speeds">
+          <button class="speed on" data-sp="bullet" style="position:relative">
+            <div class="sp-name">Bullet</div>
+            <div class="sp-sub">1pt · 2min</div>
+            <div class="sp-ascii">▮▯▯▯</div>
+          </button>
+          <button class="speed" data-sp="blitz">
+            <div class="sp-name">Blitz</div>
+            <div class="sp-sub">3pt · 3min</div>
+            <div class="sp-ascii">▮▮▯▯</div>
+          </button>
+          <button class="speed" data-sp="rapid">
+            <div class="sp-name">Rapid</div>
+            <div class="sp-sub">5pt · 5min</div>
+            <div class="sp-ascii">▮▮▮▯</div>
+          </button>
+          <button class="speed" data-sp="classic">
+            <div class="sp-name">Classic</div>
+            <div class="sp-sub">7pt · 10min</div>
+            <div class="sp-ascii">▮▮▮▮</div>
+          </button>
+        </div>
+
+        <div class="fm-cmd">
+          <span class="sym">$</span>
+          <span>find-match --speed <span class="arg" id="cmdspeed">bullet</span> --pool global<span class="cursor"></span></span>
+        </div>
+
+        <div style="margin-top:12px;display:flex;justify-content:flex-end">
+          <button class="btn amber" id="findbtn">▶ Find a match</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===================== RIGHT ===================== -->
+  <aside class="col rightbar">
+    <div class="box" data-label="club" style="margin-top:2px">
+      <div class="box-body">
+        <div class="club-head">
+          <div class="club-badge">DE</div>
+          <div class="ci">
+            <b class="glow">DeepGammon Club</b>
+            <small>@DGCLUB</small>
+          </div>
+        </div>
+
+        <div class="rating">
+          <div class="num">1500</div>
+          <div class="lbl">Intermediate · <span class="prov">provisional</span></div>
+        </div>
+
+        <div class="chips">
+          <div>
+            <div class="n">1,000</div>
+            <div class="l">YOUR CHIPS</div>
+          </div>
+          <span class="faint" style="font-size:18px">₵</span>
+        </div>
+
+        <div class="ascii-div">├─┼─┼─┼─┼─┼─┼─┼─┼─┼─┤</div>
+
+        <nav class="rnav" id="rnav">
+          <a class="active"><span class="pfx">></span> Lobby</a>
+          <a><span class="pfx">·</span> Leaderboard</a>
+          <a><span class="pfx">·</span> History</a>
+          <a><span class="pfx">·</span> Tournaments</a>
+          <a><span class="pfx">·</span> Chat</a>
+          <a><span class="pfx">·</span> Members</a>
+          <a><span class="pfx">·</span> Wallet</a>
+        </nav>
+
+        <div class="rfoot">
+          <b>47</b> Members <span class="faint">·</span> <b>1</b> Table <span class="faint">·</span> <b>Premier</b> tier
+        </div>
+      </div>
+    </div>
+
+    <div class="box" data-label="uptime">
+      <div class="box-body" style="font-size:10.5px;color:var(--ink-dim)">
+        <div class="stat"><span class="k">latency</span><span class="v">12ms</span></div>
+        <div class="stat"><span class="k">engine</span><span class="v">DG-XG online</span></div>
+        <div class="stat" style="border:none"><span class="k">session</span><span class="v" id="uptime">0m 0s</span></div>
+      </div>
+    </div>
+  </aside>
+
+</div>
+
+<script>
+  // live clock
+  const clk=document.getElementById('clock');
+  function tick(){const d=new Date();clk.textContent=d.toTimeString().slice(0,8);}
+  tick();setInterval(tick,1000);
+
+  // session uptime
+  const start=Date.now(),up=document.getElementById('uptime');
+  setInterval(()=>{const s=Math.floor((Date.now()-start)/1000);
+    up.textContent=Math.floor(s/60)+'m '+(s%60)+'s';},1000);
+
+  // main nav active
+  document.querySelectorAll('#mainnav .navitem').forEach(n=>{
+    n.addEventListener('click',()=>{
+      document.querySelectorAll('#mainnav .navitem').forEach(x=>x.classList.remove('active'));
+      n.classList.add('active');
+    });
+  });
+
+  // right nav active
+  document.querySelectorAll('#rnav a').forEach(a=>{
+    a.addEventListener('click',()=>{
+      document.querySelectorAll('#rnav a').forEach(x=>{x.classList.remove('active');x.querySelector('.pfx').textContent='·';});
+      a.classList.add('active');a.querySelector('.pfx').textContent='>';
+    });
+  });
+
+  // speed selector
+  const cmd=document.getElementById('cmdspeed');
+  document.querySelectorAll('#speeds .speed').forEach(s=>{
+    s.addEventListener('click',()=>{
+      document.querySelectorAll('#speeds .speed').forEach(x=>x.classList.remove('on'));
+      s.classList.add('on');
+      cmd.textContent=s.dataset.sp;
+    });
+  });
+
+  // find match feedback
+  const fb=document.getElementById('findbtn');
+  fb.addEventListener('click',()=>{
+    const orig=fb.textContent;
+    fb.textContent='⣾ searching pool...';fb.disabled=true;
+    const frames=['⣾','⣽','⣻','⢿','⡿','⣟','⣯','⣷'];let i=0;
+    const iv=setInterval(()=>{fb.textContent=frames[i++%frames.length]+' searching pool...';},110);
+    setTimeout(()=>{clearInterval(iv);fb.textContent='✓ match found';
+      setTimeout(()=>{fb.textContent=orig;fb.disabled=false;},1400);},2600);
+  });
+
+  // seat click
+  document.querySelectorAll('.seat.open').forEach(s=>{
+    s.addEventListener('click',()=>{const b=s.querySelector('b');const t=b.textContent;
+      b.textContent='seated';setTimeout(()=>b.textContent=t,1200);});
+  });
+</script>
+</body>
+</html>

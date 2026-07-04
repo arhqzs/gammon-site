@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DeepGammon — Lobby</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Roboto+Slab:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  /* ============================================================
+     DeepGammon — "Retro Vintage Poster" (mid-century)
+     Warm palette: mustard, teal, burnt orange, cream, navy.
+     Flat illustrative shapes, poster display type, thick rules,
+     badge/stamp motifs, subtle halftone grain.
+     ============================================================ */
+
+  :root{
+    --cream:      #f4e9d0;
+    --cream-2:    #efe0c2;
+    --paper:      #faf1dc;
+    --navy:       #1f2a44;
+    --navy-2:     #2a3a5c;
+    --ink:        #16233d;
+    --mustard:    #e6b325;
+    --mustard-d:  #cf9c14;
+    --teal:       #1f7a72;
+    --teal-d:     #155e58;
+    --teal-l:     #3ca093;
+    --orange:     #d1592a;
+    --orange-d:   #b0431c;
+    --rust:       #a8481f;
+    --sky:        #7fb2b0;
+    --line:       #1f2a44;
+    --shadow:     rgba(31,42,68,.28);
+    --stamp:      #c14a26;
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+
+  body{
+    font-family:'Roboto Slab', Georgia, serif;
+    color:var(--ink);
+    background-color:var(--cream);
+    background-image:
+      /* halftone dots */
+      radial-gradient(var(--mustard) 1px, transparent 1.4px),
+      /* faint diagonal poster wash */
+      repeating-linear-gradient(135deg, rgba(31,122,114,.05) 0 22px, transparent 22px 44px);
+    background-size: 14px 14px, auto;
+    background-position: 0 0, 0 0;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* film-grain overlay */
+  body::before{
+    content:"";
+    position:fixed; inset:0; z-index:9999; pointer-events:none;
+    opacity:.05; mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  a{ color:inherit; text-decoration:none; }
+  button{ font-family:inherit; cursor:pointer; }
+
+  .display{ font-family:'Bricolage Grotesque', 'Roboto Slab', sans-serif; }
+  .mono{ font-family:'Space Mono', monospace; }
+
+  /* ---------- App shell ---------- */
+  .app{
+    display:grid;
+    grid-template-columns: 248px 1fr 300px;
+    gap:20px;
+    max-width:1360px;
+    margin:0 auto;
+    padding:22px;
+    align-items:start;
+  }
+
+  /* poster-panel base */
+  .panel{
+    background:var(--paper);
+    border:3px solid var(--line);
+    border-radius:6px;
+    box-shadow: 6px 6px 0 var(--navy);
+    position:relative;
+  }
+
+  /* ============ LEFT SIDEBAR ============ */
+  .sidebar{ position:sticky; top:22px; }
+  .brand{
+    display:flex; align-items:center; gap:12px;
+    padding:16px 16px 14px;
+    border-bottom:3px solid var(--line);
+    background:
+      repeating-linear-gradient(45deg, rgba(209,89,42,.08) 0 8px, transparent 8px 16px),
+      var(--mustard);
+    border-radius:3px 3px 0 0;
+  }
+  .brand-badge{
+    width:44px; height:44px; flex:0 0 auto;
+    display:grid; place-items:center;
+    background:var(--navy); color:var(--mustard);
+    border:2px solid var(--line);
+    border-radius:50%;
+    font-family:'Bricolage Grotesque',sans-serif; font-weight:800;
+    font-size:19px; letter-spacing:.5px;
+    box-shadow: inset 0 0 0 3px var(--paper), 2px 2px 0 var(--orange-d);
+  }
+  .brand-name{ line-height:1; }
+  .brand-name .b1{ font-family:'Bricolage Grotesque',sans-serif; font-weight:800; font-size:20px; color:var(--navy); letter-spacing:.4px; }
+  .brand-name .b2{ font-family:'Space Mono',monospace; font-size:10px; letter-spacing:2.5px; text-transform:uppercase; color:var(--rust); margin-top:3px; }
+
+  .nav{ padding:12px 10px; }
+  .nav-label{
+    font-family:'Space Mono',monospace; font-size:9px; letter-spacing:2px;
+    text-transform:uppercase; color:var(--teal-d); padding:4px 8px 8px; opacity:.8;
+  }
+  .nav-item{
+    display:flex; align-items:center; gap:12px;
+    padding:9px 12px; margin:3px 2px;
+    border-radius:5px; color:var(--navy);
+    font-weight:500; font-size:14.5px;
+    border:2px solid transparent;
+    transition: all .12s ease;
+  }
+  .nav-item svg{ width:19px; height:19px; flex:0 0 auto; }
+  .nav-item:hover{ background:var(--cream-2); border-color:var(--line); transform:translateX(2px); }
+  .nav-item.active{
+    background:var(--teal); color:var(--paper);
+    border-color:var(--line);
+    box-shadow: 2px 2px 0 var(--navy);
+  }
+  .nav-item.active .dot{ background:var(--mustard); }
+  .dot{ width:7px; height:7px; border-radius:50%; background:transparent; margin-left:auto; }
+
+  .sidebar-sep{ height:3px; background:
+      repeating-linear-gradient(90deg, var(--line) 0 10px, transparent 10px 18px);
+    margin:8px 12px; opacity:.5; }
+
+  .side-bottom{ padding:8px 10px 12px; }
+  .user-row{
+    display:flex; align-items:center; gap:11px;
+    margin:8px 4px 2px; padding:9px 10px;
+    background:var(--navy); color:var(--paper);
+    border:2px solid var(--line); border-radius:6px;
+    box-shadow:2px 2px 0 var(--orange-d);
+  }
+  .user-av{
+    width:34px; height:34px; border-radius:50%;
+    background:var(--orange); color:var(--paper);
+    display:grid; place-items:center; font-family:'Bricolage Grotesque',sans-serif;
+    font-weight:800; font-size:15px; border:2px solid var(--paper);
+  }
+  .user-row .u-name{ font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:14px; }
+  .user-row .u-sub{ font-size:10px; color:var(--sky); font-family:'Space Mono',monospace; letter-spacing:1px; }
+
+  /* ============ CENTER ============ */
+  .center{ display:flex; flex-direction:column; gap:20px; }
+
+  .section{ padding:18px 20px 20px; }
+  .sec-head{ display:flex; align-items:flex-start; gap:14px; margin-bottom:16px; }
+  .sec-eyebrow{
+    display:inline-block;
+    font-family:'Space Mono',monospace; font-size:9px; letter-spacing:2.5px;
+    text-transform:uppercase; color:var(--paper);
+    background:var(--orange); padding:3px 9px; border:2px solid var(--line);
+    border-radius:3px; box-shadow:2px 2px 0 var(--navy); margin-bottom:9px;
+  }
+  .sec-title{ font-family:'Bricolage Grotesque',sans-serif; font-weight:800; font-size:26px; line-height:1; color:var(--navy); letter-spacing:.2px; }
+  .sec-sub{ font-size:12.5px; color:var(--teal-d); margin-top:7px; max-width:46ch; }
+  .sec-actions{ margin-left:auto; display:flex; gap:9px; flex-wrap:wrap; align-items:center; }
+
+  /* buttons — vintage tickets */
+  .btn{
+    font-family:'Bricolage Grotesque',sans-serif; font-weight:700;
+    font-size:13px; letter-spacing:.3px;
+    padding:9px 15px; border-radius:5px;
+    border:2px solid var(--line);
+    background:var(--cream); color:var(--navy);
+    box-shadow:3px 3px 0 var(--navy);
+    transition: transform .1s ease, box-shadow .1s ease;
+    display:inline-flex; align-items:center; gap:7px;
+  }
+  .btn:hover{ transform:translate(-1px,-1px); box-shadow:4px 4px 0 var(--navy); }
+  .btn:active{ transform:translate(2px,2px); box-shadow:1px 1px 0 var(--navy); }
+  .btn svg{ width:15px; height:15px; }
+  .btn.primary{ background:var(--mustard); }
+  .btn.teal{ background:var(--teal); color:var(--paper); }
+  .btn.orange{ background:var(--orange); color:var(--paper); }
+  .btn.ghost{ background:transparent; box-shadow:none; border-color:var(--teal-d); color:var(--teal-d); }
+  .btn.ghost:hover{ background:var(--cream-2); box-shadow:2px 2px 0 var(--teal-d); transform:translate(-1px,-1px); }
+  .btn.sm{ padding:6px 12px; font-size:12px; box-shadow:2px 2px 0 var(--navy); }
+
+  /* rules */
+  .thick-rule{ height:4px; background:var(--line); border-radius:2px; margin:2px 0 14px; }
+  .rule-dash{ height:0; border-top:3px dashed var(--teal-d); opacity:.55; margin:14px 0; }
+
+  /* list rows — tournament / table */
+  .row{
+    display:flex; align-items:center; gap:14px;
+    padding:13px 14px; margin-bottom:11px;
+    background:var(--cream);
+    border:2px solid var(--line); border-radius:6px;
+    box-shadow:3px 3px 0 var(--navy);
+    position:relative;
+  }
+  .row:last-child{ margin-bottom:0; }
+  .row.finished{ background:var(--cream-2); opacity:.92; box-shadow:2px 2px 0 rgba(31,42,68,.5); }
+  .row-icon{
+    width:46px; height:46px; flex:0 0 auto; border-radius:8px;
+    display:grid; place-items:center; color:var(--paper);
+    border:2px solid var(--line);
+    background:var(--teal);
+  }
+  .row-icon.cup{ background:var(--mustard); color:var(--navy); }
+  .row-icon.tbl{ background:var(--orange); }
+  .row-icon svg{ width:24px; height:24px; }
+  .row-main{ min-width:0; flex:1; }
+  .row-title{ font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:15.5px; color:var(--navy); display:flex; align-items:center; gap:9px; flex-wrap:wrap; }
+  .row-meta{ font-family:'Space Mono',monospace; font-size:11px; color:var(--teal-d); margin-top:5px; letter-spacing:.3px; }
+  .row-side{ margin-left:auto; display:flex; align-items:center; gap:10px; flex:0 0 auto; }
+
+  /* stamps / badges */
+  .pill{
+    font-family:'Space Mono',monospace; font-size:9.5px; font-weight:700;
+    letter-spacing:1.5px; text-transform:uppercase;
+    padding:3px 8px; border-radius:3px; border:2px solid var(--line);
+    color:var(--navy); background:var(--paper);
+  }
+  .pill.live{ background:var(--orange); color:var(--paper); animation:blink 1.6s steps(2,start) infinite; }
+  .pill.done{ background:var(--sky); color:var(--navy); }
+  @keyframes blink{ 50%{ box-shadow:0 0 0 3px rgba(209,89,42,.25);} }
+
+  .stamp{
+    position:absolute; top:-11px; right:14px;
+    font-family:'Space Mono',monospace; font-size:9px; font-weight:700;
+    letter-spacing:1px; text-transform:uppercase;
+    color:var(--stamp); border:2px solid var(--stamp); border-radius:4px;
+    padding:2px 7px; transform:rotate(-6deg); background:var(--paper);
+    opacity:.85;
+  }
+
+  /* empty state */
+  .empty{
+    text-align:center; padding:26px 18px;
+    border:3px dashed var(--teal-d); border-radius:8px;
+    background:repeating-linear-gradient(45deg, rgba(31,122,114,.05) 0 10px, transparent 10px 20px);
+    color:var(--teal-d);
+  }
+  .empty .em-ico{ width:42px; height:42px; margin:0 auto 8px; display:block; color:var(--orange); }
+  .empty .em-t{ font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:16px; color:var(--navy); }
+
+  /* seats (tables) */
+  .seat-wrap{ display:flex; gap:10px; margin-top:12px; }
+  .seat{
+    flex:1; text-align:center; padding:14px 10px;
+    border:2px dashed var(--teal-d); border-radius:8px;
+    background:var(--cream-2); color:var(--teal-d);
+    font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:13px;
+    transition: all .12s ease;
+  }
+  .seat:hover{ border-style:solid; background:var(--cream); }
+  .seat .seat-ico{ width:22px; height:22px; margin:0 auto 6px; display:block; }
+
+  /* FIND A MATCH */
+  .match-panel{
+    padding:20px;
+    background:
+      radial-gradient(circle at 12% 18%, rgba(230,179,37,.18), transparent 40%),
+      radial-gradient(circle at 88% 82%, rgba(31,122,114,.16), transparent 42%),
+      var(--navy);
+    color:var(--paper);
+    border:3px solid var(--line);
+    box-shadow:6px 6px 0 var(--orange-d);
+  }
+  .match-panel .sec-title{ color:var(--mustard); }
+  .match-panel .sec-eyebrow{ background:var(--mustard); color:var(--navy); box-shadow:2px 2px 0 var(--orange-d); }
+  .match-panel .sec-sub{ color:var(--sky); }
+  .match-top{ display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+  .match-cta{ margin-left:auto; }
+  .btn.find{
+    background:var(--orange); color:var(--paper); font-size:15px; padding:12px 22px;
+    box-shadow:3px 3px 0 var(--mustard);
+  }
+  .btn.find:hover{ box-shadow:4px 4px 0 var(--mustard); }
+
+  .speeds{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-top:18px; }
+  .speed{
+    background:var(--paper); color:var(--navy);
+    border:2px solid var(--line); border-radius:7px;
+    padding:14px 12px; text-align:left; position:relative;
+    box-shadow:3px 3px 0 rgba(0,0,0,.35);
+    cursor:pointer; transition:transform .12s ease, box-shadow .12s ease;
+    overflow:hidden;
+  }
+  .speed::after{
+    content:""; position:absolute; inset:0; pointer-events:none;
+    background:radial-gradient(var(--mustard) .6px, transparent 1px);
+    background-size:7px 7px; opacity:.12;
+  }
+  .speed:hover{ transform:translateY(-3px); box-shadow:3px 6px 0 rgba(0,0,0,.4); }
+  .speed.sel{ background:var(--mustard); box-shadow:3px 3px 0 var(--orange-d); }
+  .speed .s-tag{
+    font-family:'Space Mono',monospace; font-size:9px; letter-spacing:2px;
+    text-transform:uppercase; color:var(--rust); margin-bottom:8px; display:block;
+  }
+  .speed .s-name{ font-family:'Bricolage Grotesque',sans-serif; font-weight:800; font-size:19px; line-height:1; }
+  .speed .s-meta{ font-family:'Space Mono',monospace; font-size:11px; color:var(--teal-d); margin-top:7px; }
+  .speed .s-ico{ position:absolute; top:11px; right:11px; width:20px; height:20px; color:var(--orange); opacity:.7; }
+  .speed.sel .s-ico{ color:var(--navy); opacity:.9; }
+
+  /* ============ RIGHT PANEL ============ */
+  .right{ position:sticky; top:22px; display:flex; flex-direction:column; gap:20px; }
+  .club-card{ padding:0; overflow:hidden; }
+  .club-banner{
+    padding:18px 18px 16px;
+    background:
+      repeating-linear-gradient(-45deg, rgba(255,255,255,.06) 0 9px, transparent 9px 18px),
+      var(--teal);
+    border-bottom:3px solid var(--line);
+    color:var(--paper);
+    display:flex; align-items:center; gap:13px;
+  }
+  .club-badge{
+    width:52px; height:52px; flex:0 0 auto; border-radius:10px;
+    background:var(--mustard); color:var(--navy);
+    display:grid; place-items:center;
+    font-family:'Bricolage Grotesque',sans-serif; font-weight:800; font-size:20px;
+    border:2px solid var(--line); box-shadow:2px 2px 0 var(--navy); transform:rotate(-4deg);
+  }
+  .club-name{ font-family:'Bricolage Grotesque',sans-serif; font-weight:800; font-size:17px; line-height:1.05; }
+  .club-tag{ font-family:'Space Mono',monospace; font-size:10px; letter-spacing:2px; color:rgba(244,241,220,.85); margin-top:4px; }
+
+  .club-body{ padding:16px 18px 18px; }
+  .rating-row{
+    display:flex; align-items:baseline; gap:9px; flex-wrap:wrap;
+    padding-bottom:12px; margin-bottom:12px; border-bottom:3px dashed var(--teal-d);
+  }
+  .rating-num{ font-family:'Bricolage Grotesque',sans-serif; font-weight:800; font-size:30px; color:var(--navy); line-height:1; }
+  .rating-lbl{ font-family:'Space Mono',monospace; font-size:11px; color:var(--teal-d); letter-spacing:.5px; }
+  .prov{ font-family:'Space Mono',monospace; font-size:9px; letter-spacing:1px; text-transform:uppercase; background:var(--orange); color:var(--paper); border:2px solid var(--line); border-radius:3px; padding:2px 7px; }
+
+  .chips-row{
+    display:flex; align-items:center; gap:11px;
+    background:var(--navy); color:var(--paper);
+    border:2px solid var(--line); border-radius:8px;
+    padding:11px 13px; box-shadow:2px 2px 0 var(--orange-d); margin-bottom:14px;
+  }
+  .chips-ico{ width:34px; height:34px; flex:0 0 auto; color:var(--mustard); }
+  .chips-num{ font-family:'Bricolage Grotesque',sans-serif; font-weight:800; font-size:22px; line-height:1; }
+  .chips-lbl{ font-family:'Space Mono',monospace; font-size:10px; letter-spacing:1.5px; color:var(--sky); text-transform:uppercase; margin-top:3px; }
+
+  .club-tabs{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px; }
+  .ctab{
+    font-family:'Space Mono',monospace; font-size:11px; letter-spacing:.5px;
+    padding:6px 10px; border:2px solid var(--line); border-radius:5px;
+    background:var(--cream); color:var(--navy);
+    box-shadow:2px 2px 0 var(--navy); transition:transform .1s ease;
+  }
+  .ctab:hover{ transform:translate(-1px,-1px); }
+  .ctab.active{ background:var(--teal); color:var(--paper); }
+
+  .club-foot{
+    font-family:'Space Mono',monospace; font-size:11px; color:var(--teal-d);
+    display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+    border-top:3px solid var(--line); padding-top:12px; margin-top:2px;
+  }
+  .foot-dot{ width:5px; height:5px; border-radius:50%; background:var(--orange); }
+  .tier-badge{ margin-left:auto; background:var(--mustard); color:var(--navy); border:2px solid var(--line); border-radius:3px; padding:2px 8px; font-weight:700; letter-spacing:.5px; }
+
+  /* toast */
+  .toast{
+    position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(120%);
+    background:var(--navy); color:var(--paper);
+    border:2px solid var(--mustard); border-radius:7px;
+    padding:12px 20px; font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:14px;
+    box-shadow:4px 4px 0 var(--orange-d); z-index:99; transition:transform .32s cubic-bezier(.2,1.3,.4,1);
+  }
+  .toast.show{ transform:translateX(-50%) translateY(0); }
+
+  /* responsive */
+  @media (max-width:1080px){
+    .app{ grid-template-columns:1fr; }
+    .sidebar,.right{ position:static; }
+    .sidebar .nav{ display:grid; grid-template-columns:repeat(2,1fr); }
+    .nav-label{ grid-column:1/-1; }
+    .speeds{ grid-template-columns:repeat(2,1fr); }
+  }
+  @media (max-width:560px){
+    .speeds{ grid-template-columns:1fr; }
+    .sec-actions{ width:100%; }
+    .row{ flex-wrap:wrap; }
+    .row-side{ margin-left:0; width:100%; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ============ LEFT SIDEBAR ============ -->
+  <aside class="sidebar panel">
+    <div class="brand">
+      <div class="brand-badge">DG</div>
+      <div class="brand-name">
+        <div class="b1">DeepGammon</div>
+        <div class="b2">Est. Club</div>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <div class="nav-label">Play</div>
+      <a class="nav-item active" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg> Home <span class="dot"></span></a>
+      <a class="nav-item" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Clubs <span class="dot"></span></a>
+      <a class="nav-item" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg> Practice <span class="dot"></span></a>
+      <a class="nav-item" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg> Friends <span class="dot"></span></a>
+      <a class="nav-item" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 4v16M16 4v16M3 12h18"/></svg> Matches <span class="dot"></span></a>
+      <a class="nav-item" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7a6 6 0 0 1-12 0z"/><path d="M6 5H3v2a3 3 0 0 0 3 3M18 5h3v2a3 3 0 0 1-3 3"/><path d="M9 21h6M12 15v6"/></svg> Rankings <span class="dot"></span></a>
+
+      <div class="sidebar-sep"></div>
+
+      <a class="nav-item" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg> Notifications <span class="pill" style="margin-left:auto;padding:1px 7px;background:var(--orange);color:#fff;">3</span></a>
+      <a class="nav-item" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Settings</a>
+    </nav>
+
+    <div class="side-bottom">
+      <div class="user-row">
+        <div class="user-av">D</div>
+        <div>
+          <div class="u-name">Dani</div>
+          <div class="u-sub">1500 · prov</div>
+        </div>
+        <svg style="margin-left:auto;color:var(--sky)" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============ CENTER ============ -->
+  <main class="center">
+
+    <!-- TOURNAMENTS -->
+    <section class="section panel">
+      <div class="sec-head">
+        <div>
+          <span class="sec-eyebrow">Cups &amp; Titles</span>
+          <div class="sec-title">Tournaments</div>
+          <div class="sec-sub">Single-elimination cups — register and battle to the title.</div>
+        </div>
+        <div class="sec-actions">
+          <button class="btn ghost sm" data-toast="Opening the tournament map…"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 20l-6-3V4l6 3 6-3 6 3v13l-6-3-6 3z"/><path d="M9 7v13M15 4v13"/></svg> Map</button>
+          <button class="btn primary" data-toast="Let's set up a new cup!"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> Create Tournament</button>
+        </div>
+      </div>
+      <div class="thick-rule"></div>
+
+      <div class="row">
+        <div class="row-icon cup"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7a6 6 0 0 1-12 0z"/><path d="M6 5H3v2a3 3 0 0 0 3 3M18 5h3v2a3 3 0 0 1-3 3"/><path d="M9 21h6M12 15v6"/></svg></div>
+        <div class="row-main">
+          <div class="row-title">Club Cup <span class="pill live">Live</span></div>
+          <div class="row-meta">to 3 · 1/8 players · starts in 18h</div>
+        </div>
+        <div class="row-side">
+          <button class="btn teal sm" data-toast="Registered for Club Cup — good luck!">Register</button>
+        </div>
+      </div>
+
+      <div class="row finished">
+        <div class="row-icon cup"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7a6 6 0 0 1-12 0z"/><path d="M9 21h6M12 15v6"/></svg></div>
+        <div class="row-main">
+          <div class="row-title">Club Cup <span class="pill done">Finished</span></div>
+          <div class="row-meta">to 3 · 8/8 players · champion crowned</div>
+        </div>
+        <div class="row-side"><button class="btn ghost sm" data-toast="Loading bracket…">View bracket</button></div>
+        <span class="stamp">Archived</span>
+      </div>
+
+      <div class="row finished">
+        <div class="row-icon cup"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7a6 6 0 0 1-12 0z"/><path d="M9 21h6M12 15v6"/></svg></div>
+        <div class="row-main">
+          <div class="row-title">Club Cup <span class="pill done">Finished</span></div>
+          <div class="row-meta">to 5 · 16/16 players · champion crowned</div>
+        </div>
+        <div class="row-side"><button class="btn ghost sm" data-toast="Loading bracket…">View bracket</button></div>
+        <span class="stamp">Archived</span>
+      </div>
+    </section>
+
+    <!-- CHOUETTES -->
+    <section class="section panel">
+      <div class="sec-head">
+        <div>
+          <span class="sec-eyebrow">Group Play</span>
+          <div class="sec-title">Chouettes</div>
+          <div class="sec-sub">Everyone vs the box — independent cubes, one shared board.</div>
+        </div>
+        <div class="sec-actions">
+          <button class="btn orange" data-toast="Starting a new chouette — grab the box!"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> Create Chouette</button>
+        </div>
+      </div>
+      <div class="thick-rule"></div>
+
+      <div class="empty">
+        <svg class="em-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1.4"/><circle cx="16" cy="16" r="1.4"/><circle cx="12" cy="12" r="1.4"/></svg>
+        <div class="em-t">No chouettes running — start one!</div>
+        <div style="font-family:'Space Mono',monospace;font-size:11px;margin-top:6px;">Be the box and take on the whole table.</div>
+      </div>
+    </section>
+
+    <!-- TABLES -->
+    <section class="section panel">
+      <div class="sec-head">
+        <div>
+          <span class="sec-eyebrow">Cash Games</span>
+          <div class="sec-title">Tables</div>
+          <div class="sec-sub">Cash games at the club's stakes — winnings move real chips.</div>
+        </div>
+      </div>
+      <div class="thick-rule"></div>
+
+      <div class="row">
+        <div class="row-icon tbl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 12h18M8 5v14M16 5v14"/></svg></div>
+        <div class="row-main">
+          <div class="row-title">AFK Demo Table</div>
+          <div class="row-meta">1/pt · cap 5 · rake 5% · Jacoby · buy-in 5</div>
+        </div>
+      </div>
+
+      <div class="seat-wrap">
+        <div class="seat">
+          <svg class="seat-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+          Open seat
+        </div>
+        <div class="seat">
+          <svg class="seat-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+          Open seat
+        </div>
+      </div>
+      <div style="text-align:right;margin-top:12px;">
+        <button class="btn primary" data-toast="Taking a seat — buy-in 5 chips">Sit (5)</button>
+      </div>
+    </section>
+
+    <!-- FIND A MATCH -->
+    <section class="section match-panel">
+      <div class="match-top">
+        <div>
+          <span class="sec-eyebrow">Ranked · Global Rating</span>
+          <div class="sec-title">Find a Match</div>
+          <div class="sec-sub">Get paired instantly against a player near your rating.</div>
+        </div>
+        <div class="match-cta">
+          <button class="btn find" data-toast="Searching for an opponent…"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg> Find a match</button>
+        </div>
+      </div>
+
+      <div class="speeds">
+        <button class="speed sel">
+          <svg class="s-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h7l-1 8 10-12h-7z"/></svg>
+          <span class="s-tag">Fastest</span>
+          <div class="s-name">Bullet</div>
+          <div class="s-meta">1pt · 2 min</div>
+        </button>
+        <button class="speed">
+          <svg class="s-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h7l-1 8 10-12h-7z"/></svg>
+          <span class="s-tag">Quick</span>
+          <div class="s-name">Blitz</div>
+          <div class="s-meta">3pt · 3 min</div>
+        </button>
+        <button class="speed">
+          <svg class="s-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M12 2h0M9 2h6"/></svg>
+          <span class="s-tag">Balanced</span>
+          <div class="s-name">Rapid</div>
+          <div class="s-meta">5pt · 5 min</div>
+        </button>
+        <button class="speed">
+          <svg class="s-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M9 2h6"/></svg>
+          <span class="s-tag">Deep</span>
+          <div class="s-name">Classic</div>
+          <div class="s-meta">7pt · 10 min</div>
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============ RIGHT PANEL ============ -->
+  <aside class="right">
+    <div class="club-card panel">
+      <div class="club-banner">
+        <div class="club-badge">DE</div>
+        <div>
+          <div class="club-name">DeepGammon Club</div>
+          <div class="club-tag">DGCLUB</div>
+        </div>
+      </div>
+      <div class="club-body">
+        <div class="rating-row">
+          <span class="rating-num">1500</span>
+          <span class="rating-lbl">Intermediate</span>
+          <span class="prov">provisional</span>
+        </div>
+
+        <div class="chips-row">
+          <svg class="chips-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg>
+          <div>
+            <div class="chips-num">1,000</div>
+            <div class="chips-lbl">Your chips</div>
+          </div>
+        </div>
+
+        <div class="club-tabs">
+          <a class="ctab active" href="#">Lobby</a>
+          <a class="ctab" href="#">Leaderboard</a>
+          <a class="ctab" href="#">History</a>
+          <a class="ctab" href="#">Tournaments</a>
+          <a class="ctab" href="#">Chat</a>
+          <a class="ctab" href="#">Members</a>
+          <a class="ctab" href="#">Wallet</a>
+        </div>
+
+        <div class="club-foot">
+          <span class="foot-dot"></span> 47 Members
+          <span class="foot-dot"></span> 1 Table
+          <span class="tier-badge">Premier tier</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+</div>
+
+<div class="toast" id="toast">Done!</div>
+
+<script>
+  // ---- Speed selector (vintage tickets) ----
+  document.querySelectorAll('.speed').forEach(function(card){
+    card.addEventListener('click', function(){
+      document.querySelectorAll('.speed').forEach(function(c){ c.classList.remove('sel'); });
+      card.classList.add('sel');
+      showToast(card.querySelector('.s-name').textContent + ' selected · ' + card.querySelector('.s-meta').textContent);
+    });
+  });
+
+  // ---- Club tabs ----
+  document.querySelectorAll('.ctab').forEach(function(tab){
+    tab.addEventListener('click', function(e){
+      e.preventDefault();
+      document.querySelectorAll('.ctab').forEach(function(t){ t.classList.remove('active'); });
+      tab.classList.add('active');
+    });
+  });
+
+  // ---- Sidebar nav ----
+  document.querySelectorAll('.nav-item').forEach(function(item){
+    item.addEventListener('click', function(e){
+      e.preventDefault();
+      document.querySelectorAll('.nav-item').forEach(function(n){ n.classList.remove('active'); });
+      item.classList.add('active');
+    });
+  });
+
+  // ---- Toast helper ----
+  var toastEl = document.getElementById('toast');
+  var toastTimer;
+  function showToast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('show'); }, 2200);
+  }
+  document.querySelectorAll('[data-toast]').forEach(function(btn){
+    btn.addEventListener('click', function(){ showToast(btn.getAttribute('data-toast')); });
+  });
+</script>
+</body>
+</html>
