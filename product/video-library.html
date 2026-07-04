@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video Library · Gammon University</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0e1712;
+  --bg-2:#111e17;
+  --panel:#152219;
+  --panel-2:#1a2c21;
+  --line:rgba(217,169,79,.16);
+  --line-soft:rgba(183,195,183,.10);
+  --gold:#d9a94f;
+  --gold-soft:#e7c584;
+  --cream:#f3ead6;
+  --rust:#b9603c;
+  --green:#4f9b6b;
+  --text:#eef3ec;
+  --muted:#b7c3b7;
+  --muted-2:#8a978c;
+  --shadow:0 18px 50px -18px rgba(0,0,0,.7);
+  --r:16px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Inter',system-ui,sans-serif;
+  color:var(--text);
+  background:var(--bg);
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+body::before{
+  content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:
+    radial-gradient(closest-side at 12% 8%, rgba(217,169,79,.10), transparent 60%),
+    radial-gradient(closest-side at 92% 4%, rgba(79,155,107,.10), transparent 55%),
+    radial-gradient(closest-side at 88% 96%, rgba(185,96,60,.07), transparent 55%),
+    radial-gradient(closest-side at 6% 92%, rgba(217,169,79,.06), transparent 55%);
+}
+.serif{font-family:'Fraunces','Playfair Display',Georgia,serif}
+.gold{color:var(--gold)}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer}
+.wrap{max-width:1280px;margin:0 auto;padding:0 28px}
+
+/* ---------- NAV ---------- */
+header.nav{
+  position:sticky;top:0;z-index:60;
+  backdrop-filter:blur(14px);
+  background:rgba(14,23,18,.82);
+  border-bottom:1px solid var(--line-soft);
+}
+.nav-inner{display:flex;align-items:center;gap:34px;height:74px}
+.brand{display:flex;align-items:center;gap:12px;flex-shrink:0}
+.crest{width:38px;height:44px;flex-shrink:0}
+.wordmark{font-family:'Fraunces',serif;font-weight:600;font-size:20px;letter-spacing:.3px}
+.nav-links{display:flex;gap:26px;margin-left:6px;flex:1}
+.nav-links a{color:var(--muted);font-size:14.5px;font-weight:500;position:relative;padding:6px 0;transition:color .2s}
+.nav-links a:hover{color:var(--cream)}
+.nav-links a.active{color:var(--cream)}
+.nav-links a.active::after{
+  content:"";position:absolute;left:0;right:0;bottom:-2px;height:2px;border-radius:2px;
+  background:linear-gradient(90deg,var(--gold),var(--gold-soft));
+}
+.nav-cta{display:flex;gap:12px;align-items:center}
+.btn{
+  border:none;border-radius:10px;font-weight:600;font-size:14px;
+  padding:10px 18px;transition:transform .12s ease,box-shadow .2s,background .2s;
+  display:inline-flex;align-items:center;gap:8px;white-space:nowrap;
+}
+.btn:active{transform:translateY(1px)}
+.btn-gold{background:linear-gradient(180deg,var(--gold-soft),var(--gold));color:#231a09;box-shadow:0 8px 22px -10px rgba(217,169,79,.7)}
+.btn-gold:hover{box-shadow:0 12px 28px -10px rgba(217,169,79,.85)}
+.btn-ghost{background:transparent;color:var(--cream);border:1px solid var(--line)}
+.btn-ghost:hover{background:rgba(217,169,79,.08);border-color:rgba(217,169,79,.4)}
+.nav-toggle{display:none;background:transparent;border:1px solid var(--line);color:var(--cream);border-radius:9px;padding:8px 10px}
+
+/* ---------- PAGE HEADER ---------- */
+.page-head{padding:52px 0 24px}
+.eyebrow{
+  font-size:12px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--gold);display:flex;align-items:center;gap:10px;margin-bottom:14px;
+}
+.eyebrow::before{content:"";width:26px;height:1px;background:linear-gradient(90deg,var(--gold),transparent)}
+h1.title{font-family:'Fraunces',serif;font-weight:600;font-size:clamp(38px,6vw,62px);line-height:1.02;letter-spacing:-.01em}
+h1.title em{font-style:italic;font-weight:500}
+.subtitle{color:var(--muted);font-size:17px;max-width:580px;margin-top:16px}
+
+/* search */
+.searchbar{margin-top:26px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.search-field{
+  flex:1;min-width:260px;display:flex;align-items:center;gap:12px;
+  background:var(--panel);border:1px solid var(--line);border-radius:13px;
+  padding:14px 18px;transition:border-color .2s,box-shadow .2s;
+}
+.search-field:focus-within{border-color:rgba(217,169,79,.5);box-shadow:0 0 0 3px rgba(217,169,79,.1)}
+.search-field svg{flex-shrink:0;color:var(--muted-2)}
+.search-field input{background:transparent;border:none;outline:none;color:var(--text);font-size:15.5px;width:100%;font-family:inherit}
+.search-field input::placeholder{color:var(--muted-2)}
+
+/* trust stats */
+.trust{margin-top:22px;display:flex;flex-wrap:wrap;align-items:center;gap:10px 22px;color:var(--muted);font-size:14px}
+.trust b{color:var(--cream);font-weight:600}
+.trust .dot{width:5px;height:5px;border-radius:50%;background:var(--gold);opacity:.7}
+
+/* ---------- FILTER BAR ---------- */
+.toolbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:26px 0 8px;flex-wrap:wrap}
+.filter-open{display:none;background:transparent;color:var(--cream);border:1px solid var(--line);border-radius:10px;padding:10px 16px;font-weight:600;font-size:14px}
+.sort{display:flex;align-items:center;gap:10px;margin-left:auto}
+.sort .lab{font-size:13px;color:var(--muted-2)}
+.select-wrap{position:relative}
+.select-wrap select{
+  appearance:none;-webkit-appearance:none;background:var(--panel);border:1px solid var(--line);
+  color:var(--cream);font-family:inherit;font-size:14px;font-weight:500;
+  padding:10px 38px 10px 14px;border-radius:10px;cursor:pointer;
+}
+.select-wrap::after{content:"";position:absolute;right:14px;top:50%;transform:translateY(-60%) rotate(45deg);width:7px;height:7px;border-right:2px solid var(--gold);border-bottom:2px solid var(--gold);pointer-events:none}
+
+.filters{
+  background:var(--panel);border:1px solid var(--line-soft);border-radius:var(--r);
+  padding:6px 20px 18px;margin-bottom:8px;
+  transition:max-height .3s ease,opacity .25s,padding .3s;overflow:hidden;
+}
+.filters.collapsed{max-height:0;opacity:0;padding-top:0;padding-bottom:0;border-color:transparent}
+.fgroup{padding:16px 0 4px;border-top:1px solid var(--line-soft);display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.fgroup:first-of-type{border-top:none}
+.flabel{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted-2);min-width:96px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{
+  font-size:13px;font-weight:500;color:var(--muted);
+  background:rgba(255,255,255,.02);border:1px solid var(--line-soft);
+  border-radius:100px;padding:7px 13px;transition:all .16s;
+}
+.chip:hover{border-color:rgba(217,169,79,.35);color:var(--cream)}
+.chip.on{background:rgba(217,169,79,.14);border-color:rgba(217,169,79,.55);color:var(--gold-soft)}
+.filters-foot{display:flex;justify-content:flex-end;gap:10px;margin-top:14px}
+.clear{font-size:12.5px;color:var(--gold);font-weight:600;background:none;border:none}
+
+/* section heads */
+.sec{margin:38px 0 0}
+.sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:14px;margin-bottom:18px;flex-wrap:wrap}
+.sec-head h2{font-family:'Fraunces',serif;font-weight:600;font-size:26px;letter-spacing:-.01em}
+.sec-head h2 em{font-style:italic}
+.sec-head .see-all{font-size:13.5px;color:var(--gold);font-weight:600}
+.sec-head .see-all:hover{color:var(--gold-soft)}
+
+/* stars */
+.stars{display:inline-flex;gap:2px;vertical-align:middle}
+.rating{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.rating b{color:var(--cream)}
+
+/* ---------- FEATURED BANNER ---------- */
+.featured-banner{
+  position:relative;overflow:hidden;border-radius:22px;border:1px solid var(--line);
+  background:
+    radial-gradient(closest-side at 82% -10%, rgba(217,169,79,.18), transparent 62%),
+    linear-gradient(120deg,#132018,#18291e 60%,#132018);
+  box-shadow:var(--shadow);
+  display:grid;grid-template-columns:1.05fr 1fr;gap:0;align-items:stretch;
+}
+.fb-art{position:relative;min-height:280px;border-right:1px solid var(--line-soft)}
+.fb-art svg{position:absolute;inset:0;width:100%;height:100%}
+.fb-play{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:76px;height:76px;border-radius:50%;
+  background:linear-gradient(180deg,var(--gold-soft),var(--gold));
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 10px 30px -6px rgba(217,169,79,.6),0 0 0 8px rgba(217,169,79,.12);
+  cursor:pointer;transition:transform .2s;
+}
+.fb-play:hover{transform:translate(-50%,-50%) scale(1.06)}
+.fb-play svg{position:static;width:30px;height:30px}
+.fb-dur{position:absolute;bottom:14px;right:14px;background:rgba(10,16,12,.82);border:1px solid var(--line-soft);color:var(--cream);font-size:12px;font-weight:600;padding:4px 10px;border-radius:8px;letter-spacing:.02em}
+.fb-body{padding:34px 36px;display:flex;flex-direction:column;justify-content:center;gap:6px}
+.fb-badge{
+  display:inline-flex;align-items:center;gap:7px;font-size:11.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--gold);background:rgba(217,169,79,.1);border:1px solid var(--line);border-radius:100px;padding:5px 12px;margin-bottom:8px;align-self:flex-start;
+}
+.fb-body h3{font-family:'Fraunces',serif;font-weight:600;font-size:30px;line-height:1.08}
+.fb-inst{color:var(--gold-soft);font-size:14.5px;margin-top:6px;font-weight:500}
+.fb-desc{color:var(--muted);font-size:14.5px;margin-top:10px;max-width:440px}
+.fb-meta{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 18px}
+.pill{font-size:12px;font-weight:600;color:var(--muted);background:rgba(255,255,255,.03);border:1px solid var(--line-soft);border-radius:8px;padding:5px 11px}
+.pill.gold{color:var(--gold);border-color:var(--line);background:rgba(217,169,79,.08)}
+.pill.green{color:var(--green);border-color:rgba(79,155,107,.25);background:rgba(79,155,107,.08)}
+.fb-cta{display:flex;gap:10px;flex-wrap:wrap}
+
+/* ---------- CONTINUE WATCHING ---------- */
+.cw-row{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.cw-card{
+  background:linear-gradient(180deg,var(--panel-2),var(--panel));
+  border:1px solid var(--line-soft);border-radius:var(--r);overflow:hidden;
+  transition:transform .2s,border-color .2s,box-shadow .2s;cursor:pointer;
+}
+.cw-card:hover{transform:translateY(-3px);border-color:var(--line);box-shadow:var(--shadow)}
+.cw-body{padding:14px 16px 16px}
+.cw-title{font-family:'Fraunces',serif;font-weight:600;font-size:16.5px;line-height:1.2}
+.cw-inst{color:var(--muted);font-size:12.5px;margin-top:4px}
+.progress{height:5px;border-radius:5px;background:rgba(183,195,183,.16);margin-top:12px;overflow:hidden}
+.progress > i{display:block;height:100%;border-radius:5px;background:linear-gradient(90deg,var(--gold),var(--gold-soft))}
+.cw-pct{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted-2);margin-top:7px}
+.cw-pct b{color:var(--gold-soft);font-weight:600}
+
+/* thumbnail (shared) */
+.thumb{position:relative;aspect-ratio:16/9;overflow:hidden;background:#0f1a13}
+.thumb svg.art{position:absolute;inset:0;width:100%;height:100%;display:block}
+.thumb .play{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:48px;height:48px;border-radius:50%;background:rgba(14,23,18,.66);
+  border:1px solid rgba(231,197,132,.5);backdrop-filter:blur(2px);
+  display:flex;align-items:center;justify-content:center;transition:all .2s;
+}
+.thumb .play svg{width:18px;height:18px;position:static}
+.cw-card:hover .play,.vcard:hover .play{background:linear-gradient(180deg,var(--gold-soft),var(--gold));border-color:transparent;transform:translate(-50%,-50%) scale(1.08)}
+.cw-card:hover .play svg path,.vcard:hover .play svg path{fill:#231a09}
+.dur{position:absolute;bottom:10px;right:10px;background:rgba(10,16,12,.82);border:1px solid var(--line-soft);color:var(--cream);font-size:11.5px;font-weight:600;padding:3px 8px;border-radius:7px}
+.thumb-tag{position:absolute;top:10px;left:10px;font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:4px 9px;border-radius:100px}
+.thumb-tag.new{color:#231a09;background:linear-gradient(180deg,var(--gold-soft),var(--gold))}
+.thumb-tag.pop{color:var(--rust);background:rgba(185,96,60,.16);border:1px solid rgba(185,96,60,.4)}
+
+/* ---------- LEARNING PATHS ---------- */
+.paths{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.path-card{
+  background:linear-gradient(180deg,var(--panel-2),var(--panel));
+  border:1px solid var(--line-soft);border-radius:var(--r);padding:22px;
+  display:flex;gap:18px;align-items:flex-start;
+  transition:transform .2s,border-color .2s,box-shadow .2s;
+}
+.path-card:hover{transform:translateY(-3px);border-color:var(--line);box-shadow:var(--shadow)}
+.ring-wrap{position:relative;flex-shrink:0;width:72px;height:72px}
+.ring-wrap .pct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-weight:600;font-size:16px;color:var(--gold)}
+.path-body{min-width:0}
+.path-body h3{font-family:'Fraunces',serif;font-weight:600;font-size:18px;line-height:1.15}
+.path-body .lvl{color:var(--gold-soft);font-size:12.5px;font-weight:500;margin-top:3px}
+.path-body p{color:var(--muted);font-size:13px;margin-top:8px}
+.path-steps{display:flex;align-items:center;gap:8px;margin-top:11px;font-size:12.5px;color:var(--muted-2)}
+.path-steps b{color:var(--cream);font-weight:600}
+.path-steps .continue{color:var(--gold);font-weight:600}
+
+/* ---------- MAIN GRID ---------- */
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.vcard{
+  background:linear-gradient(180deg,var(--panel-2),var(--panel));
+  border:1px solid var(--line-soft);border-radius:var(--r);overflow:hidden;
+  display:flex;flex-direction:column;
+  transition:transform .2s,border-color .2s,box-shadow .2s;
+}
+.vcard:hover{transform:translateY(-3px);border-color:var(--line);box-shadow:var(--shadow)}
+.vbody{padding:15px 17px 17px;display:flex;flex-direction:column;gap:9px;flex:1}
+.vtop{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.vtag{font-size:11px;font-weight:600;color:var(--muted);background:rgba(255,255,255,.03);border:1px solid var(--line-soft);border-radius:7px;padding:3px 9px}
+.vtag.lvl{color:var(--green);border-color:rgba(79,155,107,.25);background:rgba(79,155,107,.08)}
+.vtitle{font-family:'Fraunces',serif;font-weight:600;font-size:17px;line-height:1.18}
+.vinst{color:var(--muted);font-size:12.5px}
+.vinst b{color:var(--gold-soft);font-weight:600}
+.vinst .cred{color:var(--muted-2)}
+.vmeta{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:2px}
+.vmeta .lessons{font-size:12.5px;color:var(--muted-2);display:flex;align-items:center;gap:6px}
+.vfoot{display:flex;align-items:center;gap:9px;margin-top:auto;padding-top:13px;border-top:1px solid var(--line-soft)}
+.btn-sm{padding:9px 15px;font-size:13px;border-radius:9px}
+.btn-add{background:transparent;color:var(--muted);border:1px solid var(--line-soft);border-radius:9px;padding:9px 13px;font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:7px;transition:all .16s}
+.btn-add:hover{color:var(--cream);border-color:var(--line)}
+.btn-add.saved{color:var(--gold-soft);border-color:rgba(217,169,79,.5);background:rgba(217,169,79,.1)}
+.btn-add svg{width:15px;height:15px}
+.empty{grid-column:1/-1;text-align:center;color:var(--muted-2);padding:40px 0;font-size:15px}
+
+/* footer */
+footer{border-top:1px solid var(--line-soft);padding:34px 0;color:var(--muted-2);font-size:13.5px;margin-top:56px}
+.foot-inner{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.foot-inner .brand .wordmark{font-size:17px}
+
+/* ---------- RESPONSIVE ---------- */
+@media(max-width:1080px){
+  .nav-links{display:none}
+  .grid,.cw-row,.paths{grid-template-columns:repeat(2,1fr)}
+  .featured-banner{grid-template-columns:1fr}
+  .fb-art{min-height:220px;border-right:none;border-bottom:1px solid var(--line-soft)}
+}
+@media(max-width:760px){
+  .grid,.cw-row,.paths{grid-template-columns:1fr}
+  .filter-open{display:inline-flex}
+  .filters{max-height:0;opacity:0;padding-top:0;padding-bottom:0;border-color:transparent}
+  .filters.open{max-height:1200px;opacity:1;padding:6px 20px 18px;border-color:var(--line-soft)}
+  .fgroup{flex-direction:column;align-items:flex-start;gap:10px}
+  .flabel{min-width:0}
+}
+@media(max-width:640px){
+  .wrap{padding:0 18px}
+  .nav-cta .btn-ghost{display:none}
+  .nav-toggle{display:inline-flex}
+  .searchbar{flex-direction:column;align-items:stretch}
+  .fb-body{padding:24px}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ NAV ============ -->
+<header class="nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="#" aria-label="Gammon University home">
+      <svg class="crest" viewBox="0 0 60 70" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M30 2 L56 12 V34 C56 52 44 62 30 68 C16 62 4 52 4 34 V12 Z" fill="#132018" stroke="#d9a94f" stroke-width="2.2"/>
+        <path d="M30 8 L50 16 V34 C50 48 41 56 30 61 C19 56 10 48 10 34 V16 Z" fill="none" stroke="rgba(217,169,79,.35)" stroke-width="1"/>
+        <polygon points="22,20 30,20 26,42" fill="#d9a94f"/>
+        <polygon points="30,20 38,20 34,42" fill="#b9603c"/>
+        <polygon points="22,52 30,52 26,32" fill="#b9603c"/>
+        <polygon points="30,52 38,52 34,32" fill="#e7c584"/>
+        <circle cx="30" cy="36" r="4.4" fill="#f3ead6" stroke="#d9a94f" stroke-width="1.3"/>
+      </svg>
+      <span class="wordmark">Gammon <span class="gold">University</span></span>
+    </a>
+    <nav class="nav-links">
+      <a href="#">Home</a>
+      <a href="#">Find a Teacher</a>
+      <a href="#">Lesson Room</a>
+      <a href="#" class="active">Video Library</a>
+      <a href="#">Puzzles</a>
+      <a href="#">Blog</a>
+      <a href="#">Streamers</a>
+    </nav>
+    <div class="nav-cta">
+      <button class="btn btn-ghost">Sign in</button>
+      <button class="btn btn-gold">Enroll</button>
+      <button class="nav-toggle" id="navToggle" aria-label="Menu">☰</button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- ============ PAGE HEADER ============ -->
+  <section class="page-head">
+    <div class="eyebrow">Course Catalog</div>
+    <h1 class="title">Video <em class="gold">Library</em></h1>
+    <p class="subtitle">Structured courses and single lessons from champions and grandmasters — from your first opening roll to tournament-grade cube theory.</p>
+
+    <div class="searchbar">
+      <div class="search-field">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input id="search" type="text" placeholder="Search courses, topics, or instructors…">
+      </div>
+      <button class="btn btn-gold" style="padding:14px 24px">Search</button>
+    </div>
+
+    <div class="trust">
+      <span><b>300+</b> videos</span>
+      <span class="dot"></span>
+      <span><b>40+</b> instructors</span>
+      <span class="dot"></span>
+      <span>New lessons <b>weekly</b></span>
+      <span class="dot"></span>
+      <span><b>4.9</b> avg rating</span>
+    </div>
+  </section>
+
+  <!-- ============ TOOLBAR + FILTERS ============ -->
+  <div class="toolbar">
+    <button class="filter-open" id="filterOpen">⚙ Filters</button>
+    <div class="sort">
+      <span class="lab">Sort</span>
+      <div class="select-wrap">
+        <select id="sort">
+          <option>Recommended</option>
+          <option>Newest</option>
+          <option>Most popular</option>
+          <option>Highest rated</option>
+          <option>Shortest first</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="filters" id="filters">
+    <div class="fgroup">
+      <div class="flabel">Level</div>
+      <div class="chips" data-key="level">
+        <button class="chip">Beginner</button>
+        <button class="chip">Intermediate</button>
+        <button class="chip">Advanced</button>
+        <button class="chip">Expert</button>
+      </div>
+    </div>
+    <div class="fgroup">
+      <div class="flabel">Topic</div>
+      <div class="chips" data-key="topic">
+        <button class="chip">Openings</button>
+        <button class="chip">Cube</button>
+        <button class="chip">Match play</button>
+        <button class="chip">Bear-off</button>
+        <button class="chip">Backgame</button>
+        <button class="chip">Racing</button>
+      </div>
+    </div>
+    <div class="fgroup">
+      <div class="flabel">Instructor</div>
+      <div class="chips" data-key="inst">
+        <button class="chip">Lioba Marsh</button>
+        <button class="chip">Idris Kalfa</button>
+        <button class="chip">Petra Nakamura</button>
+        <button class="chip">Vasco Delacroix</button>
+      </div>
+    </div>
+    <div class="fgroup">
+      <div class="flabel">Length</div>
+      <div class="chips" data-key="length" data-single="1">
+        <button class="chip">Under 15 min</button>
+        <button class="chip">15–40 min</button>
+        <button class="chip">40 min+</button>
+      </div>
+    </div>
+    <div class="filters-foot">
+      <button class="clear" id="clearAll">Clear all</button>
+    </div>
+  </div>
+
+  <!-- ============ FEATURED COURSE ============ -->
+  <section class="featured-banner" aria-label="Featured course">
+    <div class="fb-art">
+      <svg class="art" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice" data-board="0"></svg>
+      <div class="fb-play" id="fbPlay" aria-label="Play trailer">
+        <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="#231a09"/></svg>
+      </div>
+      <span class="fb-dur">Trailer · 2:14</span>
+    </div>
+    <div class="fb-body">
+      <span class="fb-badge">★ Featured Course</span>
+      <h3>Cube Ownership: The Complete Doubling Course</h3>
+      <div class="fb-inst">with Lioba Marsh · 2× National Champion</div>
+      <p class="fb-desc">Master takes, drops, and redoubles the way the bots see them. Twelve lessons built on rollouts, from match-equity basics to the sharpest recube vig.</p>
+      <div class="fb-meta">
+        <span class="pill gold">12 episodes</span>
+        <span class="pill">3h 40m total</span>
+        <span class="pill green">Intermediate → Advanced</span>
+      </div>
+      <div class="fb-cta">
+        <button class="btn btn-gold">Start course</button>
+        <button class="btn btn-ghost">Add to list</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CONTINUE WATCHING ============ -->
+  <section class="sec">
+    <div class="sec-head">
+      <h2>Continue <em>watching</em></h2>
+      <a class="see-all" href="#">View history →</a>
+    </div>
+    <div class="cw-row" id="continueRow"></div>
+  </section>
+
+  <!-- ============ LEARNING PATHS ============ -->
+  <section class="sec">
+    <div class="sec-head">
+      <h2>Learning <em>paths</em></h2>
+      <a class="see-all" href="#">All paths →</a>
+    </div>
+    <div class="paths" id="pathsRow"></div>
+  </section>
+
+  <!-- ============ MAIN GRID ============ -->
+  <section class="sec">
+    <div class="sec-head">
+      <h2>All <em>courses</em></h2>
+      <span class="rating" style="font-size:14px"><b id="count">9</b>&nbsp;of 300+ shown</span>
+    </div>
+    <div class="grid" id="grid"></div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="wrap foot-inner">
+    <a class="brand" href="#">
+      <svg class="crest" style="width:28px;height:33px" viewBox="0 0 60 70" fill="none"><path d="M30 2 L56 12 V34 C56 52 44 62 30 68 C16 62 4 52 4 34 V12 Z" fill="#132018" stroke="#d9a94f" stroke-width="2.2"/><polygon points="22,20 30,20 26,42" fill="#d9a94f"/><polygon points="30,20 38,20 34,42" fill="#b9603c"/><circle cx="30" cy="36" r="4" fill="#f3ead6" stroke="#d9a94f" stroke-width="1.2"/></svg>
+      <span class="wordmark">Gammon <span class="gold">University</span></span>
+    </a>
+    <span>300+ videos · 40+ instructors · new lessons weekly · © 2026 Gammon University</span>
+  </div>
+</footer>
+
+<script>
+/* ---------- STAR SVG ---------- */
+function starSVG(fill){
+  const id='g'+Math.random().toString(36).slice(2,8);
+  let paint;
+  if(fill>=1) paint='#d9a94f';
+  else if(fill<=0) paint='rgba(183,195,183,.28)';
+  else paint='url(#'+id+')';
+  const defs=(fill>0&&fill<1)?`<defs><linearGradient id="${id}"><stop offset="50%" stop-color="#d9a94f"/><stop offset="50%" stop-color="rgba(183,195,183,.28)"/></linearGradient></defs>`:'';
+  return `<svg width="13" height="13" viewBox="0 0 24 24">${defs}<path fill="${paint}" d="M12 2l2.9 6.1 6.6.9-4.8 4.6 1.2 6.6L12 17.8 6.1 20.2l1.2-6.6L2.5 9l6.6-.9z"/></svg>`;
+}
+function renderStars(el){
+  const val=parseFloat(el.dataset.stars);let out='';
+  for(let i=1;i<=5;i++){
+    if(val>=i) out+=starSVG(1);
+    else if(val>=i-0.5) out+=starSVG(.5);
+    else out+=starSVG(0);
+  }
+  el.innerHTML=out;
+}
+
+/* ---------- THUMBNAIL ART (board-ish inline SVG) ---------- */
+/* Deterministic pseudo-random from a seed so art is stable per card */
+function rng(seed){let s=seed*9301+49297;return ()=>{s=(s*9301+49297)%233280;return s/233280;};}
+const THUMB_THEMES=[
+  {felt:'#16281c',pt1:'#7a5a34',pt2:'#4f3a22',glow:'rgba(217,169,79,.16)'},
+  {felt:'#1a2233',pt1:'#3f5a7a',pt2:'#28405a',glow:'rgba(79,155,107,.14)'},
+  {felt:'#2a1c1c',pt1:'#8a4a3a',pt2:'#5a2f28',glow:'rgba(185,96,60,.16)'},
+  {felt:'#231d16',pt1:'#7a6534',pt2:'#4f4222',glow:'rgba(217,169,79,.2)'},
+];
+function boardArt(seed,w,h){
+  w=w||300;h=h||169;
+  const t=THUMB_THEMES[seed%THUMB_THEMES.length];
+  const r=rng(seed+1);
+  let s=`<defs>
+    <linearGradient id="fa${seed}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${t.felt}"/><stop offset="1" stop-color="#0f1a13"/></linearGradient>
+    <radialGradient id="fg${seed}" cx="70%" cy="18%" r="80%"><stop offset="0" stop-color="${t.glow}"/><stop offset="1" stop-color="rgba(0,0,0,0)"/></radialGradient>
+  </defs>
+  <rect width="${w}" height="${h}" fill="url(#fa${seed})"/>
+  <rect width="${w}" height="${h}" fill="url(#fg${seed})"/>`;
+  // point triangles along the bottom
+  const cols=8,pw=w/cols,triH=h*0.42;
+  for(let i=0;i<cols;i++){
+    const light=i%2===0;const col=light?t.pt1:t.pt2;
+    const x0=i*pw,xc=x0+pw/2,x1=x0+pw;
+    s+=`<path d="M${x0} ${h} L${x1} ${h} L${xc.toFixed(1)} ${(h-triH).toFixed(1)} Z" fill="${col}" opacity="0.85"/>`;
+    // top row mirrored
+    const col2=light?t.pt2:t.pt1;
+    s+=`<path d="M${x0} 0 L${x1} 0 L${xc.toFixed(1)} ${triH.toFixed(1)} Z" fill="${col2}" opacity="0.55"/>`;
+  }
+  // scatter a few checkers
+  const chkColors=['#f3ead6','#2a2724','#d9a94f'];
+  for(let i=0;i<6;i++){
+    const cx=(pw*(i+ (i%2?0.5:0)))*.9+pw*0.4;
+    const cy=r()>0.5? h-14-Math.floor(r()*2)*13 : 14+Math.floor(r()*2)*13;
+    const cr=8.5;
+    const fill=chkColors[Math.floor(r()*chkColors.length)];
+    s+=`<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${cr}" fill="${fill}" stroke="rgba(0,0,0,.35)" stroke-width="1"/>`;
+    s+=`<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${cr*.5}" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="1"/>`;
+  }
+  // a die
+  const dx=w*0.5,dy=h*0.5,ds=26;
+  s+=`<rect x="${dx-ds/2}" y="${dy-ds/2}" width="${ds}" height="${ds}" rx="6" fill="#f4f1e8" stroke="rgba(0,0,0,.25)" transform="rotate(12 ${dx} ${dy})"/>`;
+  const pips=[[-1,-1],[1,-1],[-1,1],[1,1],[0,0]];const n=1+Math.floor(r()*6);
+  const shown=n<=1?[[0,0]]:pips.slice(0,n);
+  shown.forEach(([px,py])=>{s+=`<circle cx="${dx+px*6}" cy="${dy+py*6}" r="2.4" fill="#24211c" transform="rotate(12 ${dx} ${dy})"/>`;});
+  // subtle vignette
+  s+=`<rect width="${w}" height="${h}" fill="none"/>`;
+  return s;
+}
+// fill any board svg placeholder
+document.querySelectorAll('svg[data-board]').forEach(sv=>{
+  const seed=parseInt(sv.dataset.board,10)||0;
+  sv.innerHTML=boardArt(seed,400,300);
+});
+
+/* ---------- PROGRESS RING ---------- */
+function ringSVG(pct){
+  const R=30,C=2*Math.PI*R,off=C*(1-pct/100);
+  return `<svg width="72" height="72" viewBox="0 0 72 72">
+    <circle cx="36" cy="36" r="${R}" fill="none" stroke="rgba(183,195,183,.16)" stroke-width="6"/>
+    <circle cx="36" cy="36" r="${R}" fill="none" stroke="url(#ringg)" stroke-width="6" stroke-linecap="round"
+      stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}" transform="rotate(-90 36 36)"/>
+    <defs><linearGradient id="ringg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d9a94f"/><stop offset="1" stop-color="#e7c584"/></linearGradient></defs>
+  </svg>`;
+}
+
+/* ---------- ICONS ---------- */
+const playSvg='<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="#e7c584"/></svg>';
+const filmIcon='<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v16M16 4v16"/></svg>';
+const plusIcon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';
+const checkIcon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+
+/* ---------- CONTINUE WATCHING DATA ---------- */
+const CONTINUE=[
+  {seed:11,title:'Reading the Race: Pip-Count Shortcuts',inst:'Petra Nakamura',dur:'22:41',pct:64},
+  {seed:12,title:'The 4-2 Opening, Solved',inst:'Vasco Delacroix',dur:'9:08',pct:38},
+  {seed:13,title:'Holding Games Without the Panic',inst:'Idris Kalfa',dur:'31:55',pct:82},
+];
+document.getElementById('continueRow').innerHTML=CONTINUE.map(c=>`
+  <article class="cw-card">
+    <div class="thumb">
+      <svg class="art" viewBox="0 0 300 169" preserveAspectRatio="none" data-board="${c.seed}"></svg>
+      <div class="play">${playSvg}</div>
+      <span class="dur">${c.dur}</span>
+    </div>
+    <div class="cw-body">
+      <div class="cw-title">${c.title}</div>
+      <div class="cw-inst">${c.inst}</div>
+      <div class="progress"><i style="width:${c.pct}%"></i></div>
+      <div class="cw-pct"><span>${c.pct}% complete</span><b>Resume →</b></div>
+    </div>
+  </article>`).join('');
+
+/* ---------- LEARNING PATHS DATA ---------- */
+const PATHS=[
+  {title:'Zero to 1500',lvl:'Beginner → Intermediate',desc:'The complete on-ramp: rules, safe play, and your first winning habits.',steps:14,done:9,pct:64},
+  {title:'Master the Cube',lvl:'Intermediate → Advanced',desc:'Doubling windows, takes and drops, and match-score awareness.',steps:10,done:3,pct:30},
+  {title:'Tournament Ready',lvl:'Advanced → Expert',desc:'Match play, clock discipline, and the endgame theory the giants use.',steps:12,done:1,pct:8},
+];
+document.getElementById('pathsRow').innerHTML=PATHS.map(p=>`
+  <article class="path-card">
+    <div class="ring-wrap">${ringSVG(p.pct)}<span class="pct">${p.pct}%</span></div>
+    <div class="path-body">
+      <h3>${p.title}</h3>
+      <div class="lvl">${p.lvl}</div>
+      <p>${p.desc}</p>
+      <div class="path-steps"><b>${p.done}</b>/${p.steps} steps · <span class="continue">Continue →</span></div>
+    </div>
+  </article>`).join('');
+
+/* ---------- MAIN COURSE DATA ---------- */
+const COURSES=[
+  {seed:21,title:'Opening Rolls, Every One',inst:'Lioba Marsh',cred:'2× National Champion',level:'Beginner',topic:'Openings',lessons:15,dur:'1h 52m',mins:112,rating:4.9,tag:'popular',pop:9800},
+  {seed:22,title:'The Doubling Cube Decoded',inst:'Idris Kalfa',cred:'World Cup semi-finalist',level:'Intermediate',topic:'Cube',lessons:12,dur:'2h 10m',mins:130,rating:5.0,tag:'new',pop:4100},
+  {seed:23,title:'Match Play & Match Equity',inst:'Petra Nakamura',cred:'GM-level, PR 2.9',level:'Advanced',topic:'Match play',lessons:18,dur:'3h 25m',mins:205,rating:4.8,tag:null,pop:6600},
+  {seed:24,title:'Bear-off Without Blunders',inst:'Vasco Delacroix',cred:'Giants top-16',level:'Intermediate',topic:'Bear-off',lessons:9,dur:'1h 08m',mins:68,rating:4.7,tag:null,pop:5200},
+  {seed:25,title:'The Backgame Survival Guide',inst:'Thessaly Argyros',cred:'Giants top-64',level:'Advanced',topic:'Backgame',lessons:11,dur:'2h 02m',mins:122,rating:4.8,tag:'new',pop:2900},
+  {seed:26,title:'Winning the Race',inst:'Sunniva Roos',cred:'GM-level, PR 3.1',level:'Beginner',topic:'Racing',lessons:8,dur:'0h 54m',mins:54,rating:4.6,tag:null,pop:7100},
+  {seed:27,title:'Priming & the Blitz',inst:'Baltasar Cruz',cred:'National Team coach',level:'Expert',topic:'Match play',lessons:14,dur:'2h 48m',mins:168,rating:4.9,tag:'popular',pop:8300},
+  {seed:28,title:'Cube Vig for the Ambitious',inst:'Idris Kalfa',cred:'World Cup semi-finalist',level:'Expert',topic:'Cube',lessons:10,dur:'2h 22m',mins:142,rating:5.0,tag:null,pop:3600},
+  {seed:29,title:'Safe vs. Bold: A Framework',inst:'Corin Hale',cred:'Open Champion 2024',level:'Intermediate',topic:'Openings',lessons:13,dur:'1h 44m',mins:104,rating:4.7,tag:'new',pop:2400},
+];
+
+const grid=document.getElementById('grid');
+const saved=new Set();
+
+function courseHTML(c){
+  const tag=c.tag==='new'?`<span class="thumb-tag new">New</span>`
+           :c.tag==='popular'?`<span class="thumb-tag pop">Popular</span>`:'';
+  const isSaved=saved.has(c.seed);
+  return `<article class="vcard" data-seed="${c.seed}">
+    <div class="thumb">
+      <svg class="art" viewBox="0 0 300 169" preserveAspectRatio="none" data-board="${c.seed}"></svg>
+      ${tag}
+      <div class="play">${playSvg}</div>
+      <span class="dur">${c.dur}</span>
+    </div>
+    <div class="vbody">
+      <div class="vtop">
+        <span class="vtag lvl">${c.level}</span>
+        <span class="vtag">${c.topic}</span>
+      </div>
+      <div class="vtitle">${c.title}</div>
+      <div class="vinst"><b>${c.inst}</b> · <span class="cred">${c.cred}</span></div>
+      <div class="vmeta">
+        <span class="lessons">${filmIcon} ${c.lessons} lessons · ${c.dur}</span>
+        <span class="rating"><span class="stars" data-stars="${c.rating}"></span><b>${c.rating.toFixed(1)}</b></span>
+      </div>
+      <div class="vfoot">
+        <button class="btn btn-gold btn-sm">Watch</button>
+        <button class="btn-add ${isSaved?'saved':''}" data-add="${c.seed}">
+          ${isSaved?checkIcon:plusIcon}${isSaved?'Saved':'Add to list'}
+        </button>
+      </div>
+    </div>
+  </article>`;
+}
+
+function render(list){
+  if(!list.length){grid.innerHTML='<div class="empty">No courses match those filters — try clearing a chip.</div>';document.getElementById('count').textContent=0;return;}
+  grid.innerHTML=list.map(courseHTML).join('');
+  grid.querySelectorAll('.stars').forEach(renderStars);
+  grid.querySelectorAll('svg[data-board]').forEach(sv=>{
+    sv.innerHTML=boardArt(parseInt(sv.dataset.board,10),300,169);
+  });
+  document.getElementById('count').textContent=list.length;
+}
+
+/* initial paint of continue-watching + path thumbnails */
+document.querySelectorAll('#continueRow svg[data-board]').forEach(sv=>{
+  sv.innerHTML=boardArt(parseInt(sv.dataset.board,10),300,169);
+});
+
+render(COURSES);
+
+/* ---------- FILTER STATE ---------- */
+const active={level:new Set(),topic:new Set(),inst:new Set(),length:new Set()};
+
+function applyFilters(){
+  let l=COURSES.filter(c=>{
+    if(active.level.size && !active.level.has(c.level)) return false;
+    if(active.topic.size && !active.topic.has(c.topic)) return false;
+    if(active.inst.size && !active.inst.has(c.inst)) return false;
+    if(active.length.size){
+      const bucket=c.mins<15?'Under 15 min':c.mins<=40?'15–40 min':'40 min+';
+      // course durations are long; treat "length" loosely by total runtime buckets in minutes
+      const bkt=c.mins<75?'Under 15 min':c.mins<=140?'15–40 min':'40 min+';
+      if(!active.length.has(bkt)) return false;
+    }
+    return true;
+  });
+  l=sortList(l,document.getElementById('sort').value);
+  render(l);
+}
+
+function sortList(list,mode){
+  const l=[...list];
+  if(mode==='Newest') l.sort((a,b)=>(b.tag==='new')-(a.tag==='new'));
+  else if(mode==='Most popular') l.sort((a,b)=>b.pop-a.pop);
+  else if(mode==='Highest rated') l.sort((a,b)=>b.rating-a.rating||b.pop-a.pop);
+  else if(mode==='Shortest first') l.sort((a,b)=>a.mins-b.mins);
+  else l.sort((a,b)=>{const w={popular:2,new:1};return (w[b.tag]||0)-(w[a.tag]||0)||b.pop-a.pop;});
+  return l;
+}
+
+/* chip toggles */
+document.querySelectorAll('.filters .chips').forEach(group=>{
+  const key=group.dataset.key;
+  const single=group.dataset.single==='1';
+  group.querySelectorAll('.chip').forEach(chip=>{
+    chip.addEventListener('click',()=>{
+      const val=chip.textContent.trim();
+      if(single){
+        const was=chip.classList.contains('on');
+        group.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
+        active[key].clear();
+        if(!was){chip.classList.add('on');active[key].add(val);}
+      }else{
+        chip.classList.toggle('on');
+        if(active[key].has(val)) active[key].delete(val); else active[key].add(val);
+      }
+      applyFilters();
+    });
+  });
+});
+
+document.getElementById('sort').addEventListener('change',applyFilters);
+
+document.getElementById('clearAll').addEventListener('click',()=>{
+  document.querySelectorAll('.filters .chip.on').forEach(c=>c.classList.remove('on'));
+  Object.values(active).forEach(s=>s.clear());
+  applyFilters();
+});
+
+/* Add-to-list toggle (delegated) */
+grid.addEventListener('click',e=>{
+  const btn=e.target.closest('[data-add]');
+  if(!btn) return;
+  const seed=parseInt(btn.dataset.add,10);
+  if(saved.has(seed)){saved.delete(seed);btn.classList.remove('saved');btn.innerHTML=plusIcon+'Add to list';}
+  else{saved.add(seed);btn.classList.add('saved');btn.innerHTML=checkIcon+'Saved';}
+});
+
+/* Featured play button pulse */
+document.getElementById('fbPlay').addEventListener('click',function(){
+  this.animate([{transform:'translate(-50%,-50%) scale(1)'},{transform:'translate(-50%,-50%) scale(.9)'},{transform:'translate(-50%,-50%) scale(1)'}],{duration:260});
+});
+
+/* ---------- MOBILE FILTERS + NAV ---------- */
+document.getElementById('filterOpen').addEventListener('click',()=>{
+  document.getElementById('filters').classList.toggle('open');
+});
+document.getElementById('navToggle').addEventListener('click',()=>{
+  const nl=document.querySelector('.nav-links');
+  const shown=nl.style.display==='flex';
+  nl.style.cssText=shown?'':'display:flex;position:absolute;top:74px;left:0;right:0;background:#111e17;flex-direction:column;padding:16px 28px;gap:14px;border-bottom:1px solid rgba(183,195,183,.1)';
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DeepGammon — Club Cup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#161514;
+    --panel:#1e1c1a;
+    --panel-2:#232120;
+    --hair:rgba(240,235,220,0.07);
+    --hair-strong:rgba(240,235,220,0.12);
+    --green:#6bbf3f;
+    --green-dim:rgba(107,191,63,0.14);
+    --green-line:rgba(107,191,63,0.45);
+    --gold:#d3a83f;
+    --gold-dim:rgba(211,168,63,0.14);
+    --gold-line:rgba(211,168,63,0.4);
+    --text:#f1efe9;
+    --muted:#9a978c;
+    --muted-2:#6f6d64;
+    --red:#e0654f;
+    --radius:13px;
+    --shadow:0 1px 0 rgba(255,255,255,0.02) inset, 0 8px 24px rgba(0,0,0,0.35);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+    font-size:14px;
+    -webkit-font-smoothing:antialiased;
+    line-height:1.4;
+  }
+  a{color:inherit;text-decoration:none;}
+  ::selection{background:var(--green-dim);}
+
+  /* ============ LAYOUT ============ */
+  .app{display:flex;min-height:100vh;}
+
+  /* ============ SIDEBAR ============ */
+  .sidebar{
+    width:240px;flex:0 0 240px;
+    background:var(--panel);
+    border-right:1px solid var(--hair);
+    display:flex;flex-direction:column;
+    padding:18px 14px;
+    position:sticky;top:0;height:100vh;
+  }
+  .brand{display:flex;align-items:center;gap:9px;padding:6px 8px 20px 8px;}
+  .brand .mark{font-weight:800;font-size:20px;letter-spacing:-0.5px;color:var(--green);}
+  .brand .full{font-weight:700;font-size:15px;letter-spacing:-0.2px;color:var(--text);}
+  .brand .dot{width:7px;height:7px;border-radius:50%;background:var(--green);margin-left:auto;box-shadow:0 0 10px var(--green);}
+
+  .nav{display:flex;flex-direction:column;gap:2px;}
+  .nav-label{font-size:10.5px;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted-2);padding:12px 10px 6px;font-weight:600;}
+  .nav-item{
+    display:flex;align-items:center;gap:11px;
+    padding:9px 10px;border-radius:9px;
+    color:var(--muted);font-weight:500;cursor:pointer;
+    transition:background .15s,color .15s;
+  }
+  .nav-item svg{width:18px;height:18px;flex:0 0 18px;stroke:currentColor;fill:none;stroke-width:1.7;}
+  .nav-item:hover{background:rgba(255,255,255,0.03);color:var(--text);}
+  .nav-item.active{background:var(--green-dim);color:var(--green);font-weight:600;}
+  .nav-item.active svg{stroke:var(--green);}
+  .nav-item .badge{margin-left:auto;background:var(--green);color:#0d1a06;font-size:10px;font-weight:700;padding:1px 6px;border-radius:20px;}
+
+  .sidebar .spacer{flex:1;}
+  .side-bottom{display:flex;flex-direction:column;gap:2px;padding-top:8px;border-top:1px solid var(--hair);}
+  .user-row{display:flex;align-items:center;gap:10px;padding:9px 8px;margin-top:6px;border-radius:10px;cursor:pointer;}
+  .user-row:hover{background:rgba(255,255,255,0.03);}
+  .user-row .name{font-weight:600;font-size:13px;}
+  .user-row .sub{font-size:11px;color:var(--muted);}
+  .user-row .more{margin-left:auto;color:var(--muted-2);font-weight:700;letter-spacing:1px;}
+
+  .avatar{border-radius:50%;flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;font-weight:700;color:#fff;overflow:hidden;}
+
+  /* ============ MAIN ============ */
+  .main{flex:1;min-width:0;display:flex;flex-direction:column;}
+  .topbar{display:flex;align-items:flex-start;gap:16px;padding:20px 30px 0;}
+  .titleblock{min-width:0;}
+  .title-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+  .page-title{font-size:23px;font-weight:800;letter-spacing:-0.6px;}
+  .live-badge{
+    display:inline-flex;align-items:center;gap:6px;
+    background:rgba(224,101,79,0.12);border:1px solid rgba(224,101,79,0.35);
+    color:var(--red);font-size:11px;font-weight:700;letter-spacing:.6px;
+    padding:3px 9px;border-radius:20px;text-transform:uppercase;
+  }
+  .live-badge .ld{width:7px;height:7px;border-radius:50%;background:var(--red);box-shadow:0 0 8px var(--red);animation:pulse 1.4s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.4;transform:scale(.7);}}
+  .prize-chip{
+    display:inline-flex;align-items:center;gap:7px;
+    background:var(--gold-dim);border:1px solid var(--gold-line);
+    color:var(--gold);font-size:12.5px;font-weight:700;
+    padding:4px 11px;border-radius:20px;
+  }
+  .prize-chip svg{width:14px;height:14px;stroke:var(--gold);fill:none;stroke-width:1.7;}
+  .page-sub{color:var(--muted);font-size:12.5px;margin-top:6px;}
+  .page-sub b{color:var(--text);font-weight:600;}
+
+  .content{padding:16px 30px 40px;width:100%;}
+
+  /* ---- tabs ---- */
+  .toolbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:6px 0 20px;}
+  .tabs{display:flex;gap:4px;background:var(--panel);border:1px solid var(--hair);padding:4px;border-radius:11px;}
+  .tab{padding:7px 15px;border-radius:8px;color:var(--muted);font-weight:600;font-size:13px;cursor:pointer;transition:background .15s,color .15s;white-space:nowrap;}
+  .tab:hover{color:var(--text);}
+  .tab.active{background:var(--green-dim);color:var(--green);}
+
+  /* ---- work area: bracket + right panel ---- */
+  .work{display:flex;gap:22px;align-items:flex-start;}
+  .bracketpanel{
+    flex:1;min-width:0;
+    background:var(--panel);border:1px solid var(--hair);border-radius:var(--radius);
+    box-shadow:var(--shadow);overflow:hidden;
+  }
+  .bracket-head{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:14px 18px;border-bottom:1px solid var(--hair);
+  }
+  .bracket-head .bh-title{font-weight:700;font-size:14px;}
+  .bracket-head .legend{display:flex;gap:14px;flex-wrap:wrap;}
+  .lg{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);font-weight:600;}
+  .lg .sw{width:9px;height:9px;border-radius:3px;}
+  .lg .sw.win{background:var(--green);}
+  .lg .sw.live{background:var(--red);}
+  .lg .sw.up{background:var(--muted-2);}
+
+  .bracket-scroll{overflow-x:auto;padding:22px 22px 26px;}
+  .bracket{display:flex;gap:0;min-width:1180px;position:relative;}
+  .round{display:flex;flex-direction:column;flex:0 0 auto;width:210px;}
+  .round.connectors{width:38px;}
+
+  .round-title{
+    font-size:11px;text-transform:uppercase;letter-spacing:1px;
+    color:var(--muted);font-weight:700;text-align:center;margin-bottom:16px;height:16px;
+  }
+  .round-title .cnt{color:var(--muted-2);font-weight:600;}
+
+  .match-col{display:flex;flex-direction:column;justify-content:space-around;flex:1;}
+
+  .match{
+    background:var(--panel-2);border:1px solid var(--hair);border-radius:10px;
+    overflow:hidden;position:relative;transition:box-shadow .15s,border-color .15s,transform .12s;
+    margin:8px 0;
+  }
+  .match .m-id{
+    position:absolute;top:-9px;left:9px;font-size:9px;font-weight:700;letter-spacing:.5px;
+    color:var(--muted-2);background:var(--panel);padding:0 5px;border-radius:4px;text-transform:uppercase;
+  }
+  .prow{
+    display:flex;align-items:center;gap:8px;padding:8px 10px;
+    border-bottom:1px solid var(--hair);
+  }
+  .prow:last-child{border-bottom:none;}
+  .prow .seed{
+    font-size:9.5px;font-weight:700;color:var(--muted-2);
+    width:16px;text-align:center;flex:0 0 16px;
+  }
+  .prow .pav{width:22px;height:22px;font-size:10px;}
+  .prow .pname{font-weight:600;font-size:12.5px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text);}
+  .prow .score{
+    font-weight:800;font-size:13px;color:var(--muted);
+    width:20px;text-align:center;flex:0 0 20px;font-variant-numeric:tabular-nums;
+  }
+
+  /* winner */
+  .match.done .prow.win .pname{color:var(--green);}
+  .match.done .prow.win .score{color:var(--green);}
+  .match.done .prow.win{background:var(--green-dim);}
+  .match.done .prow.win .seed{color:rgba(107,191,63,0.7);}
+  .match.done .prow.lose .pname,.match.done .prow.lose .score{color:var(--muted);}
+  .match.done .prow.lose .pav{opacity:.55;}
+
+  /* live match */
+  .match.live{border-color:rgba(224,101,79,0.5);box-shadow:0 0 0 1px rgba(224,101,79,0.25),0 6px 20px rgba(224,101,79,0.10);}
+  .match.live .m-live{
+    position:absolute;top:-9px;right:9px;display:inline-flex;align-items:center;gap:4px;
+    background:var(--panel);padding:0 6px;border-radius:4px;
+    font-size:9px;font-weight:800;color:var(--red);letter-spacing:.5px;text-transform:uppercase;
+  }
+  .match.live .m-live .ld{width:5px;height:5px;border-radius:50%;background:var(--red);box-shadow:0 0 6px var(--red);animation:pulse 1.4s ease-in-out infinite;}
+  .match.live .prow .score{color:var(--text);}
+
+  /* upcoming */
+  .match.upcoming{opacity:.5;border-style:dashed;}
+  .match.upcoming .pname{color:var(--muted);}
+
+  /* champion */
+  .match.champ{
+    background:linear-gradient(180deg,rgba(211,168,63,0.10),var(--panel-2));
+    border:1px solid var(--gold-line);border-radius:12px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:18px 14px;text-align:center;gap:6px;
+  }
+  .match.champ .trophy{font-size:26px;filter:drop-shadow(0 3px 8px rgba(211,168,63,0.4));}
+  .match.champ .clabel{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--gold);font-weight:700;}
+  .match.champ .cname{font-weight:800;font-size:15px;color:var(--text);}
+  .match.champ .ctbd{font-weight:700;font-size:13px;color:var(--muted-2);}
+
+  /* highlight path */
+  .match.trace{border-color:var(--gold-line)!important;box-shadow:0 0 0 1px var(--gold-line),0 6px 18px rgba(211,168,63,0.14)!important;transform:translateY(-1px);}
+
+  /* SVG connectors */
+  .conn-svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;}
+  .conn-svg path{fill:none;stroke:var(--hair-strong);stroke-width:1.4;transition:stroke .15s;}
+  .conn-svg path.lit{stroke:var(--gold-line);stroke-width:2;}
+  .round,.round.connectors{position:relative;z-index:1;}
+
+  /* ============ RIGHT PANEL ============ */
+  .side{flex:0 0 300px;width:300px;display:flex;flex-direction:column;gap:16px;}
+  .card{
+    background:var(--panel);border:1px solid var(--hair);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:16px;
+  }
+  .card h3{margin:0 0 12px;font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);font-weight:700;}
+
+  .status-card{position:relative;overflow:hidden;}
+  .status-card.next{border-color:var(--green-line);background:linear-gradient(180deg,rgba(107,191,63,0.08),var(--panel));}
+  .status-card .st-top{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);font-weight:700;margin-bottom:8px;}
+  .status-card .st-main{font-size:19px;font-weight:800;letter-spacing:-0.4px;}
+  .status-card .st-main.green{color:var(--green);}
+  .status-card .st-main.muted{color:var(--muted);}
+  .status-card .st-sub{font-size:12px;color:var(--muted);margin-top:5px;}
+  .countdown{font-variant-numeric:tabular-nums;}
+
+  .sched{display:flex;flex-direction:column;gap:2px;}
+  .sched-row{display:flex;align-items:center;gap:10px;padding:8px 6px;border-radius:8px;}
+  .sched-row .dot{width:8px;height:8px;border-radius:50%;flex:0 0 8px;background:var(--muted-2);}
+  .sched-row.done .dot{background:var(--green);}
+  .sched-row.live .dot{background:var(--red);box-shadow:0 0 7px var(--red);animation:pulse 1.4s ease-in-out infinite;}
+  .sched-row .sr-name{font-weight:600;font-size:13px;flex:1;}
+  .sched-row.done .sr-name{color:var(--muted);}
+  .sched-row .sr-time{font-size:11.5px;color:var(--muted);font-weight:600;font-variant-numeric:tabular-nums;}
+  .sched-row.live .sr-time{color:var(--red);}
+  .sched-row .sr-tag{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;padding:2px 6px;border-radius:20px;}
+  .sched-row.done .sr-tag{color:var(--green);background:var(--green-dim);}
+  .sched-row.live .sr-tag{color:var(--red);background:rgba(224,101,79,0.14);}
+  .sched-row.up .sr-tag{color:var(--muted-2);background:rgba(255,255,255,0.04);}
+
+  .entrant-line{display:flex;align-items:baseline;gap:8px;margin-bottom:12px;}
+  .entrant-line .big{font-size:26px;font-weight:800;letter-spacing:-0.6px;}
+  .entrant-line .lbl{font-size:12px;color:var(--muted);font-weight:600;}
+  .fillbar{height:6px;border-radius:4px;background:rgba(255,255,255,0.06);overflow:hidden;}
+  .fillbar .f{height:100%;background:linear-gradient(90deg,var(--green),#4d9a2a);border-radius:4px;}
+  .avstack{display:flex;margin-top:12px;}
+  .avstack .avatar{width:26px;height:26px;font-size:10px;margin-left:-7px;border:2px solid var(--panel);}
+  .avstack .avatar:first-child{margin-left:0;}
+  .avstack .more{margin-left:8px;align-self:center;font-size:12px;color:var(--muted);font-weight:600;}
+
+  .prize-list{display:flex;flex-direction:column;gap:2px;}
+  .prize-row{display:flex;align-items:center;gap:10px;padding:8px 6px;border-radius:8px;}
+  .prize-row:hover{background:rgba(255,255,255,0.02);}
+  .prize-row .medal{
+    width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
+    font-weight:800;font-size:12px;flex:0 0 26px;
+  }
+  .medal.g{background:radial-gradient(circle at 35% 30%,#f4d47a,#c99a2e);color:#3a2c07;}
+  .medal.s{background:radial-gradient(circle at 35% 30%,#eceae4,#a9a69d);color:#333;}
+  .medal.b{background:radial-gradient(circle at 35% 30%,#e0a76e,#a5703c);color:#3a2306;}
+  .medal.n{background:rgba(255,255,255,0.06);color:var(--muted);}
+  .prize-row .pl-place{font-weight:600;font-size:13px;flex:1;}
+  .prize-row .pl-amt{font-weight:800;font-size:13px;color:var(--gold);font-variant-numeric:tabular-nums;}
+  .prize-row .pl-amt.dim{color:var(--muted);}
+
+  .btn{
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    width:100%;padding:11px 14px;border-radius:10px;cursor:pointer;
+    font-family:inherit;font-weight:700;font-size:13.5px;border:none;transition:.15s;
+  }
+  .btn.primary{background:var(--green);color:#0d1a06;}
+  .btn.primary:hover{filter:brightness(1.08);}
+  .btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;}
+
+  .footnote{color:var(--muted-2);font-size:11.5px;margin-top:16px;text-align:center;}
+
+  /* mobile menu button */
+  .menu-btn{display:none;background:var(--panel);border:1px solid var(--hair);color:var(--text);border-radius:9px;width:38px;height:38px;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto;}
+  .menu-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;}
+
+  /* ============ RESPONSIVE ============ */
+  @media(max-width:1080px){
+    .work{flex-direction:column;}
+    .side{flex:0 0 auto;width:100%;flex-direction:row;flex-wrap:wrap;}
+    .side .card{flex:1;min-width:250px;}
+    .status-card{width:100%;}
+  }
+  @media(max-width:900px){
+    .sidebar{position:fixed;z-index:50;left:0;top:0;transform:translateX(-100%);transition:transform .22s ease;box-shadow:0 0 40px rgba(0,0,0,0.6);}
+    .sidebar.open{transform:translateX(0);}
+    .menu-btn{display:inline-flex;}
+    .content,.topbar{padding-left:16px;padding-right:16px;}
+  }
+  @media(max-width:560px){
+    .side{flex-direction:column;}
+    .side .card{min-width:0;}
+  }
+  .backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:40;}
+  .backdrop.show{display:block;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <span class="mark">DG</span>
+      <span class="full">DeepGammon</span>
+      <span class="dot"></span>
+    </div>
+
+    <nav class="nav">
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+        <span>Home</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="3.2"/><path d="M21 21v-2a4 4 0 0 0-3-3.8"/></svg>
+        <span>Clubs</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        <span>Practice</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="3.2"/><path d="M22 11l-3 3-2-2"/></svg>
+        <span>Friends</span>
+        <span class="badge">3</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M3 9h18"/><path d="M8 4v16"/></svg>
+        <span>Matches</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M17 5h3v2a3 3 0 0 1-3 3"/><path d="M7 5H4v2a3 3 0 0 0 3 3"/></svg>
+        <span>Rankings</span>
+      </div>
+
+      <div class="nav-label">Competing</div>
+      <div class="nav-item active">
+        <svg viewBox="0 0 24 24"><path d="M6 3h12v4a6 6 0 0 1-12 0V3z"/><path d="M6 6H3v1a3 3 0 0 0 3 3"/><path d="M18 6h3v1a3 3 0 0 1-3 3"/><path d="M9 20h6"/><path d="M12 15v5"/></svg>
+        <span>Tournaments</span>
+        <span class="badge">1</span>
+      </div>
+    </nav>
+
+    <div class="spacer"></div>
+
+    <div class="side-bottom">
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+        <span>Notifications</span>
+        <span class="badge">5</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1A2 2 0 1 1 7.1 3.9l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+        <span>Settings</span>
+      </div>
+      <div class="user-row">
+        <span class="avatar" style="width:34px;height:34px;background:linear-gradient(135deg,#6bbf3f,#3f7a25);font-size:13px;">D</span>
+        <div>
+          <div class="name">Dani</div>
+          <div class="sub">1500 · provisional</div>
+        </div>
+        <span class="more">⋯</span>
+      </div>
+    </div>
+  </aside>
+  <div class="backdrop" id="backdrop"></div>
+
+  <!-- ============ MAIN ============ -->
+  <main class="main">
+    <div class="topbar">
+      <button class="menu-btn" id="menuBtn"><svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+      <div class="titleblock">
+        <div class="title-row">
+          <div class="page-title">Club Cup</div>
+          <span class="live-badge"><span class="ld"></span>Live</span>
+          <span class="prize-chip">
+            <svg viewBox="0 0 24 24"><path d="M6 3h12v4a6 6 0 0 1-12 0V3z"/><path d="M9 20h6M12 15v5"/></svg>
+            5,000 pts prize pool
+          </span>
+        </div>
+        <div class="page-sub">Single-elimination · <b>5-point matches</b> · 16 players · Blitz clock · Riverside Backgammon Club</div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- tabs -->
+      <div class="toolbar">
+        <div class="tabs" id="tabs">
+          <div class="tab active" data-tab="bracket">Bracket</div>
+          <div class="tab" data-tab="register">Register</div>
+          <div class="tab" data-tab="standings">Standings</div>
+          <div class="tab" data-tab="info">Info</div>
+        </div>
+      </div>
+
+      <div class="work">
+        <!-- ============ BRACKET ============ -->
+        <section class="bracketpanel">
+          <div class="bracket-head">
+            <div class="bh-title">Championship Bracket</div>
+            <div class="legend">
+              <span class="lg"><span class="sw win"></span>Winner</span>
+              <span class="lg"><span class="sw live"></span>Live now</span>
+              <span class="lg"><span class="sw up"></span>Upcoming</span>
+            </div>
+          </div>
+          <div class="bracket-scroll">
+            <div class="bracket" id="bracket">
+              <svg class="conn-svg" id="conns" preserveAspectRatio="none"></svg>
+              <!-- rounds injected -->
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ RIGHT PANEL ============ -->
+        <aside class="side">
+          <div class="card status-card next">
+            <div class="st-top">Your status</div>
+            <div class="st-main green">Next match in <span class="countdown" id="cd">3:20</span></div>
+            <div class="st-sub">Quarterfinal · vs winner of M-Live · Table 2 · seed #6</div>
+          </div>
+
+          <div class="card">
+            <h3>Round schedule</h3>
+            <div class="sched">
+              <div class="sched-row done">
+                <span class="dot"></span>
+                <span class="sr-name">Round of 16</span>
+                <span class="sr-time">18:00</span>
+                <span class="sr-tag">Done</span>
+              </div>
+              <div class="sched-row live">
+                <span class="dot"></span>
+                <span class="sr-name">Quarterfinals</span>
+                <span class="sr-time">Now</span>
+                <span class="sr-tag">Live</span>
+              </div>
+              <div class="sched-row up">
+                <span class="dot"></span>
+                <span class="sr-name">Semifinals</span>
+                <span class="sr-time">19:15</span>
+                <span class="sr-tag">Up next</span>
+              </div>
+              <div class="sched-row up">
+                <span class="dot"></span>
+                <span class="sr-name">Final</span>
+                <span class="sr-time">20:00</span>
+                <span class="sr-tag">Later</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Entrants</h3>
+            <div class="entrant-line">
+              <span class="big">16</span>
+              <span class="lbl">/ 16 seats · full field</span>
+            </div>
+            <div class="fillbar"><span class="f" style="width:100%"></span></div>
+            <div class="avstack">
+              <span class="avatar" style="background:linear-gradient(135deg,#e8c15a,#b07f2a)">A</span>
+              <span class="avatar" style="background:linear-gradient(135deg,#7f8ce0,#4a54a8)">M</span>
+              <span class="avatar" style="background:linear-gradient(135deg,#5fb0d6,#2f6d92)">L</span>
+              <span class="avatar" style="background:linear-gradient(135deg,#8bc97b,#4d8a3a)">S</span>
+              <span class="avatar" style="background:linear-gradient(135deg,#d98cc4,#94487e)">K</span>
+              <span class="more">+11 more</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Prize breakdown</h3>
+            <div class="prize-list">
+              <div class="prize-row">
+                <span class="medal g">1</span>
+                <span class="pl-place">Champion</span>
+                <span class="pl-amt">2,500 pts</span>
+              </div>
+              <div class="prize-row">
+                <span class="medal s">2</span>
+                <span class="pl-place">Runner-up</span>
+                <span class="pl-amt">1,250 pts</span>
+              </div>
+              <div class="prize-row">
+                <span class="medal b">3</span>
+                <span class="pl-place">Semifinalists</span>
+                <span class="pl-amt">500 pts</span>
+              </div>
+              <div class="prize-row">
+                <span class="medal n">Q</span>
+                <span class="pl-place">Quarterfinalists</span>
+                <span class="pl-amt dim">125 pts</span>
+              </div>
+            </div>
+          </div>
+
+          <button class="btn primary" id="watchBtn">
+            <svg viewBox="0 0 24 24"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+            Watch featured match
+          </button>
+        </aside>
+      </div>
+
+      <div class="footnote">Bracket updates live as matches complete · Blitz clock: 3 min + 8 sec/move · Riverside Club · Season 12</div>
+
+    </div>
+  </main>
+</div>
+
+<script>
+/* ===================== AVATAR PALETTE ===================== */
+const AV={
+  A:'linear-gradient(135deg,#e8c15a,#b07f2a)', M:'linear-gradient(135deg,#7f8ce0,#4a54a8)',
+  L:'linear-gradient(135deg,#5fb0d6,#2f6d92)', S:'linear-gradient(135deg,#8bc97b,#4d8a3a)',
+  K:'linear-gradient(135deg,#d98cc4,#94487e)', H:'linear-gradient(135deg,#e0a76e,#a5703c)',
+  J:'linear-gradient(135deg,#6fc2b0,#2f7d6a)', N:'linear-gradient(135deg,#9d8be0,#5a48a8)',
+  W:'linear-gradient(135deg,#c9a24e,#8a6c22)', R:'linear-gradient(135deg,#e07f7f,#9c3f3f)',
+  C:'linear-gradient(135deg,#5fc98a,#2f8a54)', E:'linear-gradient(135deg,#c98b5f,#8a5730)',
+  D:'linear-gradient(135deg,#6bbf3f,#3f7a25)', T:'linear-gradient(135deg,#8ba7e0,#4a63a8)',
+  P:'linear-gradient(135deg,#d6a15f,#946522)', F:'linear-gradient(135deg,#7fb0d6,#3f6d92)',
+  O:'linear-gradient(135deg,#c98bb0,#8a4870)', B:'linear-gradient(135deg,#8bc9c9,#3a8a8a)'
+};
+function avBg(name){const c=name.replace(/[^A-Za-z]/,'').charAt(0).toUpperCase();return AV[c]||'linear-gradient(135deg,#8b8b8b,#4a4a4a)';}
+function init(name){return name.replace(/[^A-Za-z]/,'').charAt(0).toUpperCase()||name.charAt(0);}
+
+/* ===================== BRACKET DATA =====================
+   status: 'done' | 'live' | 'upcoming'
+   next: id of the match its winner feeds into (for path highlighting)
+========================================================= */
+const P = (name,seed)=>({name,seed});
+const R16 = [
+  {id:'r16-1', a:P('Akiko S.',1),   b:P('R. Sharma',16),  sa:5, sb:2, status:'done', win:'a', next:'qf-1'},
+  {id:'r16-2', a:P('J. Whitfield',9),b:P('H. Bauer',8),   sa:3, sb:5, status:'done', win:'b', next:'qf-1'},
+  {id:'r16-3', a:P('L. Petrov',5),  b:P('C. Morgan',12),  sa:5, sb:4, status:'done', win:'a', next:'qf-2'},
+  {id:'r16-4', a:P('Sofia M.',4),   b:P('N. Papadakis',13),sa:5, sb:1, status:'done', win:'a', next:'qf-2'},
+  {id:'r16-5', a:P('Mochizuki',2),  b:P('E. Navarro',15), sa:5, sb:3, status:'done', win:'a', next:'qf-3'},
+  {id:'r16-6', a:P('Dani',6),       b:P('A. Dubois',11),  sa:5, sb:4, status:'done', win:'a', next:'qf-3'},
+  {id:'r16-7', a:P('K. Öztürk',3),  b:P('Wei Chen',14),   sa:5, sb:2, status:'done', win:'a', next:'qf-4'},
+  {id:'r16-8', a:P('M. Larsson',7), b:P('D. Rossi',10),   sa:2, sb:5, status:'done', win:'b', next:'qf-4'}
+];
+const QF = [
+  {id:'qf-1', a:P('Akiko S.',1),  b:P('H. Bauer',8),  sa:5, sb:3, status:'done', win:'a', next:'sf-1'},
+  {id:'qf-2', a:P('L. Petrov',5), b:P('Sofia M.',4),  sa:3, sb:2, status:'live', win:null, next:'sf-1'},
+  {id:'qf-3', a:P('Mochizuki',2), b:P('Dani',6),      sa:0, sb:0, status:'upcoming', win:null, next:'sf-2'},
+  {id:'qf-4', a:P('K. Öztürk',3), b:P('D. Rossi',10), sa:0, sb:0, status:'upcoming', win:null, next:'sf-2'}
+];
+const SF = [
+  {id:'sf-1', a:P('Akiko S.',1), b:P('TBD',null), sa:0, sb:0, status:'upcoming', win:null, next:'final'},
+  {id:'sf-2', a:P('TBD',null),   b:P('TBD',null), sa:0, sb:0, status:'upcoming', win:null, next:'final'}
+];
+const FINAL = [
+  {id:'final', a:P('TBD',null), b:P('TBD',null), sa:0, sb:0, status:'upcoming', win:null, next:'champ'}
+];
+
+const ROUNDS = [
+  {title:'Round of 16', matches:R16},
+  {title:'Quarterfinals', matches:QF},
+  {title:'Semifinals', matches:SF},
+  {title:'Final', matches:FINAL}
+];
+
+/* ===================== RENDER MATCH ===================== */
+function prow(pl, side, m){
+  const isTBD = !pl || pl.name==='TBD';
+  const cls = m.status==='done' ? (m.win===side ? 'win' : 'lose') : '';
+  const seed = (pl && pl.seed) ? pl.seed : '';
+  const scoreVal = side==='a' ? m.sa : m.sb;
+  const showScore = m.status!=='upcoming';
+  if(isTBD){
+    return `<div class="prow ${cls}">
+      <span class="seed"></span>
+      <span class="avatar pav" style="background:rgba(255,255,255,0.05);color:var(--muted-2)">?</span>
+      <span class="pname">TBD</span>
+      <span class="score"></span>
+    </div>`;
+  }
+  return `<div class="prow ${cls}">
+    <span class="seed">${seed}</span>
+    <span class="avatar pav" style="background:${avBg(pl.name)}">${init(pl.name)}</span>
+    <span class="pname">${pl.name}</span>
+    <span class="score">${showScore?scoreVal:''}</span>
+  </div>`;
+}
+function matchNode(m){
+  let cls='match', extra='';
+  if(m.status==='done'){cls+=' done'; extra=`<span class="m-id">${m.id.replace('-',' ').toUpperCase()}</span>`;}
+  else if(m.status==='live'){cls+=' live'; extra=`<span class="m-id">${m.id.replace('-',' ').toUpperCase()}</span><span class="m-live"><span class="ld"></span>Live</span>`;}
+  else {cls+=' upcoming'; extra=`<span class="m-id">${m.id.replace('-',' ').toUpperCase()}</span>`;}
+  return `<div class="${cls}" data-id="${m.id}" data-next="${m.next||''}">
+    ${extra}
+    ${prow(m.a,'a',m)}
+    ${prow(m.b,'b',m)}
+  </div>`;
+}
+
+/* ===================== BUILD BRACKET ===================== */
+const bracket = document.getElementById('bracket');
+const svg = document.getElementById('conns');
+
+ROUNDS.forEach((rd, ri)=>{
+  const col = document.createElement('div');
+  col.className='round';
+  col.dataset.round=ri;
+  const cnt = rd.matches.length;
+  col.innerHTML = `<div class="round-title">${rd.title} <span class="cnt">· ${cnt}</span></div>
+    <div class="match-col">${rd.matches.map(matchNode).join('')}</div>`;
+  bracket.appendChild(col);
+
+  // connector spacer column (not after last round)
+  if(ri < ROUNDS.length-1){
+    const conn = document.createElement('div');
+    conn.className='round connectors';
+    bracket.appendChild(conn);
+  }
+});
+
+/* champion column */
+const champCol = document.createElement('div');
+champCol.className='round connectors';
+bracket.appendChild(champCol);
+const champWrap = document.createElement('div');
+champWrap.className='round';
+champWrap.style.justifyContent='center';
+champWrap.innerHTML = `<div class="round-title">Champion</div>
+  <div class="match-col" style="justify-content:center;flex:1;">
+    <div class="match champ" data-id="champ">
+      <div class="trophy">🏆</div>
+      <div class="clabel">Champion</div>
+      <div class="ctbd">TBD</div>
+    </div>
+  </div>`;
+bracket.appendChild(champWrap);
+
+/* ===================== DRAW CONNECTOR LINES ===================== */
+function drawConnectors(){
+  const brect = bracket.getBoundingClientRect();
+  svg.setAttribute('width', bracket.scrollWidth);
+  svg.setAttribute('height', bracket.scrollHeight);
+  svg.style.width = bracket.scrollWidth+'px';
+  svg.style.height = bracket.scrollHeight+'px';
+  svg.innerHTML='';
+
+  const allMatches = [...document.querySelectorAll('.match[data-next]')];
+  allMatches.forEach(el=>{
+    const nextId = el.dataset.next;
+    if(!nextId) return;
+    const target = document.querySelector(`.match[data-id="${nextId}"]`);
+    if(!target) return;
+    const r1 = el.getBoundingClientRect();
+    const r2 = target.getBoundingClientRect();
+    const x1 = r1.right - brect.left;
+    const y1 = r1.top + r1.height/2 - brect.top;
+    const x2 = r2.left - brect.left;
+    const y2 = r2.top + r2.height/2 - brect.top;
+    const midX = x1 + (x2 - x1)/2;
+    const d = `M ${x1} ${y1} H ${midX} V ${y2} H ${x2}`;
+    const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d', d);
+    path.dataset.from = el.dataset.id;
+    path.dataset.to = nextId;
+    svg.appendChild(path);
+  });
+}
+
+/* ===================== PATH HIGHLIGHT ON HOVER ===================== */
+function traceFrom(id){
+  clearTrace();
+  let cur = id;
+  const chain=[];
+  while(cur){
+    const el = document.querySelector(`.match[data-id="${cur}"]`);
+    if(!el) break;
+    el.classList.add('trace');
+    chain.push(cur);
+    cur = el.dataset.next;
+  }
+  // light paths connecting the chain
+  svg.querySelectorAll('path').forEach(p=>{
+    if(chain.includes(p.dataset.from)) p.classList.add('lit');
+  });
+}
+function clearTrace(){
+  document.querySelectorAll('.match.trace').forEach(m=>m.classList.remove('trace'));
+  svg.querySelectorAll('path.lit').forEach(p=>p.classList.remove('lit'));
+}
+bracket.addEventListener('mouseover', e=>{
+  const m = e.target.closest('.match');
+  if(!m || !m.dataset.id || m.dataset.id==='champ') return;
+  traceFrom(m.dataset.id);
+});
+bracket.addEventListener('mouseout', e=>{
+  const m = e.target.closest('.match');
+  if(!m) return;
+  if(!e.relatedTarget || !e.relatedTarget.closest || !e.relatedTarget.closest('.match')) clearTrace();
+});
+
+/* redraw on resize + after fonts load */
+window.addEventListener('resize', drawConnectors);
+document.querySelector('.bracket-scroll').addEventListener('scroll', ()=>{});
+requestAnimationFrame(()=>{ drawConnectors(); });
+if(document.fonts && document.fonts.ready){ document.fonts.ready.then(drawConnectors); }
+setTimeout(drawConnectors, 300);
+
+/* ===================== TABS ===================== */
+document.getElementById('tabs').addEventListener('click', e=>{
+  const t = e.target.closest('.tab'); if(!t) return;
+  document.querySelectorAll('#tabs .tab').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');
+  // only the bracket view is fully built; others are placeholders in this prototype
+});
+
+/* ===================== COUNTDOWN ===================== */
+let secs = 3*60 + 20;
+const cdEl = document.getElementById('cd');
+setInterval(()=>{
+  if(secs>0) secs--;
+  const m = Math.floor(secs/60), s = secs%60;
+  cdEl.textContent = m+':'+String(s).padStart(2,'0');
+}, 1000);
+
+/* ===================== WATCH BUTTON ===================== */
+document.getElementById('watchBtn').addEventListener('click', ()=>{
+  const live = document.querySelector('.match.live');
+  if(live){ live.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'}); traceFrom(live.dataset.id); setTimeout(clearTrace, 1600); }
+});
+
+/* ===================== MOBILE MENU ===================== */
+const sb=document.getElementById('sidebar'), bd=document.getElementById('backdrop');
+document.getElementById('menuBtn').addEventListener('click',()=>{sb.classList.add('open');bd.classList.add('show');});
+bd.addEventListener('click',()=>{sb.classList.remove('open');bd.classList.remove('show');});
+</script>
+</body>
+</html>

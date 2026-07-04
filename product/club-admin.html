@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DeepGammon — Run a Club</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#161514;
+    --panel:#1e1c1a;
+    --panel-2:#232120;
+    --hair:rgba(240,235,220,0.07);
+    --hair-strong:rgba(240,235,220,0.12);
+    --green:#6bbf3f;
+    --green-dim:rgba(107,191,63,0.14);
+    --green-line:rgba(107,191,63,0.45);
+    --gold:#d3a83f;
+    --gold-dim:rgba(211,168,63,0.14);
+    --gold-line:rgba(211,168,63,0.4);
+    --text:#f1efe9;
+    --muted:#9a978c;
+    --muted-2:#6f6d64;
+    --red:#e0654f;
+    --red-dim:rgba(224,101,79,0.14);
+    --row-tint:rgba(255,255,255,0.014);
+    --radius:13px;
+    --shadow:0 1px 0 rgba(255,255,255,0.02) inset, 0 8px 24px rgba(0,0,0,0.35);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+    font-size:14px;
+    -webkit-font-smoothing:antialiased;
+    line-height:1.4;
+  }
+  a{color:inherit;text-decoration:none;}
+  ::selection{background:var(--green-dim);}
+
+  /* ============ LAYOUT ============ */
+  .app{display:flex;min-height:100vh;}
+
+  /* ============ SIDEBAR ============ */
+  .sidebar{
+    width:240px;flex:0 0 240px;
+    background:var(--panel);
+    border-right:1px solid var(--hair);
+    display:flex;flex-direction:column;
+    padding:18px 14px;
+    position:sticky;top:0;height:100vh;
+  }
+  .brand{display:flex;align-items:center;gap:9px;padding:6px 8px 20px 8px;}
+  .brand .mark{font-weight:800;font-size:20px;letter-spacing:-0.5px;color:var(--green);}
+  .brand .full{font-weight:700;font-size:15px;letter-spacing:-0.2px;color:var(--text);}
+  .brand .dot{width:7px;height:7px;border-radius:50%;background:var(--green);margin-left:auto;box-shadow:0 0 10px var(--green);}
+
+  .nav{display:flex;flex-direction:column;gap:2px;}
+  .nav-item{
+    display:flex;align-items:center;gap:11px;
+    padding:9px 10px;border-radius:9px;
+    color:var(--muted);font-weight:500;cursor:pointer;
+    transition:background .15s,color .15s;
+  }
+  .nav-item svg{width:18px;height:18px;flex:0 0 18px;stroke:currentColor;fill:none;stroke-width:1.7;}
+  .nav-item:hover{background:rgba(255,255,255,0.03);color:var(--text);}
+  .nav-item.active{background:var(--green-dim);color:var(--green);font-weight:600;}
+  .nav-item.active svg{stroke:var(--green);}
+  .nav-item .badge{margin-left:auto;background:var(--green);color:#0d1a06;font-size:10px;font-weight:700;padding:1px 6px;border-radius:20px;}
+
+  .sidebar .spacer{flex:1;}
+  .side-bottom{display:flex;flex-direction:column;gap:2px;padding-top:8px;border-top:1px solid var(--hair);}
+  .user-row{display:flex;align-items:center;gap:10px;padding:9px 8px;margin-top:6px;border-radius:10px;cursor:pointer;}
+  .user-row:hover{background:rgba(255,255,255,0.03);}
+  .user-row .name{font-weight:600;font-size:13px;}
+  .user-row .sub{font-size:11px;color:var(--muted);}
+  .user-row .more{margin-left:auto;color:var(--muted-2);font-weight:700;letter-spacing:1px;}
+
+  .avatar{border-radius:50%;flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;font-weight:700;color:#fff;overflow:hidden;}
+
+  /* ============ MAIN ============ */
+  .main{flex:1;min-width:0;display:flex;flex-direction:column;}
+  .content{padding:16px 30px 48px;max-width:1200px;width:100%;}
+
+  /* ---- CLUB HEADER ---- */
+  .clubhead{
+    display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+    padding:22px 30px 14px;
+  }
+  .clubbadge{
+    width:56px;height:56px;border-radius:15px;flex:0 0 56px;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:800;font-size:22px;letter-spacing:-0.5px;color:#0d1a06;
+    background:linear-gradient(135deg,#7bcf4a,#3f7a25);
+    box-shadow:0 6px 18px rgba(107,191,63,0.28), 0 0 0 1px rgba(255,255,255,0.06) inset;
+  }
+  .clubinfo{min-width:0;}
+  .clubinfo .titlerow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .clubinfo h1{margin:0;font-size:22px;font-weight:800;letter-spacing:-0.6px;}
+  .owner-chip{
+    font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;
+    color:var(--green);background:var(--green-dim);border:1px solid var(--green-line);
+    padding:3px 9px;border-radius:20px;
+  }
+  .clubinfo .metarow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:5px;color:var(--muted);font-size:12.5px;}
+  .handle{color:var(--muted);font-weight:600;}
+  .tier-pill{
+    font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;
+    color:var(--gold);background:var(--gold-dim);border:1px solid var(--gold-line);
+    padding:2px 8px;border-radius:20px;
+  }
+  .dotsep{color:var(--muted-2);}
+  .clubhead .grow{flex:1;}
+  .headbtns{display:flex;gap:9px;flex-wrap:wrap;}
+
+  /* ---- buttons ---- */
+  .btn{
+    font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;
+    padding:8px 14px;border-radius:9px;border:1px solid var(--hair-strong);
+    background:var(--panel-2);color:var(--text);
+    display:inline-flex;align-items:center;gap:7px;transition:.15s;white-space:nowrap;
+  }
+  .btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;}
+  .btn:hover{border-color:var(--muted-2);background:#2a2725;}
+  .btn.green{background:var(--green);color:#0d1a06;border-color:transparent;}
+  .btn.green:hover{background:#7bcf4a;}
+  .btn.gold{background:var(--gold);color:#2c2205;border-color:transparent;}
+  .btn.gold:hover{background:#e0b656;}
+  .btn.ghost{background:none;}
+  .btn.sm{padding:5px 10px;font-size:11.5px;border-radius:7px;}
+  .btn.danger{color:var(--red);border-color:rgba(224,101,79,0.3);}
+  .btn.danger:hover{background:var(--red-dim);border-color:var(--red);}
+
+  /* ---- TABS ---- */
+  .tabsbar{
+    padding:0 30px;border-bottom:1px solid var(--hair);
+    display:flex;overflow-x:auto;scrollbar-width:none;
+  }
+  .tabsbar::-webkit-scrollbar{display:none;}
+  .ptab{
+    padding:12px 15px;color:var(--muted);font-weight:600;font-size:13.5px;cursor:pointer;
+    border-bottom:2px solid transparent;white-space:nowrap;transition:.15s;margin-bottom:-1px;
+  }
+  .ptab:hover{color:var(--text);}
+  .ptab.active{color:var(--green);border-bottom-color:var(--green);}
+
+  /* ---- KPI TILES ---- */
+  .kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin:18px 0 22px;}
+  .kpi{
+    background:var(--panel);border:1px solid var(--hair);border-radius:var(--radius);
+    padding:14px 15px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:3px;
+  }
+  .kpi .k{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;font-weight:600;}
+  .kpi .v{font-size:22px;font-weight:800;letter-spacing:-0.5px;}
+  .kpi .v.gold{color:var(--gold);}
+  .kpi .v.green{color:var(--green);}
+  .kpi .v.red{color:var(--red);}
+  .kpi .v small{font-size:12px;font-weight:600;color:var(--muted);}
+  .kpi .d{font-size:11px;font-weight:700;margin-top:1px;}
+  .kpi .d.up{color:var(--green);}
+  .kpi .d.down{color:var(--red);}
+  .kpi .d.flat{color:var(--muted);}
+
+  /* ---- GRID + PANELS ---- */
+  .grid{display:grid;gap:16px;}
+  .grid.two{grid-template-columns:1.55fr 1fr;}
+  .panel{
+    background:var(--panel);border:1px solid var(--hair);border-radius:var(--radius);
+    box-shadow:var(--shadow);overflow:hidden;
+  }
+  .panel-head{
+    display:flex;align-items:center;gap:10px;padding:15px 18px;border-bottom:1px solid var(--hair);
+  }
+  .panel-head h2{margin:0;font-size:14.5px;font-weight:700;letter-spacing:-0.2px;}
+  .panel-head .sub{font-size:11.5px;color:var(--muted);font-weight:500;}
+  .panel-head .grow{flex:1;}
+  .panel-body{padding:18px;}
+
+  /* ---- ACCOUNTING CHART ---- */
+  .acct-top{display:flex;gap:18px;flex-wrap:wrap;}
+  .chartwrap{flex:1;min-width:300px;}
+  .chart-legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:12px;font-size:11.5px;color:var(--muted);}
+  .chart-legend span{display:inline-flex;align-items:center;gap:6px;}
+  .chart-legend i{width:9px;height:9px;border-radius:2px;display:inline-block;}
+  .bar{cursor:pointer;transition:opacity .12s;}
+  .bar:hover{opacity:.85;}
+  .chart-tip{
+    position:fixed;pointer-events:none;z-index:60;background:#0c0b0a;border:1px solid var(--hair-strong);
+    border-radius:8px;padding:8px 11px;font-size:12px;opacity:0;transition:opacity .12s;
+    box-shadow:0 8px 20px rgba(0,0,0,0.5);white-space:nowrap;
+  }
+  .chart-tip .tm{color:var(--muted);font-size:10.5px;}
+  .chart-tip .tv{font-weight:700;color:var(--gold);}
+  .chart-tip .tr{color:var(--green);font-size:11px;font-weight:600;}
+
+  /* ---- breakdown rows ---- */
+  .breakdown{display:flex;flex-direction:column;gap:2px;}
+  .brk{
+    display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--hair);
+  }
+  .brk:last-child{border-bottom:none;}
+  .brk .dotc{width:9px;height:9px;border-radius:3px;flex:0 0 9px;}
+  .brk .lab{flex:1;}
+  .brk .lab .nm{font-weight:600;font-size:13px;}
+  .brk .lab .ds{font-size:11px;color:var(--muted);margin-top:1px;}
+  .brk .amt{font-weight:800;font-size:14px;letter-spacing:-0.3px;}
+  .brk .amt.gold{color:var(--gold);}
+  .brk .amt.red{color:var(--red);}
+  .brk .amt.green{color:var(--green);}
+
+  .earn-card{
+    background:linear-gradient(180deg,rgba(211,168,63,0.10),var(--panel-2));
+    border:1px solid var(--gold-line);border-radius:12px;padding:16px;margin-top:16px;
+  }
+  .earn-card .kw{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--gold);font-weight:700;}
+  .earn-card .big{font-size:30px;font-weight:800;letter-spacing:-1px;color:var(--gold);margin:4px 0 2px;}
+  .earn-card .note{font-size:11.5px;color:var(--muted);margin-bottom:14px;}
+  .earn-card .rowbtns{display:flex;gap:9px;flex-wrap:wrap;}
+
+  /* ---- TABLE ---- */
+  .tablescroll{overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;min-width:640px;}
+  thead th{
+    text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.7px;
+    color:var(--muted);font-weight:600;padding:12px 16px;
+    border-bottom:1px solid var(--hair-strong);white-space:nowrap;background:var(--panel-2);
+  }
+  th.num,td.num{text-align:right;}
+  th.act,td.act{text-align:right;}
+  tbody td{padding:11px 16px;border-bottom:1px solid var(--hair);vertical-align:middle;white-space:nowrap;}
+  tbody tr{transition:background .12s;}
+  tbody tr:nth-child(even){background:var(--row-tint);}
+  tbody tr:hover{background:rgba(107,191,63,0.05);}
+  tbody tr:last-child td{border-bottom:none;}
+
+  .player{display:flex;align-items:center;gap:11px;}
+  .player .pn{font-weight:600;}
+  .player .sub2{font-size:11px;color:var(--muted);margin-top:1px;}
+  .role{
+    font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;text-transform:uppercase;letter-spacing:.4px;
+    border:1px solid transparent;
+  }
+  .role.owner{color:var(--green);background:var(--green-dim);border-color:var(--green-line);}
+  .role.admin{color:#b98cff;background:rgba(150,110,255,0.13);border-color:rgba(150,110,255,0.3);}
+  .role.member{color:var(--muted);background:rgba(255,255,255,0.05);}
+  .rating{font-weight:800;color:var(--gold);font-size:14px;}
+  .chipsval{font-weight:700;color:var(--text);}
+  .chipsval svg{width:12px;height:12px;vertical-align:-1px;margin-right:3px;}
+  .rowacts{display:inline-flex;gap:6px;}
+
+  /* ---- TABLES config ---- */
+  .field{display:flex;flex-direction:column;gap:5px;margin-bottom:13px;}
+  .field label{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:600;}
+  .field input,.field select{
+    background:var(--panel-2);border:1px solid var(--hair-strong);border-radius:9px;
+    padding:9px 11px;color:var(--text);font-family:inherit;font-size:13px;outline:none;
+  }
+  .field input:focus,.field select:focus{border-color:var(--green-line);}
+  .fieldrow{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .stakebadge{
+    display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--gold);
+    background:var(--gold-dim);padding:3px 9px;border-radius:20px;
+  }
+
+  .livetable{
+    display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--hair);
+  }
+  .livetable:last-child{border-bottom:none;}
+  .livedot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);flex:0 0 8px;animation:pulse 1.8s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+  .livetable .lt-main{flex:1;min-width:0;}
+  .livetable .lt-name{font-weight:600;font-size:13px;}
+  .livetable .lt-sub{font-size:11px;color:var(--muted);margin-top:1px;}
+
+  /* ---- TOURNAMENTS ---- */
+  .tour{
+    display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--hair);
+  }
+  .tour:last-child{border-bottom:none;}
+  .tour .ticon{
+    width:38px;height:38px;border-radius:10px;flex:0 0 38px;display:flex;align-items:center;justify-content:center;
+    background:var(--gold-dim);
+  }
+  .tour .ticon svg{width:19px;height:19px;stroke:var(--gold);fill:none;stroke-width:1.7;}
+  .tour .tmain{flex:1;min-width:0;}
+  .tour .tname{font-weight:600;font-size:13px;}
+  .tour .tsub{font-size:11px;color:var(--muted);margin-top:1px;}
+  .status{
+    font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;text-transform:uppercase;letter-spacing:.4px;
+  }
+  .status.live{color:var(--green);background:var(--green-dim);}
+  .status.soon{color:var(--gold);background:var(--gold-dim);}
+  .status.done{color:var(--muted);background:rgba(255,255,255,0.05);}
+
+  /* ---- SUBSCRIPTION STRIP ---- */
+  .substrip{
+    display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+    background:linear-gradient(90deg,var(--gold-dim),var(--panel));
+    border:1px solid var(--gold-line);border-radius:var(--radius);
+    padding:15px 18px;margin-top:16px;
+  }
+  .substrip .crown{
+    width:40px;height:40px;border-radius:10px;flex:0 0 40px;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(circle at 35% 30%,#f4d47a,#c99a2e);
+  }
+  .substrip .crown svg{width:22px;height:22px;stroke:#3a2c07;fill:none;stroke-width:1.7;}
+  .substrip .stext .st1{font-weight:700;font-size:14px;}
+  .substrip .stext .st1 b{color:var(--gold);}
+  .substrip .stext .st2{font-size:12px;color:var(--muted);margin-top:2px;}
+  .substrip .grow{flex:1;}
+
+  /* ---- toast log ---- */
+  .toast{
+    position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:#0c0b0a;border:1px solid var(--hair-strong);border-radius:11px;
+    padding:11px 18px;font-size:13px;font-weight:600;opacity:0;pointer-events:none;
+    transition:opacity .2s,transform .2s;z-index:80;box-shadow:0 10px 30px rgba(0,0,0,0.5);
+    display:flex;align-items:center;gap:9px;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .toast .tdot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);}
+
+  .tabpane{display:none;}
+  .tabpane.active{display:block;}
+  .placeholder{color:var(--muted);text-align:center;padding:60px 20px;font-size:13.5px;}
+  .placeholder svg{width:34px;height:34px;stroke:var(--muted-2);fill:none;stroke-width:1.5;margin-bottom:12px;}
+
+  /* mobile menu button */
+  .menu-btn{display:none;background:var(--panel);border:1px solid var(--hair);color:var(--text);border-radius:9px;width:38px;height:38px;align-items:center;justify-content:center;cursor:pointer;margin:18px 0 0 16px;}
+  .menu-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;}
+
+  /* ============ RESPONSIVE ============ */
+  @media(max-width:1080px){
+    .kpis{grid-template-columns:repeat(3,1fr);}
+    .grid.two{grid-template-columns:1fr;}
+  }
+  @media(max-width:900px){
+    .sidebar{position:fixed;z-index:50;left:0;top:0;transform:translateX(-100%);transition:transform .22s ease;box-shadow:0 0 40px rgba(0,0,0,0.6);}
+    .sidebar.open{transform:translateX(0);}
+    .menu-btn{display:inline-flex;}
+    .content,.clubhead{padding-left:16px;padding-right:16px;}
+    .tabsbar{padding-left:16px;padding-right:16px;}
+    .acct-top{flex-direction:column;}
+  }
+  @media(max-width:560px){
+    .kpis{grid-template-columns:repeat(2,1fr);}
+    .fieldrow{grid-template-columns:1fr;}
+  }
+  .backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:40;}
+  .backdrop.show{display:block;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <span class="mark">DG</span>
+      <span class="full">DeepGammon</span>
+      <span class="dot"></span>
+    </div>
+
+    <nav class="nav">
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+        <span>Home</span>
+      </div>
+      <div class="nav-item active">
+        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="3.2"/><path d="M21 21v-2a4 4 0 0 0-3-3.8"/></svg>
+        <span>Clubs</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        <span>Practice</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="3.2"/><path d="M22 11l-3 3-2-2"/></svg>
+        <span>Friends</span>
+        <span class="badge">3</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M3 9h18"/><path d="M8 4v16"/></svg>
+        <span>Matches</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M17 5h3v2a3 3 0 0 1-3 3"/><path d="M7 5H4v2a3 3 0 0 0 3 3"/></svg>
+        <span>Rankings</span>
+      </div>
+    </nav>
+
+    <div class="spacer"></div>
+
+    <div class="side-bottom">
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+        <span>Notifications</span>
+        <span class="badge">5</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1A2 2 0 1 1 7.1 3.9l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+        <span>Settings</span>
+      </div>
+      <div class="user-row">
+        <span class="avatar" style="width:34px;height:34px;background:linear-gradient(135deg,#6bbf3f,#3f7a25);font-size:13px;">D</span>
+        <div>
+          <div class="name">Dani</div>
+          <div class="sub">Club owner</div>
+        </div>
+        <span class="more">⋯</span>
+      </div>
+    </div>
+  </aside>
+  <div class="backdrop" id="backdrop"></div>
+
+  <!-- ============ MAIN ============ -->
+  <main class="main">
+    <button class="menu-btn" id="menuBtn"><svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+
+    <!-- CLUB HEADER -->
+    <div class="clubhead">
+      <div class="clubbadge">DE</div>
+      <div class="clubinfo">
+        <div class="titlerow">
+          <h1>DeepGammon Club</h1>
+          <span class="owner-chip">Owner</span>
+        </div>
+        <div class="metarow">
+          <span class="handle">@DGCLUB</span>
+          <span class="dotsep">·</span>
+          <span class="tier-pill">Premier tier</span>
+          <span class="dotsep">·</span>
+          <span>47 members</span>
+          <span class="dotsep">·</span>
+          <span>Founded Mar 2025</span>
+        </div>
+      </div>
+      <div class="grow"></div>
+      <div class="headbtns">
+        <button class="btn ghost" onclick="log('Invite link copied to clipboard')">
+          <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="3.2"/><path d="M20 8v6M17 11h6"/></svg>
+          Invite
+        </button>
+        <button class="btn green" onclick="log('Opened club broadcast composer')">
+          <svg viewBox="0 0 24 24"><path d="M3 11l18-8-8 18-2-8-8-2z"/></svg>
+          Announce
+        </button>
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabsbar" id="tabsbar">
+      <div class="ptab active" data-pane="overview">Overview</div>
+      <div class="ptab" data-pane="members">Members</div>
+      <div class="ptab" data-pane="tables">Tables</div>
+      <div class="ptab" data-pane="tournaments">Tournaments</div>
+      <div class="ptab" data-pane="accounting">Accounting</div>
+      <div class="ptab" data-pane="settings">Settings</div>
+    </div>
+
+    <div class="content">
+
+      <!-- ============ OVERVIEW PANE ============ -->
+      <div class="tabpane active" id="pane-overview">
+
+        <!-- KPI TILES -->
+        <div class="kpis">
+          <div class="kpi">
+            <span class="k">Members</span>
+            <span class="v">47</span>
+            <span class="d up">▲ 6 this month</span>
+          </div>
+          <div class="kpi">
+            <span class="k">Active tables</span>
+            <span class="v green">1 <small>· live</small></span>
+            <span class="d flat">3 configured</span>
+          </div>
+          <div class="kpi">
+            <span class="k">Chips in circulation</span>
+            <span class="v gold">1.24M</span>
+            <span class="d up">▲ 4.1%</span>
+          </div>
+          <div class="kpi">
+            <span class="k">Rake this month</span>
+            <span class="v gold">₲ 38,400</span>
+            <span class="d up">▲ 22%</span>
+          </div>
+          <div class="kpi">
+            <span class="k">Net payouts</span>
+            <span class="v red">₲ 19,650</span>
+            <span class="d down">▼ 8%</span>
+          </div>
+          <div class="kpi">
+            <span class="k">Your balance</span>
+            <span class="v">₲ 12,940</span>
+            <span class="d up">▲ withdrawable</span>
+          </div>
+        </div>
+
+        <div class="grid two">
+          <!-- ACCOUNTING / ECONOMY -->
+          <div class="panel">
+            <div class="panel-head">
+              <h2>Club economy</h2>
+              <span class="sub">· last 8 months</span>
+              <div class="grow"></div>
+              <button class="btn sm ghost" onclick="switchTab('accounting')">Full accounting →</button>
+            </div>
+            <div class="panel-body">
+              <div class="acct-top">
+                <div class="chartwrap">
+                  <svg id="revChart" viewBox="0 0 520 210" width="100%" style="display:block;overflow:visible;"></svg>
+                  <div class="chart-legend">
+                    <span><i style="background:var(--gold)"></i> Rake collected</span>
+                    <span><i style="background:rgba(211,168,63,0.35)"></i> Buy-in volume</span>
+                    <span><i style="background:var(--green)"></i> Your earnings</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="breakdown" style="margin-top:18px;">
+                <div class="brk">
+                  <span class="dotc" style="background:rgba(211,168,63,0.4)"></span>
+                  <div class="lab"><div class="nm">Buy-ins collected</div><div class="ds">Total chips entered across all tables</div></div>
+                  <span class="amt gold">₲ 214,800</span>
+                </div>
+                <div class="brk">
+                  <span class="dotc" style="background:var(--gold)"></span>
+                  <div class="lab"><div class="nm">Rake · 4.5% of pots</div><div class="ds">Your configured house cut, capped per pot</div></div>
+                  <span class="amt gold">₲ 38,400</span>
+                </div>
+                <div class="brk">
+                  <span class="dotc" style="background:var(--red)"></span>
+                  <div class="lab"><div class="nm">Prize payouts</div><div class="ds">Tournament & table winnings paid to members</div></div>
+                  <span class="amt red">− ₲ 19,650</span>
+                </div>
+                <div class="brk">
+                  <span class="dotc" style="background:var(--green)"></span>
+                  <div class="lab"><div class="nm">Your earnings <span style="color:var(--green);font-weight:700">· keep what you build</span></div><div class="ds">Rake minus platform fee (15%) & payouts</div></div>
+                  <span class="amt green">₲ 12,940</span>
+                </div>
+              </div>
+
+              <div class="earn-card">
+                <div class="kw">Available to withdraw</div>
+                <div class="big">₲ 12,940</div>
+                <div class="note">≈ $129.40 · settles to your linked payout method in 1–2 business days.</div>
+                <div class="rowbtns">
+                  <button class="btn gold" onclick="log('Withdrawal of ₲ 12,940 initiated → linked account')">
+                    <svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 21h16"/></svg>
+                    Withdraw earnings
+                  </button>
+                  <button class="btn ghost" onclick="log('Opened payout method settings')">Payout settings</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT COLUMN: tables config + tournaments -->
+          <div class="grid" style="align-content:start;">
+            <!-- TABLES CONFIG -->
+            <div class="panel">
+              <div class="panel-head">
+                <h2>Create a table</h2>
+                <div class="grow"></div>
+                <span class="stakebadge">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>
+                  house cut
+                </span>
+              </div>
+              <div class="panel-body">
+                <div class="field">
+                  <label>Table name</label>
+                  <input id="tblName" type="text" value="Friday Night Chouette">
+                </div>
+                <div class="fieldrow">
+                  <div class="field">
+                    <label>Stakes (per point)</label>
+                    <select id="tblStake">
+                      <option>₲ 25</option>
+                      <option selected>₲ 100</option>
+                      <option>₲ 500</option>
+                      <option>₲ 1,000</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label>Rake %</label>
+                    <select id="tblRake">
+                      <option>2%</option>
+                      <option selected>4.5%</option>
+                      <option>5%</option>
+                      <option>7%</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="fieldrow">
+                  <div class="field">
+                    <label>Rake cap / pot</label>
+                    <input id="tblCap" type="text" value="₲ 500">
+                  </div>
+                  <div class="field">
+                    <label>Seats</label>
+                    <select id="tblSeats"><option>2</option><option selected>Chouette (2–8)</option></select>
+                  </div>
+                </div>
+                <button class="btn green" style="width:100%;justify-content:center;" onclick="createTable()">
+                  <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                  Create table
+                </button>
+
+                <div style="margin-top:16px;padding-top:6px;border-top:1px solid var(--hair);">
+                  <div style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:600;margin:6px 0 4px;">Live now</div>
+                  <div class="livetable">
+                    <span class="livedot"></span>
+                    <div class="lt-main">
+                      <div class="lt-name">High Rollers · ₲ 500/pt</div>
+                      <div class="lt-sub">4 seated · pot ₲ 8,200 · rake 4.5%</div>
+                    </div>
+                    <button class="btn sm ghost" onclick="log('Opened live table director for High Rollers')">Manage</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- TOURNAMENTS -->
+            <div class="panel">
+              <div class="panel-head">
+                <h2>Tournaments</h2>
+                <div class="grow"></div>
+                <button class="btn sm green" onclick="log('Opened new-tournament wizard')">+ Create</button>
+              </div>
+              <div class="panel-body" style="padding-top:8px;padding-bottom:8px;">
+                <div class="tour">
+                  <div class="ticon"><svg viewBox="0 0 24 24"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/></svg></div>
+                  <div class="tmain">
+                    <div class="tname">Summer Championship</div>
+                    <div class="tsub">32 players · ₲ 1,000 buy-in · Round 3/5</div>
+                  </div>
+                  <span class="status live">Live</span>
+                </div>
+                <div class="tour">
+                  <div class="ticon"><svg viewBox="0 0 24 24"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/></svg></div>
+                  <div class="tmain">
+                    <div class="tname">Weekly Blitz Ladder</div>
+                    <div class="tsub">Starts Sat 20:00 · 18 registered</div>
+                  </div>
+                  <span class="status soon">Soon</span>
+                </div>
+                <div class="tour">
+                  <div class="ticon"><svg viewBox="0 0 24 24"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/></svg></div>
+                  <div class="tmain">
+                    <div class="tname">Spring Open</div>
+                    <div class="tsub">Won by K. Öztürk · ₲ 24,000 prize pool</div>
+                  </div>
+                  <span class="status done">Done</span>
+                </div>
+              </div>
+              <div style="padding:12px 18px;border-top:1px solid var(--hair);">
+                <button class="btn ghost" style="width:100%;justify-content:center;" onclick="log('Opened live tournament director')">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg>
+                  Open live director
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MEMBERS MINI-TABLE -->
+        <div class="panel" style="margin-top:16px;">
+          <div class="panel-head">
+            <h2>Members</h2>
+            <span class="sub">· 47 total</span>
+            <div class="grow"></div>
+            <button class="btn sm ghost" onclick="switchTab('members')">View all →</button>
+          </div>
+          <div class="tablescroll">
+            <table id="memberTable">
+              <thead>
+                <tr>
+                  <th>Member</th>
+                  <th>Role</th>
+                  <th class="num">Rating</th>
+                  <th class="num">Chips</th>
+                  <th>Joined</th>
+                  <th class="act">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="memberBody"><!-- injected --></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- SUBSCRIPTION STRIP -->
+        <div class="substrip">
+          <div class="crown"><svg viewBox="0 0 24 24"><path d="M3 7l4 5 5-7 5 7 4-5-2 13H5L3 7z"/></svg></div>
+          <div class="stext">
+            <div class="st1"><b>Premier tier</b> · $39/mo · renews Aug 4, 2026</div>
+            <div class="st2">Unlimited tables · custom rake up to 7% · tournaments · priority payouts · club branding</div>
+          </div>
+          <div class="grow"></div>
+          <div class="headbtns">
+            <button class="btn ghost" onclick="log('Opened plan comparison')">Compare plans</button>
+            <button class="btn gold" onclick="log('Opened subscription management')">Manage subscription</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ MEMBERS PANE ============ -->
+      <div class="tabpane" id="pane-members">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>All members</h2>
+            <span class="sub">· 47 total · 3 admins</span>
+            <div class="grow"></div>
+            <button class="btn sm green" onclick="log('Invite link copied to clipboard')">+ Invite member</button>
+          </div>
+          <div class="tablescroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Member</th>
+                  <th>Role</th>
+                  <th class="num">Rating</th>
+                  <th class="num">Chips</th>
+                  <th>Joined</th>
+                  <th class="act">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="memberBodyFull"><!-- injected --></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ OTHER PANES (light) ============ -->
+      <div class="tabpane" id="pane-tables">
+        <div class="panel"><div class="placeholder">
+          <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M3 9h18"/></svg>
+          <div>Table &amp; stakes management lives on the Overview tab's "Create a table" panel.</div>
+          <div style="margin-top:14px;"><button class="btn green" onclick="switchTab('overview')">Go to table config</button></div>
+        </div></div>
+      </div>
+      <div class="tabpane" id="pane-tournaments">
+        <div class="panel"><div class="placeholder">
+          <svg viewBox="0 0 24 24"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/></svg>
+          <div>Full tournament director &amp; bracket tools.</div>
+          <div style="margin-top:14px;"><button class="btn green" onclick="log('Opened live tournament director')">Open live director</button></div>
+        </div></div>
+      </div>
+      <div class="tabpane" id="pane-accounting">
+        <div class="panel">
+          <div class="panel-head"><h2>Accounting &amp; ledger</h2><div class="grow"></div>
+            <button class="btn sm gold" onclick="log('Withdrawal of ₲ 12,940 initiated → linked account')">Withdraw ₲ 12,940</button>
+          </div>
+          <div class="panel-body">
+            <div class="kpis" style="grid-template-columns:repeat(4,1fr);margin:0 0 18px;">
+              <div class="kpi"><span class="k">Gross rake (YTD)</span><span class="v gold">₲ 214,300</span></div>
+              <div class="kpi"><span class="k">Platform fee 15%</span><span class="v red">− ₲ 32,145</span></div>
+              <div class="kpi"><span class="k">Payouts (YTD)</span><span class="v red">− ₲ 118,900</span></div>
+              <div class="kpi"><span class="k">Net to you</span><span class="v green">₲ 63,255</span></div>
+            </div>
+            <div class="tablescroll">
+              <table>
+                <thead><tr><th>Date</th><th>Description</th><th>Type</th><th class="num">Amount</th></tr></thead>
+                <tbody>
+                  <tr><td>Jul 3</td><td>Rake · High Rollers table</td><td><span class="role member">Rake</span></td><td class="num" style="color:var(--gold);font-weight:700">+ ₲ 1,240</td></tr>
+                  <tr><td>Jul 2</td><td>Prize payout · Summer Championship R2</td><td><span class="role member">Payout</span></td><td class="num" style="color:var(--red);font-weight:700">− ₲ 6,000</td></tr>
+                  <tr><td>Jul 1</td><td>Buy-ins · Weekly Blitz Ladder</td><td><span class="role member">Buy-in</span></td><td class="num" style="color:var(--gold);font-weight:700">+ ₲ 18,000</td></tr>
+                  <tr><td>Jun 28</td><td>Withdrawal → linked account</td><td><span class="role admin">Withdraw</span></td><td class="num" style="color:var(--red);font-weight:700">− ₲ 9,500</td></tr>
+                  <tr><td>Jun 27</td><td>Rake · Friday Night Chouette</td><td><span class="role member">Rake</span></td><td class="num" style="color:var(--gold);font-weight:700">+ ₲ 2,180</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="tabpane" id="pane-settings">
+        <div class="panel"><div class="placeholder">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M4 12h2M18 12h2M12 4v2M12 18v2"/></svg>
+          <div>Club branding, roles, rake defaults &amp; payout method.</div>
+          <div style="margin-top:14px;"><button class="btn green" onclick="log('Opened club settings')">Edit club settings</button></div>
+        </div></div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<div class="chart-tip" id="chartTip"></div>
+<div class="toast" id="toast"><span class="tdot"></span><span id="toastMsg"></span></div>
+
+<script>
+/* ===================== MEMBER DATA ===================== */
+const AV=['#7f8ce0','#5fb0d6','#e0a76e','#8bc97b','#d98cc4','#c9a24e','#6fc2b0','#e07f7f'];
+const members=[
+  {name:'Dani',sub:'you · owner',role:'owner',r:1500,chips:'48,200',joined:'Mar 2025',c:'#6bbf3f'},
+  {name:'K. Öztürk',sub:'@kaan',role:'admin',r:2244,chips:'132,400',joined:'Mar 2025',c:'#7f8ce0'},
+  {name:'Sofia M.',sub:'@sofiam',role:'admin',r:2178,chips:'96,050',joined:'Apr 2025',c:'#d98cc4'},
+  {name:'H. Bauer',sub:'@hbauer',role:'member',r:2144,chips:'54,300',joined:'Apr 2025',c:'#e0a76e'},
+  {name:'Wei Chen',sub:'@weichen',role:'member',r:2071,chips:'41,800',joined:'May 2025',c:'#5fb0d6'},
+  {name:'A. Dubois',sub:'@adubois',role:'member',r:2033,chips:'22,140',joined:'Jun 2025',c:'#8bc97b'},
+  {name:'R. Sharma',sub:'@rsharma',role:'member',r:1994,chips:'17,900',joined:'Jun 2025',c:'#6fc2b0'},
+  {name:'C. Morgan',sub:'@cmorgan',role:'member',r:1948,chips:'9,420',joined:'Jul 2025',c:'#c9a24e'}
+];
+const ROLE={owner:'Owner',admin:'Admin',member:'Member'};
+const chipSvg='<svg viewBox="0 0 24 24" fill="none" stroke="#d3a83f" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg>';
+
+function memberRow(m,i){
+  const init=(m.name.match(/[A-Za-z]/)||[m.name[0]])[0].toUpperCase();
+  const isOwner=m.role==='owner';
+  const promote = isOwner ? '' : `<button class="btn sm ghost" onclick="log('Promoted ${m.name} — role updated')">Promote</button>`;
+  const remove = isOwner ? '' : `<button class="btn sm danger" onclick="log('Removed ${m.name} from DeepGammon Club')">Remove</button>`;
+  return `<tr>
+    <td><div class="player">
+      <span class="avatar" style="width:34px;height:34px;background:linear-gradient(135deg,${m.c},rgba(0,0,0,0.35));font-size:13px;">${init}</span>
+      <div><div class="pn">${m.name}</div><div class="sub2">${m.sub}</div></div>
+    </div></td>
+    <td><span class="role ${m.role}">${ROLE[m.role]}</span></td>
+    <td class="num"><span class="rating">${m.r}</span></td>
+    <td class="num"><span class="chipsval">${chipSvg}${m.chips}</span></td>
+    <td>${m.joined}</td>
+    <td class="act"><span class="rowacts">
+      ${promote}
+      <button class="btn sm ghost" onclick="log('Opened message thread with ${m.name}')">Message</button>
+      ${remove}
+    </span></td>
+  </tr>`;
+}
+document.getElementById('memberBody').innerHTML = members.slice(0,6).map(memberRow).join('');
+document.getElementById('memberBodyFull').innerHTML = members.map(memberRow).join('');
+
+/* ===================== REVENUE CHART ===================== */
+(function(){
+  const data=[
+    {m:'Dec',rake:14200,buyin:82000,earn:5100},
+    {m:'Jan',rake:18600,buyin:96000,earn:6800},
+    {m:'Feb',rake:21400,buyin:118000,earn:7900},
+    {m:'Mar',rake:26800,buyin:142000,earn:9200},
+    {m:'Apr',rake:24100,buyin:131000,earn:8400},
+    {m:'May',rake:31500,buyin:176000,earn:10900},
+    {m:'Jun',rake:34900,buyin:198000,earn:11800},
+    {m:'Jul',rake:38400,buyin:214800,earn:12940}
+  ];
+  const W=520,H=210,padL=8,padR=8,padB=26,padT=8;
+  const maxV=Math.max(...data.map(d=>d.rake));
+  const plotH=H-padB-padT, plotW=W-padL-padR;
+  const groupW=plotW/data.length;
+  const barW=groupW*0.42;
+  const svg=document.getElementById('revChart');
+  const tip=document.getElementById('chartTip');
+  let html='';
+  // baseline
+  html+=`<line x1="${padL}" y1="${padT+plotH}" x2="${W-padR}" y2="${padT+plotH}" stroke="rgba(240,235,220,0.10)" stroke-width="1"/>`;
+  data.forEach((d,i)=>{
+    const gx=padL+groupW*i+groupW/2;
+    const rakeH=(d.rake/maxV)*plotH;
+    const earnH=(d.earn/maxV)*plotH;
+    const bx1=gx-barW-1.5, bx2=gx+1.5;
+    // rake bar (gold)
+    html+=`<rect class="bar" data-i="${i}" x="${bx1}" y="${padT+plotH-rakeH}" width="${barW}" height="${rakeH}" rx="3" fill="var(--gold)"/>`;
+    // earnings bar (green)
+    html+=`<rect class="bar" data-i="${i}" x="${bx2}" y="${padT+plotH-earnH}" width="${barW}" height="${earnH}" rx="3" fill="var(--green)"/>`;
+    // month label
+    html+=`<text x="${gx}" y="${H-8}" text-anchor="middle" font-size="10" fill="#9a978c" font-family="Inter">${d.m}</text>`;
+  });
+  svg.innerHTML=html;
+  function fmt(n){return '₲ '+n.toLocaleString();}
+  svg.querySelectorAll('.bar').forEach(b=>{
+    b.addEventListener('mousemove',e=>{
+      const d=data[+b.dataset.i];
+      tip.innerHTML=`<div class="tm">${d.m} 2026</div><div class="tv">Rake ${fmt(d.rake)}</div><div class="tr">Your earnings ${fmt(d.earn)}</div><div class="tm">Buy-ins ${fmt(d.buyin)}</div>`;
+      tip.style.opacity='1';
+      tip.style.left=(e.clientX+14)+'px';
+      tip.style.top=(e.clientY-10)+'px';
+    });
+    b.addEventListener('mouseleave',()=>{tip.style.opacity='0';});
+  });
+})();
+
+/* ===================== TABS ===================== */
+function switchTab(pane){
+  document.querySelectorAll('.ptab').forEach(t=>t.classList.toggle('active',t.dataset.pane===pane));
+  document.querySelectorAll('.tabpane').forEach(p=>p.classList.toggle('active',p.id==='pane-'+pane));
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+document.getElementById('tabsbar').addEventListener('click',e=>{
+  const t=e.target.closest('.ptab'); if(!t)return;
+  switchTab(t.dataset.pane);
+});
+
+/* ===================== TABLE CREATE ===================== */
+function createTable(){
+  const n=document.getElementById('tblName').value||'Untitled table';
+  const s=document.getElementById('tblStake').value;
+  const r=document.getElementById('tblRake').value;
+  log(`Created "${n}" · ${s}/pt · ${r} rake — now open`);
+}
+
+/* ===================== TOAST LOG ===================== */
+let toastTimer;
+function log(msg){
+  const t=document.getElementById('toast');
+  document.getElementById('toastMsg').textContent=msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),2600);
+}
+
+/* ===================== MOBILE MENU ===================== */
+const sb=document.getElementById('sidebar'), bd=document.getElementById('backdrop');
+document.getElementById('menuBtn').addEventListener('click',()=>{sb.classList.add('open');bd.classList.add('show');});
+bd.addEventListener('click',()=>{sb.classList.remove('open');bd.classList.remove('show');});
+</script>
+</body>
+</html>

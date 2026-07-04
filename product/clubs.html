@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DeepGammon — Clubs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#161514;
+    --panel:#1e1c1a;
+    --panel-2:#232120;
+    --hair:rgba(240,235,220,0.07);
+    --hair-strong:rgba(240,235,220,0.12);
+    --green:#6bbf3f;
+    --green-dim:rgba(107,191,63,0.14);
+    --green-line:rgba(107,191,63,0.45);
+    --gold:#d3a83f;
+    --gold-dim:rgba(211,168,63,0.14);
+    --text:#f1efe9;
+    --muted:#9a978c;
+    --muted-2:#6f6d64;
+    --red:#e0654f;
+    --row-tint:rgba(255,255,255,0.014);
+    --radius:13px;
+    --shadow:0 1px 0 rgba(255,255,255,0.02) inset, 0 8px 24px rgba(0,0,0,0.35);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+    font-size:14px;
+    -webkit-font-smoothing:antialiased;
+    line-height:1.4;
+  }
+  a{color:inherit;text-decoration:none;}
+  button{font-family:inherit;}
+  ::selection{background:var(--green-dim);}
+
+  /* ============ LAYOUT ============ */
+  .app{display:flex;min-height:100vh;}
+
+  /* ============ SIDEBAR ============ */
+  .sidebar{
+    width:240px;flex:0 0 240px;
+    background:var(--panel);
+    border-right:1px solid var(--hair);
+    display:flex;flex-direction:column;
+    padding:18px 14px;
+    position:sticky;top:0;height:100vh;
+  }
+  .brand{
+    display:flex;align-items:center;gap:9px;
+    padding:6px 8px 20px 8px;
+  }
+  .brand .mark{
+    font-weight:800;font-size:20px;letter-spacing:-0.5px;
+    color:var(--green);
+  }
+  .brand .full{font-weight:700;font-size:15px;letter-spacing:-0.2px;color:var(--text);}
+  .brand .dot{width:7px;height:7px;border-radius:50%;background:var(--green);margin-left:auto;box-shadow:0 0 10px var(--green);}
+
+  .nav{display:flex;flex-direction:column;gap:2px;}
+  .nav-item{
+    display:flex;align-items:center;gap:11px;
+    padding:9px 10px;border-radius:9px;
+    color:var(--muted);font-weight:500;cursor:pointer;
+    transition:background .15s,color .15s;
+  }
+  .nav-item svg{width:18px;height:18px;flex:0 0 18px;stroke:currentColor;fill:none;stroke-width:1.7;}
+  .nav-item:hover{background:rgba(255,255,255,0.03);color:var(--text);}
+  .nav-item.active{background:var(--green-dim);color:var(--green);font-weight:600;}
+  .nav-item.active svg{stroke:var(--green);}
+  .nav-item .badge{margin-left:auto;background:var(--green);color:#0d1a06;font-size:10px;font-weight:700;padding:1px 6px;border-radius:20px;}
+
+  .sidebar .spacer{flex:1;}
+  .side-bottom{display:flex;flex-direction:column;gap:2px;padding-top:8px;border-top:1px solid var(--hair);}
+  .user-row{
+    display:flex;align-items:center;gap:10px;
+    padding:9px 8px;margin-top:6px;border-radius:10px;cursor:pointer;
+  }
+  .user-row:hover{background:rgba(255,255,255,0.03);}
+  .user-row .name{font-weight:600;font-size:13px;}
+  .user-row .sub{font-size:11px;color:var(--muted);}
+  .user-row .more{margin-left:auto;color:var(--muted-2);font-weight:700;letter-spacing:1px;}
+
+  .avatar{border-radius:50%;flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;font-weight:700;color:#fff;overflow:hidden;}
+
+  /* ============ MAIN ============ */
+  .main{flex:1;min-width:0;display:flex;flex-direction:column;}
+  .topbar{
+    display:flex;align-items:flex-start;gap:16px;
+    padding:20px 30px 0;
+  }
+  .page-title{font-size:23px;font-weight:800;letter-spacing:-0.6px;}
+  .page-sub{color:var(--muted);font-size:12.5px;margin-top:2px;}
+  .topbar .grow{flex:1;}
+  .content{padding:16px 30px 40px;max-width:1180px;width:100%;}
+
+  /* ---- buttons ---- */
+  .btn{
+    display:inline-flex;align-items:center;gap:7px;justify-content:center;
+    border-radius:10px;font-weight:600;font-size:13px;cursor:pointer;
+    padding:9px 15px;border:1px solid transparent;transition:.15s;white-space:nowrap;
+  }
+  .btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.9;}
+  .btn.green{background:var(--green);color:#0d1a06;}
+  .btn.green:hover{background:#7bcf4c;}
+  .btn.outline{background:transparent;color:var(--text);border-color:var(--hair-strong);}
+  .btn.outline:hover{border-color:var(--muted);background:rgba(255,255,255,0.03);}
+  .btn.ghost{background:var(--panel-2);color:var(--text);border-color:var(--hair);}
+  .btn.ghost:hover{border-color:var(--muted-2);}
+  .btn.small{padding:7px 12px;font-size:12.5px;}
+  .btn.joined{background:var(--green-dim);color:var(--green);border-color:var(--green-line);pointer-events:auto;}
+  .btn.requested{background:var(--gold-dim);color:var(--gold);border-color:rgba(211,168,63,0.4);}
+
+  /* ---- search (header) ---- */
+  .search{
+    display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--hair);
+    border-radius:10px;padding:8px 12px;
+  }
+  .search svg{width:15px;height:15px;stroke:var(--muted);fill:none;stroke-width:1.8;}
+  .search input{
+    background:none;border:none;outline:none;color:var(--text);font-family:inherit;font-size:13px;width:190px;
+  }
+  .search input::placeholder{color:var(--muted-2);}
+
+  /* ---- section labels ---- */
+  .sec-head{display:flex;align-items:baseline;gap:10px;margin:26px 0 12px;}
+  .sec-head h2{font-size:15px;font-weight:700;letter-spacing:-0.2px;margin:0;}
+  .sec-head .count{font-size:12px;color:var(--muted);font-weight:500;}
+  .sec-head .link{margin-left:auto;font-size:12.5px;color:var(--green);font-weight:600;cursor:pointer;}
+  .sec-head .link:hover{text-decoration:underline;}
+
+  /* ---- YOUR CLUBS strip ---- */
+  .yours{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px;}
+  .yourcard{
+    display:flex;align-items:center;gap:14px;
+    background:linear-gradient(180deg,var(--panel-2),var(--panel));
+    border:1px solid var(--hair);border-radius:var(--radius);
+    padding:16px;box-shadow:var(--shadow);position:relative;overflow:hidden;
+  }
+  .yourcard.featured{border-color:rgba(211,168,63,0.28);}
+  .yourcard .logo{width:54px;height:54px;border-radius:13px;flex:0 0 54px;}
+  .yourcard .info{min-width:0;flex:1;}
+  .yourcard .cn{font-weight:700;font-size:15px;display:flex;align-items:center;gap:8px;}
+  .yourcard .meta{font-size:12px;color:var(--muted);margin-top:3px;}
+  .yourcard .meta b{color:var(--text);font-weight:600;}
+  .yourcard .enter{margin-top:0;}
+
+  /* ---- FILTERS row ---- */
+  .filters{
+    display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+    background:var(--panel);border:1px solid var(--hair);border-radius:var(--radius);
+    padding:12px 14px;box-shadow:var(--shadow);
+  }
+  .fgroup{display:flex;align-items:center;gap:7px;}
+  .flabel{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted-2);font-weight:600;}
+  .select{
+    position:relative;display:inline-flex;align-items:center;
+    background:var(--panel-2);border:1px solid var(--hair);border-radius:9px;
+  }
+  .select select{
+    appearance:none;-webkit-appearance:none;background:none;border:none;outline:none;
+    color:var(--text);font-family:inherit;font-size:12.5px;font-weight:600;
+    padding:7px 26px 7px 11px;cursor:pointer;
+  }
+  .select::after{content:"▾";position:absolute;right:9px;color:var(--muted);font-size:10px;pointer-events:none;}
+  .seg{display:flex;gap:2px;background:var(--panel-2);border:1px solid var(--hair);padding:3px;border-radius:10px;}
+  .seg button{
+    background:none;border:none;color:var(--muted);font-size:12.5px;font-weight:600;
+    padding:6px 11px;border-radius:7px;cursor:pointer;transition:.15s;
+  }
+  .seg button:hover{color:var(--text);}
+  .seg button.active{background:var(--gold-dim);color:var(--gold);}
+  .seg.greenseg button.active{background:var(--green-dim);color:var(--green);}
+  .filters .grow{flex:1;}
+
+  /* ---- CLUB GRID ---- */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;margin-top:14px;}
+  .clubcard{
+    display:flex;flex-direction:column;
+    background:var(--panel);border:1px solid var(--hair);border-radius:var(--radius);
+    padding:16px;box-shadow:var(--shadow);position:relative;transition:border-color .15s,transform .15s;
+  }
+  .clubcard:hover{border-color:var(--hair-strong);}
+  .clubcard.featured{border-color:rgba(211,168,63,0.3);background:linear-gradient(180deg,rgba(211,168,63,0.05),var(--panel));}
+  .ribbon{
+    position:absolute;top:14px;right:14px;
+    font-size:9.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;
+    color:var(--gold);background:var(--gold-dim);border:1px solid rgba(211,168,63,0.35);
+    padding:3px 8px;border-radius:20px;display:flex;align-items:center;gap:4px;
+  }
+  .ribbon svg{width:10px;height:10px;fill:var(--gold);stroke:none;}
+  .cc-head{display:flex;align-items:flex-start;gap:12px;}
+  .cc-logo{width:48px;height:48px;border-radius:12px;flex:0 0 48px;}
+  .cc-title{min-width:0;padding-right:56px;}
+  .cc-name{font-weight:700;font-size:15px;letter-spacing:-0.2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .cc-handle{font-size:12px;color:var(--muted);margin-top:1px;}
+  .cc-desc{font-size:12.5px;color:var(--muted);margin:12px 0 0;line-height:1.5;min-height:34px;}
+  .cc-stats{display:flex;flex-wrap:wrap;gap:6px;margin-top:13px;align-items:center;}
+  .stat{
+    display:inline-flex;align-items:center;gap:5px;
+    font-size:11.5px;color:var(--muted);font-weight:600;
+    background:var(--panel-2);border:1px solid var(--hair);border-radius:8px;padding:4px 9px;
+  }
+  .stat svg{width:12px;height:12px;stroke:var(--muted);fill:none;stroke-width:1.8;}
+  .stat .rate{color:var(--gold);}
+  .stat.stakes{color:var(--gold);border-color:rgba(211,168,63,0.22);background:var(--gold-dim);}
+  .stat.stakes svg{stroke:var(--gold);}
+  .tier{
+    font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;text-transform:uppercase;letter-spacing:.4px;
+    border:1px solid transparent;
+  }
+  .tier.premier{color:var(--gold);background:var(--gold-dim);border-color:rgba(211,168,63,0.3);}
+  .tier.elite{color:#b98cff;background:rgba(150,110,255,0.13);border-color:rgba(150,110,255,0.3);}
+  .tier.casual{color:#6fc2b0;background:rgba(111,194,176,0.12);border-color:rgba(111,194,176,0.3);}
+  .cc-foot{display:flex;align-items:center;gap:8px;margin-top:15px;padding-top:14px;border-top:1px solid var(--hair);}
+  .cc-foot .access{font-size:11.5px;color:var(--muted);font-weight:600;display:flex;align-items:center;gap:5px;}
+  .cc-foot .access svg{width:13px;height:13px;stroke:var(--muted);fill:none;stroke-width:1.8;}
+  .cc-foot .btn{margin-left:auto;}
+
+  .empty{
+    grid-column:1/-1;text-align:center;color:var(--muted);padding:40px;
+    background:var(--panel);border:1px dashed var(--hair-strong);border-radius:var(--radius);
+  }
+
+  /* ---- STATS BAR ---- */
+  .statsbar{
+    display:flex;flex-wrap:wrap;gap:0;margin-top:26px;
+    background:var(--panel);border:1px solid var(--hair);border-radius:var(--radius);
+    box-shadow:var(--shadow);overflow:hidden;
+  }
+  .statsbar .cell{
+    flex:1;min-width:150px;padding:16px 20px;
+    display:flex;flex-direction:column;gap:3px;
+    border-right:1px solid var(--hair);
+  }
+  .statsbar .cell:last-child{border-right:none;}
+  .statsbar .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;font-weight:600;}
+  .statsbar .v{font-size:21px;font-weight:800;letter-spacing:-0.4px;}
+  .statsbar .v.gold{color:var(--gold);}
+  .statsbar .v.green{color:var(--green);}
+  .statsbar .v small{font-size:12px;font-weight:600;color:var(--muted);}
+
+  /* mobile menu button */
+  .menu-btn{display:none;background:var(--panel);border:1px solid var(--hair);color:var(--text);border-radius:9px;width:38px;height:38px;align-items:center;justify-content:center;cursor:pointer;flex:0 0 38px;}
+  .menu-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;}
+
+  /* ============ RESPONSIVE ============ */
+  @media(max-width:900px){
+    .sidebar{
+      position:fixed;z-index:50;left:0;top:0;transform:translateX(-100%);
+      transition:transform .22s ease;box-shadow:0 0 40px rgba(0,0,0,0.6);
+    }
+    .sidebar.open{transform:translateX(0);}
+    .menu-btn{display:inline-flex;}
+    .content,.topbar{padding-left:16px;padding-right:16px;}
+    .topbar{flex-wrap:wrap;}
+    .header-actions{width:100%;margin-top:4px;}
+    .grid,.yours{grid-template-columns:1fr;}
+    .statsbar .cell{border-right:none;border-bottom:1px solid var(--hair);}
+    .statsbar .cell:last-child{border-bottom:none;}
+  }
+  .header-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:40;}
+  .backdrop.show{display:block;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <span class="mark">DG</span>
+      <span class="full">DeepGammon</span>
+      <span class="dot"></span>
+    </div>
+
+    <nav class="nav">
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+        <span>Home</span>
+      </div>
+      <div class="nav-item active">
+        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="3.2"/><path d="M21 21v-2a4 4 0 0 0-3-3.8"/></svg>
+        <span>Clubs</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        <span>Practice</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="3.2"/><path d="M22 11l-3 3-2-2"/></svg>
+        <span>Friends</span>
+        <span class="badge">3</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M3 9h18"/><path d="M8 4v16"/></svg>
+        <span>Matches</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M17 5h3v2a3 3 0 0 1-3 3"/><path d="M7 5H4v2a3 3 0 0 0 3 3"/></svg>
+        <span>Rankings</span>
+      </div>
+    </nav>
+
+    <div class="spacer"></div>
+
+    <div class="side-bottom">
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+        <span>Notifications</span>
+        <span class="badge">5</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1A2 2 0 1 1 7.1 3.9l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+        <span>Settings</span>
+      </div>
+      <div class="user-row">
+        <span class="avatar" style="width:34px;height:34px;background:linear-gradient(135deg,#6bbf3f,#3f7a25);font-size:13px;">D</span>
+        <div>
+          <div class="name">Dani</div>
+          <div class="sub">1500 · provisional</div>
+        </div>
+        <span class="more">⋯</span>
+      </div>
+    </div>
+  </aside>
+  <div class="backdrop" id="backdrop"></div>
+
+  <!-- ============ MAIN ============ -->
+  <main class="main">
+    <div class="topbar">
+      <button class="menu-btn" id="menuBtn"><svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+      <div>
+        <div class="page-title">Clubs</div>
+        <div class="page-sub">Find a community, play stakes matches, and climb your club ladder.</div>
+      </div>
+      <div class="grow"></div>
+      <div class="header-actions">
+        <div class="search">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input id="searchInput" type="text" placeholder="Search clubs…">
+        </div>
+        <button class="btn green" id="createBtn">
+          <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+          Create a club
+        </button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ===== YOUR CLUBS ===== -->
+      <div class="sec-head">
+        <h2>Your clubs</h2>
+        <span class="count">2 memberships</span>
+        <span class="link">Manage</span>
+      </div>
+      <div class="yours">
+        <div class="yourcard featured">
+          <span class="logo" data-badge="DG" data-c1="#e8c15a" data-c2="#b07f2a" data-dark="1"></span>
+          <div class="info">
+            <div class="cn">DeepGammon Club <span class="tier premier">Premier</span></div>
+            <div class="meta"><b>Elite member</b> · Gold tier · <b>1,842</b> members · 12 online</div>
+          </div>
+          <button class="btn green small enter">Enter lobby</button>
+        </div>
+        <div class="yourcard">
+          <span class="logo" data-badge="NL" data-c1="#5fb0d6" data-c2="#2f6d92"></span>
+          <div class="info">
+            <div class="cn">Night Owls <span class="tier casual">Casual</span></div>
+            <div class="meta"><b>Member</b> · Silver tier · <b>340</b> members · 5 online</div>
+          </div>
+          <button class="btn ghost small enter">Enter lobby</button>
+        </div>
+      </div>
+
+      <!-- ===== BROWSE / FILTERS ===== -->
+      <div class="sec-head">
+        <h2>Browse clubs</h2>
+        <span class="count" id="resultCount">9 clubs</span>
+      </div>
+
+      <div class="filters">
+        <div class="fgroup">
+          <span class="flabel">Region</span>
+          <span class="select">
+            <select id="fRegion">
+              <option value="">All regions</option>
+              <option>Europe</option>
+              <option>North America</option>
+              <option>Asia</option>
+              <option>Middle East</option>
+              <option>Global</option>
+            </select>
+          </span>
+        </div>
+        <div class="fgroup">
+          <span class="flabel">Stakes</span>
+          <span class="select">
+            <select id="fStakes">
+              <option value="">Any stakes</option>
+              <option value="free">Free / play money</option>
+              <option value="low">Low (≤ 1/pt)</option>
+              <option value="high">High (&gt; 1/pt)</option>
+            </select>
+          </span>
+        </div>
+        <div class="fgroup">
+          <span class="flabel">Tier</span>
+          <div class="seg" id="segTier">
+            <button class="active" data-tier="">All</button>
+            <button data-tier="premier">Premier</button>
+            <button data-tier="elite">Elite</button>
+            <button data-tier="casual">Casual</button>
+          </div>
+        </div>
+        <div class="fgroup">
+          <span class="flabel">Access</span>
+          <div class="seg greenseg" id="segAccess">
+            <button class="active" data-access="">Any</button>
+            <button data-access="open">Open</button>
+            <button data-access="invite">Invite-only</button>
+          </div>
+        </div>
+        <div class="grow"></div>
+        <div class="fgroup">
+          <span class="flabel">Sort</span>
+          <span class="select">
+            <select id="fSort">
+              <option value="featured">Featured</option>
+              <option value="members">Most members</option>
+              <option value="rating">Highest rating</option>
+              <option value="stakes">Highest stakes</option>
+              <option value="name">Name (A–Z)</option>
+            </select>
+          </span>
+        </div>
+      </div>
+
+      <!-- ===== CLUB GRID ===== -->
+      <div class="grid" id="grid"><!-- cards injected --></div>
+
+      <!-- ===== STATS BAR ===== -->
+      <div class="statsbar">
+        <div class="cell">
+          <span class="k">Total clubs</span>
+          <span class="v">1,206</span>
+        </div>
+        <div class="cell">
+          <span class="k">Players in clubs</span>
+          <span class="v green">312,480</span>
+        </div>
+        <div class="cell">
+          <span class="k">Tournaments this week</span>
+          <span class="v gold">84 <small>· 6 live now</small></span>
+        </div>
+        <div class="cell">
+          <span class="k">New clubs today</span>
+          <span class="v">17</span>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script>
+/* ===================== BADGE / LOGO SVG ===================== */
+function badgeSVG(text, c1, c2, dark){
+  const fg = dark ? '#3a2c07' : '#0d1a06';
+  return `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+    <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="${c1}"/><stop offset="1" stop-color="${c2}"/>
+    </linearGradient></defs>
+    <rect width="48" height="48" rx="12" fill="url(#g)"/>
+    <rect x="1" y="1" width="46" height="46" rx="11" fill="none" stroke="rgba(255,255,255,0.16)"/>
+    <text x="24" y="24" text-anchor="middle" dominant-baseline="central"
+      font-family="Inter,sans-serif" font-weight="800" font-size="17"
+      fill="${fg}" letter-spacing="-0.5">${text}</text>
+  </svg>`;
+}
+function paintBadges(root){
+  (root||document).querySelectorAll('[data-badge]').forEach(el=>{
+    if(el.dataset.painted) return;
+    el.innerHTML = badgeSVG(el.dataset.badge, el.dataset.c1, el.dataset.c2, el.dataset.dark);
+    el.dataset.painted='1';
+  });
+}
+
+/* ===================== ICONS ===================== */
+const IC = {
+  members:'<svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="3.2"/><path d="M21 21v-2a4 4 0 0 0-3-3.8"/></svg>',
+  star:'<svg viewBox="0 0 24 24"><path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9 6.8 19.1l1-5.8L3.5 9.2l5.9-.9z"/></svg>',
+  coin:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 8v8M9.5 10.5c0-1 1-1.6 2.5-1.6s2.5.6 2.5 1.5c0 2-5 1-5 3 0 1 1 1.6 2.5 1.6s2.5-.6 2.5-1.6"/></svg>',
+  open:'<svg viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 7.5-1.9"/></svg>',
+  invite:'<svg viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>'
+};
+const ribbonStar = '<svg viewBox="0 0 24 24"><path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9 6.8 19.1l1-5.8L3.5 9.2l5.9-.9z"/></svg>';
+
+/* ===================== DATA ===================== */
+const CLUBS = [
+  {name:'Aegean Masters', handle:'@aegean', badge:'AM', c1:'#0d9ecf', c2:'#0a5c8a',
+   members:2140, rating:1890, stakesTxt:'2/pt · cap 8', stakesVal:2, tier:'premier', region:'Europe', access:'invite',
+   featured:true, joined:false, desc:'High-level money play and weekly Premier tournaments.'},
+  {name:'Manhattan Gammon', handle:'@mgc', badge:'MG', c1:'#e0a76e', c2:'#a5703c',
+   members:1560, rating:1810, stakesTxt:'1/pt · cap 5', stakesVal:1, tier:'elite', region:'North America', access:'open',
+   featured:true, joined:false, desc:'NYC club night crowd. Fast blitz ladders every evening.'},
+  {name:'Tokyo Backgammon', handle:'@tokyobg', badge:'東', c1:'#e07f7f', c2:'#a83f3f',
+   members:2980, rating:1955, stakesTxt:'3/pt · cap 12', stakesVal:3, tier:'premier', region:'Asia', access:'invite',
+   featured:false, joined:false, desc:'Japan’s strongest circuit. Serious rated matches only.'},
+  {name:'Casual Dice', handle:'@casualdice', badge:'CD', c1:'#8bc97b', c2:'#4f8a3f',
+   members:6420, rating:1420, stakesTxt:'Free · play money', stakesVal:0, tier:'casual', region:'Global', access:'open',
+   featured:false, joined:false, desc:'Relaxed, friendly games. Perfect for learning the ropes.'},
+  {name:'Levantine League', handle:'@levant', badge:'LL', c1:'#c9a24e', c2:'#8a6a26',
+   members:980, rating:1720, stakesTxt:'1/pt · cap 5', stakesVal:1, tier:'elite', region:'Middle East', access:'open',
+   featured:false, joined:false, desc:'Tel Aviv & Istanbul regulars. Coffee-house tavla energy.'},
+  {name:'Nordic Gambit', handle:'@nordic', badge:'NG', c1:'#6fc2b0', c2:'#2f7a6b',
+   members:1210, rating:1665, stakesTxt:'Free · play money', stakesVal:0, tier:'casual', region:'Europe', access:'open',
+   featured:false, joined:false, desc:'Scandinavian community with a big beginners’ academy.'},
+  {name:'London Doubles', handle:'@londondbl', badge:'LD', c1:'#9d8be0', c2:'#5a4aa8',
+   members:1740, rating:1785, stakesTxt:'1/pt · cap 6', stakesVal:1, tier:'elite', region:'Europe', access:'invite',
+   featured:false, joined:false, desc:'Chouette specialists. Cube skill sharpened weekly.'},
+  {name:'Rio Rollers', handle:'@riorollers', badge:'RR', c1:'#5fc98a', c2:'#2f8a55',
+   members:2260, rating:1590, stakesTxt:'Free · play money', stakesVal:0, tier:'casual', region:'North America', access:'open',
+   featured:false, joined:false, desc:'Loud, fast, and fun. South-American party bracket nightly.'},
+  {name:'Silk Road Society', handle:'@silkroad', badge:'SR', c1:'#d3a83f', c2:'#8a6a1e',
+   members:1320, rating:1840, stakesTxt:'2/pt · cap 10', stakesVal:2, tier:'premier', region:'Asia', access:'invite',
+   featured:false, joined:false, desc:'Invitation-only masters from across Central Asia.'}
+];
+const TIER_LABEL = {premier:'Premier', elite:'Elite', casual:'Casual'};
+
+/* ===================== STATE ===================== */
+const state = { q:'', region:'', stakes:'', tier:'', access:'', sort:'featured' };
+
+function stakesBucket(v){ if(v===0) return 'free'; if(v<=1) return 'low'; return 'high'; }
+
+function renderGrid(){
+  let rows = CLUBS.slice();
+  const q = state.q.toLowerCase();
+
+  rows = rows.filter(c=>{
+    if(q && !(c.name.toLowerCase().includes(q) || c.handle.toLowerCase().includes(q) || c.desc.toLowerCase().includes(q))) return false;
+    if(state.region && c.region !== state.region) return false;
+    if(state.stakes && stakesBucket(c.stakesVal) !== state.stakes) return false;
+    if(state.tier && c.tier !== state.tier) return false;
+    if(state.access && c.access !== state.access) return false;
+    return true;
+  });
+
+  const sorters = {
+    featured:(a,b)=>(b.featured-a.featured)||(b.members-a.members),
+    members:(a,b)=>b.members-a.members,
+    rating:(a,b)=>b.rating-a.rating,
+    stakes:(a,b)=>b.stakesVal-a.stakesVal,
+    name:(a,b)=>a.name.localeCompare(b.name)
+  };
+  rows.sort(sorters[state.sort]);
+
+  const grid = document.getElementById('grid');
+  document.getElementById('resultCount').textContent = rows.length + (rows.length===1?' club':' clubs');
+
+  if(!rows.length){
+    grid.innerHTML = '<div class="empty">No clubs match your filters. Try widening your search.</div>';
+    return;
+  }
+
+  grid.innerHTML = rows.map(c=>{
+    const joinBtn = c.joined
+      ? `<button class="btn joined small" data-name="${c.name}"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Joined</button>`
+      : (c.access==='invite'
+          ? `<button class="btn outline small" data-name="${c.name}" data-req="1">Request</button>`
+          : `<button class="btn green small" data-name="${c.name}">Join</button>`);
+    const accessLabel = c.access==='invite'
+      ? `<span class="access">${IC.invite}Invite-only</span>`
+      : `<span class="access">${IC.open}Open to join</span>`;
+    return `<div class="clubcard ${c.featured?'featured':''}">
+      ${c.featured?`<span class="ribbon">${ribbonStar}Featured</span>`:''}
+      <div class="cc-head">
+        <span class="cc-logo" data-badge="${c.badge}" data-c1="${c.c1}" data-c2="${c.c2}"></span>
+        <div class="cc-title">
+          <div class="cc-name">${c.name}</div>
+          <div class="cc-handle">${c.handle} · ${c.region}</div>
+        </div>
+      </div>
+      <p class="cc-desc">${c.desc}</p>
+      <div class="cc-stats">
+        <span class="stat">${IC.members}${c.members.toLocaleString()}</span>
+        <span class="stat">${IC.star}<span class="rate">${c.rating}</span> avg</span>
+        <span class="stat stakes">${IC.coin}${c.stakesTxt}</span>
+        <span class="tier ${c.tier}">${TIER_LABEL[c.tier]}</span>
+      </div>
+      <div class="cc-foot">
+        ${accessLabel}
+        ${joinBtn}
+      </div>
+    </div>`;
+  }).join('');
+
+  paintBadges(grid);
+}
+
+/* ===================== INTERACTIVITY ===================== */
+// search
+document.getElementById('searchInput').addEventListener('input', e=>{
+  state.q = e.target.value; renderGrid();
+});
+// selects
+document.getElementById('fRegion').addEventListener('change', e=>{ state.region = e.target.value; renderGrid(); });
+document.getElementById('fStakes').addEventListener('change', e=>{ state.stakes = e.target.value; renderGrid(); });
+document.getElementById('fSort').addEventListener('change', e=>{ state.sort = e.target.value; renderGrid(); });
+// tier seg
+document.getElementById('segTier').addEventListener('click', e=>{
+  const b = e.target.closest('button'); if(!b) return;
+  document.querySelectorAll('#segTier button').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active'); state.tier = b.dataset.tier; renderGrid();
+});
+// access seg
+document.getElementById('segAccess').addEventListener('click', e=>{
+  const b = e.target.closest('button'); if(!b) return;
+  document.querySelectorAll('#segAccess button').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active'); state.access = b.dataset.access; renderGrid();
+});
+
+// join / request toggle (event delegation on grid)
+document.getElementById('grid').addEventListener('click', e=>{
+  const b = e.target.closest('button[data-name]'); if(!b) return;
+  const club = CLUBS.find(c=>c.name===b.dataset.name); if(!club) return;
+  if(club.access==='invite' && !club.joined){
+    // toggle Request <-> Requested
+    if(b.classList.contains('requested')){
+      b.classList.remove('requested'); b.classList.add('outline'); b.textContent='Request';
+    } else {
+      b.classList.remove('outline'); b.classList.add('requested'); b.textContent='Requested';
+    }
+    return;
+  }
+  // open clubs & joined toggle
+  club.joined = !club.joined;
+  renderGrid();
+});
+
+// header buttons (demo)
+document.getElementById('createBtn').addEventListener('click', ()=>{
+  const btn = document.getElementById('createBtn');
+  const original = btn.innerHTML;
+  btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Opening…';
+  setTimeout(()=>{ btn.innerHTML = original; }, 1100);
+});
+
+// mobile menu
+const sb = document.getElementById('sidebar'), bd = document.getElementById('backdrop');
+document.getElementById('menuBtn').addEventListener('click', ()=>{ sb.classList.add('open'); bd.classList.add('show'); });
+bd.addEventListener('click', ()=>{ sb.classList.remove('open'); bd.classList.remove('show'); });
+
+// init
+paintBadges(document);
+renderGrid();
+</script>
+</body>
+</html>
