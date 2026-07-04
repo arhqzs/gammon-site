@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<title>DeepGammon — Product Screens</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#161514; --panel:#1e1c1a; --panel-2:#242220;
+    --line:rgba(240,235,220,.08); --line-2:rgba(240,235,220,.14);
+    --ink:#f1efe9; --muted:#9a978c; --green:#6bbf3f; --green-2:#7fd050; --gold:#d3a83f;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:
+      radial-gradient(1000px 500px at 85% -10%, rgba(107,191,63,.06), transparent 60%),
+      var(--bg);color:var(--ink);font-family:"Inter",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  a{text-decoration:none;color:inherit}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 26px}
+
+  header{padding:40px 0 8px}
+  .brand{display:flex;align-items:center;gap:11px;font-weight:800;font-size:20px;letter-spacing:.02em}
+  .brand .dg{width:34px;height:34px;border-radius:9px;background:linear-gradient(145deg,#2a3b1c,#1a2412);border:1px solid rgba(107,191,63,.4);
+    display:grid;place-items:center;color:var(--green);font-weight:800;font-size:15px}
+  .brand b{color:var(--green)}
+  .brand small{color:var(--muted);font-weight:600;font-size:12px;letter-spacing:.14em;text-transform:uppercase}
+  h1{font-size:clamp(28px,4vw,40px);font-weight:800;letter-spacing:-.02em;margin:26px 0 0}
+  .lead{color:var(--muted);font-size:17px;margin-top:12px;max-width:640px;line-height:1.6}
+  .note{margin-top:16px;display:inline-flex;align-items:center;gap:9px;font-size:13px;color:var(--muted);
+    border:1px solid var(--line-2);border-radius:999px;padding:7px 14px}
+  .note .dot{width:7px;height:7px;border-radius:50%;background:var(--gold)}
+
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;padding:34px 0 60px}
+  @media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:600px){.grid{grid-template-columns:1fr}}
+  .card{background:linear-gradient(180deg,var(--panel),var(--bg));border:1px solid var(--line);border-radius:15px;
+    padding:22px 22px 20px;transition:transform .25s cubic-bezier(.22,.61,.36,1),border-color .25s,box-shadow .25s;position:relative;overflow:hidden}
+  .card:hover{transform:translateY(-5px);border-color:var(--line-2);box-shadow:0 24px 50px -26px #000}
+  .ic{width:44px;height:44px;border-radius:11px;display:grid;place-items:center;margin-bottom:16px;
+    background:rgba(107,191,63,.12);border:1px solid rgba(107,191,63,.25);color:var(--green)}
+  .card.uni .ic{background:rgba(211,168,63,.12);border-color:rgba(211,168,63,.3);color:var(--gold)}
+  .card h3{font-size:18px;font-weight:700;margin:0}
+  .card p{color:var(--muted);font-size:14px;line-height:1.55;margin:8px 0 0}
+  .tag{position:absolute;top:16px;right:16px;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--green-2);background:rgba(107,191,63,.12);border:1px solid rgba(107,191,63,.25);padding:4px 9px;border-radius:999px}
+  .card.uni .tag{color:var(--gold);background:rgba(211,168,63,.12);border-color:rgba(211,168,63,.28)}
+  .open{display:inline-flex;align-items:center;gap:7px;margin-top:16px;color:var(--green);font-weight:600;font-size:14px}
+  .card.uni .open{color:var(--gold)}
+  .open svg{transition:transform .2s}
+  .card:hover .open svg{transform:translateX(4px)}
+  footer{border-top:1px solid var(--line);padding:24px 0 40px;color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="brand"><span class="dg">DG</span> Deep<b>Gammon</b> <small>· Product Screens</small></div>
+    <h1>Product design screens</h1>
+    <p class="lead">Interactive UI mockups for the DeepGammon platform and Gammon University — built to match the live product look. Click any screen to open it full-size.</p>
+    <span class="note"><span class="dot"></span> Design prototypes · self-contained · ready to hand to the build team</span>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="grid" id="grid"></div>
+</div>
+
+<footer><div class="wrap">DeepGammon · internal product mockups · 6 screens</div></footer>
+
+<script>
+  const SCREENS = [
+    {file:"play.html", tag:"App", uni:false, title:"Play — Live Match", desc:"The in-game board: checkers, dice, doubling cube, reserve+delay clocks, move log and chat.",
+     ic:'<rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.5" fill="currentColor"/>'},
+    {file:"engine.html", tag:"App", uni:false, title:"The Engine", desc:"Analysis workspace — ranked moves with equities, snap-a-photo of the board, pip count and cube evaluation.",
+     ic:'<path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/><circle cx="12" cy="12" r="4"/>'},
+    {file:"puzzles.html", tag:"App", uni:false, title:"Beat the Grandmaster", desc:"Puzzle solver built from real master mistakes — pick the move, see the equity, track your puzzle rating.",
+     ic:'<path d="M9 11a3 3 0 1 1 4 2.8c-.8.4-1 .8-1 1.7v.4"/><circle cx="12" cy="19" r="1" fill="currentColor"/>'},
+    {file:"rankings.html", tag:"App", uni:false, title:"Rankings", desc:"Global leaderboard — podium, tier badges, live ratings and your own pinned rank.",
+     ic:'<path d="M8 21h8M12 17v4M6 4h12v6a6 6 0 0 1-12 0V4Z"/><path d="M6 6H4v2a3 3 0 0 0 2 2M18 6h2v2a3 3 0 0 1-2 2"/>'},
+    {file:"stream.html", tag:"App", uni:false, title:"Record & Stream", desc:"Live broadcast page — wide-angle feed, equity/pip HUD, chat, schedule and your recordings.",
+     ic:'<rect x="2" y="6" width="14" height="12" rx="3"/><path d="m16 10 6-3v10l-6-3"/>'},
+    {file:"teachers.html", tag:"University", uni:true, title:"Find a Teacher", desc:"Gammon University coaching marketplace — filters, teacher cards, ratings and book-a-lesson.",
+     ic:'<path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c0 1 3 3 6 3s6-2 6-3v-5"/>'},
+  ];
+  const grid = document.getElementById('grid');
+  SCREENS.forEach(s=>{
+    const a=document.createElement('a');
+    a.href=s.file; a.className='card'+(s.uni?' uni':'');
+    a.innerHTML=`<span class="tag">${s.tag}</span>
+      <span class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">${s.ic}</svg></span>
+      <h3>${s.title}</h3><p>${s.desc}</p>
+      <span class="open">Open screen <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>`;
+    grid.appendChild(a);
+  });
+</script>
+</body>
+</html>

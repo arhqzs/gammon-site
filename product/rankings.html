@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DeepGammon — Rankings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#161514;
+    --panel:#1e1c1a;
+    --panel-2:#232120;
+    --hair:rgba(240,235,220,0.07);
+    --hair-strong:rgba(240,235,220,0.12);
+    --green:#6bbf3f;
+    --green-dim:rgba(107,191,63,0.14);
+    --green-line:rgba(107,191,63,0.45);
+    --gold:#d3a83f;
+    --gold-dim:rgba(211,168,63,0.14);
+    --text:#f1efe9;
+    --muted:#9a978c;
+    --muted-2:#6f6d64;
+    --red:#e0654f;
+    --row-tint:rgba(255,255,255,0.014);
+    --radius:13px;
+    --shadow:0 1px 0 rgba(255,255,255,0.02) inset, 0 8px 24px rgba(0,0,0,0.35);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+    font-size:14px;
+    -webkit-font-smoothing:antialiased;
+    line-height:1.4;
+  }
+  a{color:inherit;text-decoration:none;}
+  ::selection{background:var(--green-dim);}
+
+  /* ============ LAYOUT ============ */
+  .app{display:flex;min-height:100vh;}
+
+  /* ============ SIDEBAR ============ */
+  .sidebar{
+    width:240px;flex:0 0 240px;
+    background:var(--panel);
+    border-right:1px solid var(--hair);
+    display:flex;flex-direction:column;
+    padding:18px 14px;
+    position:sticky;top:0;height:100vh;
+  }
+  .brand{
+    display:flex;align-items:center;gap:9px;
+    padding:6px 8px 20px 8px;
+  }
+  .brand .mark{
+    font-weight:800;font-size:20px;letter-spacing:-0.5px;
+    color:var(--green);
+  }
+  .brand .full{font-weight:700;font-size:15px;letter-spacing:-0.2px;color:var(--text);}
+  .brand .dot{width:7px;height:7px;border-radius:50%;background:var(--green);margin-left:auto;box-shadow:0 0 10px var(--green);}
+
+  .nav{display:flex;flex-direction:column;gap:2px;}
+  .nav-label{font-size:10.5px;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted-2);padding:10px 10px 6px;font-weight:600;}
+  .nav-item{
+    display:flex;align-items:center;gap:11px;
+    padding:9px 10px;border-radius:9px;
+    color:var(--muted);font-weight:500;cursor:pointer;
+    transition:background .15s,color .15s;
+  }
+  .nav-item svg{width:18px;height:18px;flex:0 0 18px;stroke:currentColor;fill:none;stroke-width:1.7;}
+  .nav-item:hover{background:rgba(255,255,255,0.03);color:var(--text);}
+  .nav-item.active{background:var(--green-dim);color:var(--green);font-weight:600;}
+  .nav-item.active svg{stroke:var(--green);}
+  .nav-item .badge{margin-left:auto;background:var(--green);color:#0d1a06;font-size:10px;font-weight:700;padding:1px 6px;border-radius:20px;}
+
+  .sidebar .spacer{flex:1;}
+  .side-bottom{display:flex;flex-direction:column;gap:2px;padding-top:8px;border-top:1px solid var(--hair);}
+  .user-row{
+    display:flex;align-items:center;gap:10px;
+    padding:9px 8px;margin-top:6px;border-radius:10px;cursor:pointer;
+  }
+  .user-row:hover{background:rgba(255,255,255,0.03);}
+  .user-row .name{font-weight:600;font-size:13px;}
+  .user-row .sub{font-size:11px;color:var(--muted);}
+  .user-row .more{margin-left:auto;color:var(--muted-2);font-weight:700;letter-spacing:1px;}
+
+  .avatar{border-radius:50%;flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;font-weight:700;color:#fff;overflow:hidden;}
+
+  /* ============ MAIN ============ */
+  .main{flex:1;min-width:0;display:flex;flex-direction:column;}
+  .topbar{
+    display:flex;align-items:center;gap:16px;
+    padding:20px 30px 0;
+  }
+  .page-title{font-size:23px;font-weight:800;letter-spacing:-0.6px;}
+  .page-sub{color:var(--muted);font-size:12.5px;margin-top:2px;}
+  .content{padding:16px 30px 40px;max-width:1180px;width:100%;}
+
+  /* ---- stat chips ---- */
+  .chips{display:flex;gap:12px;flex-wrap:wrap;margin:14px 0 20px;}
+  .chip{
+    background:var(--panel);border:1px solid var(--hair);
+    border-radius:var(--radius);padding:12px 16px;
+    display:flex;flex-direction:column;gap:2px;min-width:150px;flex:1;
+    box-shadow:var(--shadow);
+  }
+  .chip .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;font-weight:600;}
+  .chip .v{font-size:20px;font-weight:800;letter-spacing:-0.4px;}
+  .chip .v.gold{color:var(--gold);}
+  .chip .v small{font-size:12px;font-weight:600;color:var(--muted);}
+
+  /* ---- toolbar: tabs + filters ---- */
+  .toolbar{
+    display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+    margin-bottom:18px;
+  }
+  .tabs{display:flex;gap:4px;background:var(--panel);border:1px solid var(--hair);padding:4px;border-radius:11px;}
+  .tab{
+    padding:7px 14px;border-radius:8px;color:var(--muted);font-weight:600;font-size:13px;cursor:pointer;
+    transition:background .15s,color .15s;white-space:nowrap;
+  }
+  .tab:hover{color:var(--text);}
+  .tab.active{background:var(--green-dim);color:var(--green);}
+
+  .toolbar .grow{flex:1;}
+  .filters{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .seg{display:flex;gap:2px;background:var(--panel);border:1px solid var(--hair);padding:3px;border-radius:10px;}
+  .seg button{
+    background:none;border:none;color:var(--muted);font-family:inherit;font-size:12.5px;font-weight:600;
+    padding:6px 11px;border-radius:7px;cursor:pointer;transition:.15s;
+  }
+  .seg button:hover{color:var(--text);}
+  .seg button.active{background:var(--gold-dim);color:var(--gold);}
+  .search{
+    display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--hair);
+    border-radius:10px;padding:7px 12px;
+  }
+  .search svg{width:15px;height:15px;stroke:var(--muted);fill:none;stroke-width:1.8;}
+  .search input{
+    background:none;border:none;outline:none;color:var(--text);font-family:inherit;font-size:13px;width:150px;
+  }
+  .search input::placeholder{color:var(--muted-2);}
+
+  /* ---- PODIUM ---- */
+  .podium{display:grid;grid-template-columns:1fr 1.12fr 1fr;gap:14px;margin-bottom:22px;align-items:end;}
+  .pcard{
+    background:linear-gradient(180deg,var(--panel-2),var(--panel));
+    border:1px solid var(--hair);border-radius:16px;
+    padding:20px 16px 18px;text-align:center;position:relative;overflow:hidden;
+    box-shadow:var(--shadow);
+  }
+  .pcard.first{border-color:var(--gold-dim);background:linear-gradient(180deg,rgba(211,168,63,0.10),var(--panel));padding-top:26px;padding-bottom:24px;}
+  .pcard .rankwrap{position:absolute;top:0;left:0;width:100%;height:4px;}
+  .pcard.first .rankwrap{background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+  .pcard.second .rankwrap{background:linear-gradient(90deg,transparent,#c9c6bd,transparent);}
+  .pcard.third .rankwrap{background:linear-gradient(90deg,transparent,#c08a52,transparent);}
+  .medal{
+    width:34px;height:34px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
+    font-weight:800;font-size:14px;margin-bottom:8px;position:relative;
+  }
+  .medal.g{background:radial-gradient(circle at 35% 30%,#f4d47a,#c99a2e);color:#3a2c07;box-shadow:0 4px 14px rgba(211,168,63,0.35);}
+  .medal.s{background:radial-gradient(circle at 35% 30%,#eceae4,#a9a69d);color:#333;}
+  .medal.b{background:radial-gradient(circle at 35% 30%,#e0a76e,#a5703c);color:#3a2306;}
+  .crown{position:absolute;top:-14px;left:50%;transform:translateX(-50%);font-size:16px;}
+  .pcard .pav{margin:0 auto 10px;box-shadow:0 4px 14px rgba(0,0,0,0.4);}
+  .pcard .pname{font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center;gap:7px;}
+  .pcard .prating{color:var(--gold);font-weight:800;font-size:22px;letter-spacing:-0.4px;margin-top:4px;}
+  .pcard .pmeta{color:var(--muted);font-size:11.5px;margin-top:4px;}
+  .flag{display:inline-block;width:20px;height:13px;border-radius:2px;overflow:hidden;vertical-align:middle;box-shadow:0 0 0 1px rgba(0,0,0,0.3);}
+
+  /* ---- TABLE ---- */
+  .tablewrap{
+    background:var(--panel);border:1px solid var(--hair);border-radius:var(--radius);
+    box-shadow:var(--shadow);overflow:hidden;
+  }
+  .tablescroll{overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;min-width:720px;}
+  thead th{
+    position:sticky;top:0;z-index:5;background:var(--panel-2);
+    text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.7px;
+    color:var(--muted);font-weight:600;padding:12px 16px;
+    border-bottom:1px solid var(--hair-strong);cursor:pointer;user-select:none;white-space:nowrap;
+  }
+  thead th:hover{color:var(--text);}
+  thead th .arrow{font-size:9px;opacity:.5;margin-left:4px;}
+  thead th.sorted .arrow{opacity:1;color:var(--green);}
+  th.num,td.num{text-align:right;}
+  tbody td{padding:12px 16px;border-bottom:1px solid var(--hair);vertical-align:middle;white-space:nowrap;}
+  tbody tr{transition:background .12s;}
+  tbody tr:nth-child(even){background:var(--row-tint);}
+  tbody tr:hover{background:rgba(107,191,63,0.05);}
+  tbody tr:last-child td{border-bottom:none;}
+
+  .rankcell{font-weight:700;color:var(--muted);width:60px;}
+  .rankcell .top{color:var(--gold);}
+  .player{display:flex;align-items:center;gap:11px;}
+  .player .pn{font-weight:600;}
+  .player .pc{display:flex;align-items:center;gap:6px;margin-top:2px;}
+  .player .pc .flag{width:16px;height:11px;}
+  .player .pc .country{font-size:11px;color:var(--muted);}
+  .tier{
+    font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;text-transform:uppercase;letter-spacing:.4px;
+    border:1px solid transparent;
+  }
+  .tier.premier{color:var(--gold);background:var(--gold-dim);border-color:rgba(211,168,63,0.3);}
+  .tier.elite{color:#b98cff;background:rgba(150,110,255,0.13);border-color:rgba(150,110,255,0.3);}
+  .tier.gold{color:#e0b45a;background:rgba(211,168,63,0.10);}
+  .tier.silver{color:#c9c6bd;background:rgba(200,200,200,0.09);}
+
+  .rating{font-weight:800;color:var(--gold);font-size:15px;letter-spacing:-0.3px;}
+  .delta{font-size:11px;font-weight:700;margin-left:7px;}
+  .delta.up{color:var(--green);}
+  .delta.down{color:var(--red);}
+  .streak{font-weight:600;}
+  .streak.w{color:var(--green);}
+  .streak.l{color:var(--red);}
+  .winbar{display:inline-flex;align-items:center;gap:8px;}
+  .winbar .track{width:52px;height:5px;border-radius:3px;background:rgba(255,255,255,0.07);overflow:hidden;}
+  .winbar .fill{height:100%;background:var(--green);border-radius:3px;}
+
+  /* YOUR RANK pinned row */
+  .yourrank{
+    background:var(--panel);border-top:1px solid var(--hair-strong);
+    box-shadow:0 -6px 16px rgba(0,0,0,0.25);
+  }
+  .yourrank table{min-width:720px;}
+  .yourrank td{border-bottom:none;padding:14px 16px;background:rgba(107,191,63,0.06);}
+  .yourrank tr{outline:1px solid var(--green-line);outline-offset:-1px;}
+  .provisional{font-size:9.5px;font-weight:700;color:var(--green);background:var(--green-dim);padding:2px 6px;border-radius:20px;text-transform:uppercase;letter-spacing:.4px;margin-left:8px;}
+
+  .footnote{color:var(--muted-2);font-size:11.5px;margin-top:14px;text-align:center;}
+
+  /* mobile menu button */
+  .menu-btn{display:none;background:var(--panel);border:1px solid var(--hair);color:var(--text);border-radius:9px;width:38px;height:38px;align-items:center;justify-content:center;cursor:pointer;}
+  .menu-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;}
+
+  /* ============ RESPONSIVE ============ */
+  @media(max-width:900px){
+    .sidebar{
+      position:fixed;z-index:50;left:0;top:0;transform:translateX(-100%);
+      transition:transform .22s ease;box-shadow:0 0 40px rgba(0,0,0,0.6);
+    }
+    .sidebar.open{transform:translateX(0);}
+    .menu-btn{display:inline-flex;}
+    .content,.topbar{padding-left:16px;padding-right:16px;}
+    .podium{grid-template-columns:1fr;}
+    .pcard.first{order:-1;}
+  }
+  .backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:40;}
+  .backdrop.show{display:block;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <span class="mark">DG</span>
+      <span class="full">DeepGammon</span>
+      <span class="dot"></span>
+    </div>
+
+    <nav class="nav">
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+        <span>Home</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="3.2"/><path d="M21 21v-2a4 4 0 0 0-3-3.8"/></svg>
+        <span>Clubs</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        <span>Practice</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="3.2"/><path d="M22 11l-3 3-2-2"/></svg>
+        <span>Friends</span>
+        <span class="badge">3</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M3 9h18"/><path d="M8 4v16"/></svg>
+        <span>Matches</span>
+      </div>
+      <div class="nav-item active">
+        <svg viewBox="0 0 24 24"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M17 5h3v2a3 3 0 0 1-3 3"/><path d="M7 5H4v2a3 3 0 0 0 3 3"/></svg>
+        <span>Rankings</span>
+      </div>
+    </nav>
+
+    <div class="spacer"></div>
+
+    <div class="side-bottom">
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+        <span>Notifications</span>
+        <span class="badge">5</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1A2 2 0 1 1 7.1 3.9l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+        <span>Settings</span>
+      </div>
+      <div class="user-row">
+        <span class="avatar" style="width:34px;height:34px;background:linear-gradient(135deg,#6bbf3f,#3f7a25);font-size:13px;">D</span>
+        <div>
+          <div class="name">Dani</div>
+          <div class="sub">1500 · provisional</div>
+        </div>
+        <span class="more">⋯</span>
+      </div>
+    </div>
+  </aside>
+  <div class="backdrop" id="backdrop"></div>
+
+  <!-- ============ MAIN ============ -->
+  <main class="main">
+    <div class="topbar">
+      <button class="menu-btn" id="menuBtn"><svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+      <div>
+        <div class="page-title">Rankings</div>
+        <div class="page-sub">Global competitive ladder · <span id="scopeLabel">Global</span> · <span id="speedLabel">All speeds</span> · Season 12</div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- stat chips -->
+      <div class="chips">
+        <div class="chip">
+          <span class="k">Total players</span>
+          <span class="v">48,213</span>
+        </div>
+        <div class="chip">
+          <span class="k">Your percentile</span>
+          <span class="v gold">Top 41% <small>· provisional</small></span>
+        </div>
+        <div class="chip">
+          <span class="k">Your rank</span>
+          <span class="v">#1,204</span>
+        </div>
+        <div class="chip">
+          <span class="k">Matches this season</span>
+          <span class="v">28 <small>· 15W / 13L</small></span>
+        </div>
+      </div>
+
+      <!-- toolbar -->
+      <div class="toolbar">
+        <div class="tabs" id="scopeTabs">
+          <div class="tab active" data-scope="Global">Global</div>
+          <div class="tab" data-scope="Club">Club</div>
+          <div class="tab" data-scope="Friends">Friends</div>
+          <div class="tab" data-scope="This Season">This Season</div>
+        </div>
+        <div class="grow"></div>
+        <div class="filters">
+          <div class="seg" id="speedSeg">
+            <button class="active" data-speed="All speeds">All</button>
+            <button data-speed="Bullet">Bullet</button>
+            <button data-speed="Blitz">Blitz</button>
+            <button data-speed="Rapid">Rapid</button>
+            <button data-speed="Classic">Classic</button>
+          </div>
+          <div class="search">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+            <input id="searchInput" type="text" placeholder="Search players…">
+          </div>
+        </div>
+      </div>
+
+      <!-- PODIUM -->
+      <div class="podium">
+        <!-- 2nd -->
+        <div class="pcard second">
+          <div class="rankwrap"></div>
+          <div class="medal s">2</div>
+          <span class="avatar pav" style="width:54px;height:54px;background:linear-gradient(135deg,#7f8ce0,#4a54a8);font-size:20px;">M</span>
+          <div class="pname">Mochizuki <span class="flag" data-flag="jp"></span></div>
+          <div class="prating">2388</div>
+          <div class="pmeta">Japan · 2,140 matches · 71% win</div>
+        </div>
+        <!-- 1st -->
+        <div class="pcard first">
+          <div class="rankwrap"></div>
+          <div class="medal g"><span class="crown">👑</span>1</div>
+          <span class="avatar pav" style="width:64px;height:64px;background:linear-gradient(135deg,#e8c15a,#b07f2a);font-size:24px;">A</span>
+          <div class="pname">Akiko S. <span class="flag" data-flag="jp"></span></div>
+          <div class="prating">2431</div>
+          <div class="pmeta">Japan · 3,006 matches · 74% win</div>
+        </div>
+        <!-- 3rd -->
+        <div class="pcard third">
+          <div class="rankwrap"></div>
+          <div class="medal b">3</div>
+          <span class="avatar pav" style="width:54px;height:54px;background:linear-gradient(135deg,#5fb0d6,#2f6d92);font-size:20px;">L</span>
+          <div class="pname">L. Petrov <span class="flag" data-flag="ru"></span></div>
+          <div class="prating">2354</div>
+          <div class="pmeta">Russia · 1,880 matches · 69% win</div>
+        </div>
+      </div>
+
+      <!-- TABLE -->
+      <div class="tablewrap">
+        <div class="tablescroll">
+          <table id="ladder">
+            <thead>
+              <tr>
+                <th data-sort="rank" class="sorted">Rank<span class="arrow">▲</span></th>
+                <th data-sort="name">Player<span class="arrow">▲</span></th>
+                <th data-sort="rating" class="num">Rating<span class="arrow">▲</span></th>
+                <th data-sort="matches" class="num">Matches<span class="arrow">▲</span></th>
+                <th data-sort="win" class="num">Win %<span class="arrow">▲</span></th>
+                <th data-sort="streak" class="num">Streak<span class="arrow">▲</span></th>
+              </tr>
+            </thead>
+            <tbody id="ladderBody"><!-- rows injected --></tbody>
+          </table>
+        </div>
+        <!-- pinned YOUR RANK -->
+        <div class="yourrank">
+          <table>
+            <tbody>
+              <tr>
+                <td class="rankcell" style="width:60px;">#1,204</td>
+                <td>
+                  <div class="player">
+                    <span class="avatar" style="width:36px;height:36px;background:linear-gradient(135deg,#6bbf3f,#3f7a25);font-size:14px;">D</span>
+                    <div>
+                      <div class="pn">Dani <span class="provisional">You · provisional</span></div>
+                      <div class="pc"><span class="flag" data-flag="il"></span><span class="country">Israel</span><span class="tier silver">Silver</span></div>
+                    </div>
+                  </div>
+                </td>
+                <td class="num"><span class="rating">1500</span><span class="delta up">▲ 0</span></td>
+                <td class="num">28</td>
+                <td class="num"><span class="winbar"><span class="track"><span class="fill" style="width:54%"></span></span>54%</span></td>
+                <td class="num"><span class="streak w">W2</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="footnote">Rankings update every 5 minutes · Provisional players need 30 rated matches to be fully ranked.</div>
+
+    </div>
+  </main>
+</div>
+
+<script>
+/* ===================== FLAG SVGs ===================== */
+const FLAGS = {
+  jp:'<svg viewBox="0 0 30 20"><rect width="30" height="20" fill="#fff"/><circle cx="15" cy="10" r="6" fill="#bc002d"/></svg>',
+  ru:'<svg viewBox="0 0 30 20"><rect width="30" height="7" fill="#fff"/><rect y="6.6" width="30" height="7" fill="#0039a6"/><rect y="13.3" width="30" height="7" fill="#d52b1e"/></svg>',
+  il:'<svg viewBox="0 0 30 20"><rect width="30" height="20" fill="#fff"/><rect width="30" height="3" y="2.5" fill="#0038b8"/><rect width="30" height="3" y="14.5" fill="#0038b8"/><path d="M15 6.5l3.2 5.5h-6.4z" fill="none" stroke="#0038b8" stroke-width="0.9"/><path d="M15 13.5l3.2-5.5h-6.4z" fill="none" stroke="#0038b8" stroke-width="0.9"/></svg>',
+  us:'<svg viewBox="0 0 30 20"><rect width="30" height="20" fill="#b22234"/><rect width="30" height="1.55" y="1.55" fill="#fff"/><rect width="30" height="1.55" y="4.6" fill="#fff"/><rect width="30" height="1.55" y="7.7" fill="#fff"/><rect width="30" height="1.55" y="10.8" fill="#fff"/><rect width="30" height="1.55" y="13.9" fill="#fff"/><rect width="30" height="1.55" y="17" fill="#fff"/><rect width="13" height="10.8" fill="#3c3b6e"/></svg>',
+  de:'<svg viewBox="0 0 30 20"><rect width="30" height="6.66" fill="#000"/><rect y="6.66" width="30" height="6.66" fill="#dd0000"/><rect y="13.3" width="30" height="6.66" fill="#ffce00"/></svg>',
+  gb:'<svg viewBox="0 0 30 20"><rect width="30" height="20" fill="#012169"/><path d="M0 0l30 20M30 0L0 20" stroke="#fff" stroke-width="4"/><path d="M0 0l30 20M30 0L0 20" stroke="#c8102e" stroke-width="2"/><path d="M15 0v20M0 10h30" stroke="#fff" stroke-width="6"/><path d="M15 0v20M0 10h30" stroke="#c8102e" stroke-width="3.5"/></svg>',
+  tr:'<svg viewBox="0 0 30 20"><rect width="30" height="20" fill="#e30a17"/><circle cx="11" cy="10" r="5" fill="#fff"/><circle cx="12.5" cy="10" r="4" fill="#e30a17"/><path d="M17 10l4.5-1.5-2.8 3.8V7.7l2.8 3.8z" fill="#fff"/></svg>',
+  fr:'<svg viewBox="0 0 30 20"><rect width="10" height="20" fill="#002395"/><rect x="10" width="10" height="20" fill="#fff"/><rect x="20" width="10" height="20" fill="#ed2939"/></svg>',
+  gr:'<svg viewBox="0 0 30 20"><rect width="30" height="20" fill="#0d5eaf"/><rect y="2.2" width="30" height="2.2" fill="#fff"/><rect y="6.6" width="30" height="2.2" fill="#fff"/><rect y="11" width="30" height="2.2" fill="#fff"/><rect y="15.5" width="30" height="2.2" fill="#fff"/><rect width="12" height="11" fill="#0d5eaf"/><path d="M5 0v11M0 5.5h12" stroke="#fff" stroke-width="2.2"/></svg>',
+  cn:'<svg viewBox="0 0 30 20"><rect width="30" height="20" fill="#de2910"/><path d="M6 3l1.2 3.6L4 4.4h4L4.8 6.6z" fill="#ffde00"/></svg>',
+  se:'<svg viewBox="0 0 30 20"><rect width="30" height="20" fill="#006aa7"/><rect x="9" width="3.5" height="20" fill="#fecc00"/><rect y="8.25" width="30" height="3.5" fill="#fecc00"/></svg>',
+  br:'<svg viewBox="0 0 30 20"><rect width="30" height="20" fill="#009c3b"/><path d="M15 2l12 8-12 8L3 10z" fill="#ffdf00"/><circle cx="15" cy="10" r="4.2" fill="#002776"/></svg>',
+  it:'<svg viewBox="0 0 30 20"><rect width="10" height="20" fill="#009246"/><rect x="10" width="10" height="20" fill="#fff"/><rect x="20" width="10" height="20" fill="#ce2b37"/></svg>',
+  in:'<svg viewBox="0 0 30 20"><rect width="30" height="6.66" fill="#ff9933"/><rect y="6.66" width="30" height="6.66" fill="#fff"/><rect y="13.3" width="30" height="6.66" fill="#138808"/><circle cx="15" cy="10" r="2.4" fill="none" stroke="#000080" stroke-width="0.6"/></svg>',
+  es:'<svg viewBox="0 0 30 20"><rect width="30" height="20" fill="#c60b1e"/><rect y="5" width="30" height="10" fill="#ffc400"/></svg>'
+};
+function paintFlags(root){
+  (root||document).querySelectorAll('.flag[data-flag]').forEach(el=>{
+    if(el.dataset.painted) return;
+    el.innerHTML = FLAGS[el.dataset.flag] || '';
+    el.dataset.painted='1';
+  });
+}
+
+/* ===================== DATA ===================== */
+const AV=['#7f8ce0','#5fb0d6','#e0a76e','#8bc97b','#d98cc4','#c9a24e','#6fc2b0','#e07f7f','#9d8be0','#5fc98a','#c98b5f','#8ba7e0'];
+function av(i){return AV[i%AV.length];}
+const players = [
+  {name:'Akiko S.',c:'jp',tier:'premier',r:2431,d:12,m:3006,w:74,s:'W6'},
+  {name:'Mochizuki',c:'jp',tier:'premier',r:2388,d:-4,m:2140,w:71,s:'L1'},
+  {name:'L. Petrov',c:'ru',tier:'premier',r:2354,d:8,m:1880,w:69,s:'W3'},
+  {name:'M. Larsson',c:'se',tier:'elite',r:2301,d:15,m:2455,w:68,s:'W4'},
+  {name:'D. Rossi',c:'it',tier:'elite',r:2276,d:-9,m:1620,w:66,s:'L2'},
+  {name:'K. Öztürk',c:'tr',tier:'elite',r:2244,d:6,m:1988,w:67,s:'W1'},
+  {name:'J. Whitfield',c:'gb',tier:'elite',r:2213,d:-3,m:1410,w:64,s:'L1'},
+  {name:'Sofia M.',c:'br',tier:'gold',r:2178,d:21,m:1205,w:63,s:'W5'},
+  {name:'H. Bauer',c:'de',tier:'gold',r:2144,d:-11,m:1760,w:62,s:'L3'},
+  {name:'N. Papadakis',c:'gr',tier:'gold',r:2109,d:4,m:990,w:61,s:'W2'},
+  {name:'Wei Chen',c:'cn',tier:'gold',r:2071,d:9,m:1330,w:60,s:'W1'},
+  {name:'A. Dubois',c:'fr',tier:'gold',r:2033,d:-6,m:870,w:58,s:'L1'},
+  {name:'R. Sharma',c:'in',tier:'silver',r:1994,d:13,m:1120,w:57,s:'W3'},
+  {name:'C. Morgan',c:'us',tier:'silver',r:1948,d:-2,m:740,w:55,s:'L2'},
+  {name:'E. Navarro',c:'es',tier:'silver',r:1902,d:7,m:660,w:53,s:'W1'}
+];
+const CN={jp:'Japan',ru:'Russia',se:'Sweden',it:'Italy',tr:'Türkiye',gb:'UK',br:'Brazil',de:'Germany',gr:'Greece',cn:'China',fr:'France',in:'India',us:'USA',es:'Spain',il:'Israel'};
+const TIER={premier:'Premier',elite:'Elite',gold:'Gold',silver:'Silver'};
+
+let sortKey='rank', sortDir=1;
+
+function renderRows(){
+  const q=(document.getElementById('searchInput').value||'').toLowerCase();
+  let rows = players.map((p,i)=>({...p, rank:i+1}));
+  // filter
+  if(q) rows = rows.filter(p=>p.name.toLowerCase().includes(q)||CN[p.c].toLowerCase().includes(q));
+  // sort
+  const cmp = {
+    rank:(a,b)=>a.rank-b.rank,
+    name:(a,b)=>a.name.localeCompare(b.name),
+    rating:(a,b)=>a.r-b.r,
+    matches:(a,b)=>a.m-b.m,
+    win:(a,b)=>a.w-b.w,
+    streak:(a,b)=>(a.s[0]==='W'?1:-1)*parseInt(a.s.slice(1))-(b.s[0]==='W'?1:-1)*parseInt(b.s.slice(1))
+  }[sortKey];
+  rows.sort((a,b)=>cmp(a,b)*sortDir);
+
+  const body=document.getElementById('ladderBody');
+  body.innerHTML = rows.map((p,idx)=>{
+    const topCls = p.rank<=3 ? 'top' : '';
+    const av0 = av(p.rank-1);
+    const dcls = p.d>=0?'up':'down';
+    const darr = p.d>=0?'▲':'▼';
+    const scls = p.s[0]==='W'?'w':'l';
+    const init = p.name.replace(/[^A-Za-z]/,'').charAt(0)||p.name.charAt(0);
+    return `<tr>
+      <td class="rankcell"><span class="${topCls}">${p.rank}</span></td>
+      <td>
+        <div class="player">
+          <span class="avatar" style="width:34px;height:34px;background:linear-gradient(135deg,${av0},rgba(0,0,0,0.35));font-size:13px;">${init}</span>
+          <div>
+            <div class="pn">${p.name}</div>
+            <div class="pc"><span class="flag" data-flag="${p.c}"></span><span class="country">${CN[p.c]}</span><span class="tier ${p.tier}">${TIER[p.tier]}</span></div>
+          </div>
+        </div>
+      </td>
+      <td class="num"><span class="rating">${p.r}</span><span class="delta ${dcls}">${darr} ${Math.abs(p.d)}</span></td>
+      <td class="num">${p.m.toLocaleString()}</td>
+      <td class="num"><span class="winbar"><span class="track"><span class="fill" style="width:${p.w}%"></span></span>${p.w}%</span></td>
+      <td class="num"><span class="streak ${scls}">${p.s}</span></td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:28px;">No players match your search.</td></tr>`;
+  paintFlags(body);
+}
+
+/* ===================== INTERACTIVITY ===================== */
+// scope tabs
+document.getElementById('scopeTabs').addEventListener('click',e=>{
+  const t=e.target.closest('.tab'); if(!t)return;
+  document.querySelectorAll('#scopeTabs .tab').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');
+  document.getElementById('scopeLabel').textContent = t.dataset.scope;
+});
+// speed filter
+document.getElementById('speedSeg').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b)return;
+  document.querySelectorAll('#speedSeg button').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  document.getElementById('speedLabel').textContent = b.dataset.speed;
+});
+// search
+document.getElementById('searchInput').addEventListener('input',renderRows);
+// sort headers
+document.querySelectorAll('#ladder thead th').forEach(th=>{
+  th.addEventListener('click',()=>{
+    const k=th.dataset.sort;
+    if(sortKey===k){ sortDir*=-1; } else { sortKey=k; sortDir = (k==='rank'||k==='name')?1:-1; }
+    document.querySelectorAll('#ladder thead th').forEach(x=>{x.classList.remove('sorted');const a=x.querySelector('.arrow');if(a)a.textContent='▲';});
+    th.classList.add('sorted');
+    th.querySelector('.arrow').textContent = sortDir>0?'▲':'▼';
+    renderRows();
+  });
+});
+// mobile menu
+const sb=document.getElementById('sidebar'), bd=document.getElementById('backdrop');
+document.getElementById('menuBtn').addEventListener('click',()=>{sb.classList.add('open');bd.classList.add('show');});
+bd.addEventListener('click',()=>{sb.classList.remove('open');bd.classList.remove('show');});
+
+// init
+paintFlags(document);
+renderRows();
+</script>
+</body>
+</html>

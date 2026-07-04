@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DeepGammon · The Engine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #161514;
+    --panel: #1e1c1a;
+    --panel-2: #232120;
+    --hair: rgba(240, 235, 220, 0.07);
+    --hair-strong: rgba(240, 235, 220, 0.12);
+    --green: #6bbf3f;
+    --green-dim: #5aa634;
+    --green-tint: rgba(107, 191, 63, 0.13);
+    --green-glow: rgba(107, 191, 63, 0.25);
+    --gold: #d3a83f;
+    --gold-dim: rgba(211, 168, 63, 0.15);
+    --text: #f1efe9;
+    --muted: #9a978c;
+    --muted-2: #6f6d64;
+    --red: #d3543f;
+    --red-tint: rgba(211, 84, 63, 0.14);
+    --felt: #2a3a24;
+    --felt-2: #223019;
+    --point-a: #3b3630;
+    --point-b: #4a4239;
+    --checker-white: #e9e4d6;
+    --checker-black: #2b2825;
+    --shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+    display: flex;
+    min-height: 100vh;
+  }
+  ::selection { background: var(--green-tint); }
+
+  a { color: inherit; text-decoration: none; }
+  button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+
+  /* ============ SIDEBAR ============ */
+  .sidebar {
+    width: 240px;
+    flex-shrink: 0;
+    background: var(--panel);
+    border-right: 1px solid var(--hair);
+    display: flex;
+    flex-direction: column;
+    padding: 20px 14px 16px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 10px 22px;
+  }
+  .brand .mark {
+    font-weight: 800;
+    font-size: 22px;
+    letter-spacing: -0.5px;
+    color: var(--green);
+  }
+  .brand .sub {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 500;
+    letter-spacing: 0.3px;
+  }
+
+  .nav { display: flex; flex-direction: column; gap: 2px; }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 12px;
+    border-radius: 10px;
+    color: var(--muted);
+    font-weight: 500;
+    font-size: 13.5px;
+    transition: background 0.15s, color 0.15s;
+  }
+  .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+  .nav-item:hover { background: rgba(240, 235, 220, 0.04); color: var(--text); }
+  .nav-item.active {
+    background: var(--green-tint);
+    color: var(--green);
+    font-weight: 600;
+  }
+  .nav-sep { height: 1px; background: var(--hair); margin: 12px 8px; }
+  .nav-bottom { margin-top: auto; display: flex; flex-direction: column; gap: 2px; }
+  .user-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 10px;
+    border-radius: 10px;
+    margin-top: 6px;
+  }
+  .user-row:hover { background: rgba(240, 235, 220, 0.04); }
+  .avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: linear-gradient(135deg, #6bbf3f, #3f7d24);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 13px; color: #10240a; flex-shrink: 0;
+  }
+  .user-row .name { font-weight: 600; font-size: 13.5px; flex: 1; }
+  .user-row .dots { color: var(--muted); font-size: 18px; line-height: 1; }
+
+  /* ============ MAIN ============ */
+  .main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 22px 26px 40px;
+  }
+  .topbar {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+  }
+  .topbar h1 {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .topbar h1 .engine-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 10px var(--green-glow);
+  }
+  .topbar .crumb {
+    font-size: 12.5px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+  .topbar .crumb b { color: var(--gold); font-weight: 600; }
+
+  .workspace {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(340px, 0.9fr);
+    gap: 20px;
+    align-items: start;
+  }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--hair);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+  }
+  .panel-pad { padding: 18px; }
+
+  /* ===== BOARD TOOLBAR ===== */
+  .board-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--hair);
+    flex-wrap: wrap;
+  }
+  .tool-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 12px;
+    border-radius: 9px;
+    background: var(--panel-2);
+    border: 1px solid var(--hair);
+    color: var(--muted);
+    font-weight: 500;
+    font-size: 12.5px;
+    transition: all 0.15s;
+  }
+  .tool-btn svg { width: 15px; height: 15px; }
+  .tool-btn:hover { color: var(--text); border-color: var(--hair-strong); background: var(--panel-2); }
+  .tool-btn.active { color: var(--green); border-color: rgba(107,191,63,0.35); background: var(--green-tint); }
+  .xgid-field {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg);
+    border: 1px solid var(--hair);
+    border-radius: 9px;
+    padding: 6px 10px;
+    min-width: 0;
+  }
+  .xgid-field label { font-size: 11px; color: var(--gold); font-weight: 600; letter-spacing: 0.4px; }
+  .xgid-field input {
+    background: none; border: none; color: var(--muted);
+    font-family: 'Inter', monospace; font-size: 11.5px; width: 210px;
+    letter-spacing: 0.2px;
+  }
+  .xgid-field input:focus { outline: none; color: var(--text); }
+
+  .board-wrap { padding: 18px; }
+  .board-svg { width: 100%; height: auto; display: block; border-radius: 10px; }
+
+  /* ===== PIP + SNAP row ===== */
+  .board-footer {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    padding: 0 18px 18px;
+  }
+  @media (max-width: 560px) { .board-footer { grid-template-columns: 1fr; } }
+
+  .pip-box {
+    background: var(--panel-2);
+    border: 1px solid var(--hair);
+    border-radius: 12px;
+    padding: 14px 16px;
+  }
+  .pip-title {
+    font-size: 10.5px;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--muted-2);
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+  .pip-rows { display: flex; flex-direction: column; gap: 9px; }
+  .pip-row { display: flex; align-items: center; gap: 10px; }
+  .pip-dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; border: 1px solid var(--hair-strong); }
+  .pip-dot.white { background: var(--checker-white); }
+  .pip-dot.black { background: var(--checker-black); }
+  .pip-row .who { font-size: 13px; font-weight: 500; color: var(--muted); flex: 1; }
+  .pip-row .val { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; font-variant-numeric: tabular-nums; }
+  .pip-diff {
+    margin-top: 11px; padding-top: 11px; border-top: 1px solid var(--hair);
+    font-size: 12px; color: var(--muted); display: flex; justify-content: space-between;
+  }
+  .pip-diff b { color: var(--gold); font-weight: 600; }
+
+  .snap {
+    background: var(--panel-2);
+    border: 1.5px dashed rgba(107,191,63,0.4);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 8px;
+    transition: all 0.18s;
+    cursor: pointer;
+  }
+  .snap:hover { border-color: var(--green); background: rgba(107,191,63,0.06); }
+  .snap .cam {
+    width: 44px; height: 44px; border-radius: 12px;
+    background: var(--green-tint);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--green); margin-bottom: 2px;
+  }
+  .snap .cam svg { width: 24px; height: 24px; }
+  .snap .snap-title {
+    font-size: 12.5px; font-weight: 700; letter-spacing: 0.6px;
+    text-transform: uppercase; color: var(--text);
+  }
+  .snap .snap-sub { font-size: 11.5px; color: var(--muted); }
+  .snap .snap-sub b { color: var(--green); font-weight: 600; }
+
+  /* ============ RIGHT PANEL ============ */
+  .right-col { display: flex; flex-direction: column; gap: 20px; }
+
+  .section-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 15px 18px; border-bottom: 1px solid var(--hair);
+  }
+  .section-head h2 { font-size: 14px; font-weight: 700; letter-spacing: -0.2px; }
+  .section-head .meta { font-size: 11.5px; color: var(--muted); }
+  .conf-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--green-tint); color: var(--green);
+    font-size: 11px; font-weight: 600; padding: 4px 9px; border-radius: 20px;
+    border: 1px solid rgba(107,191,63,0.25);
+  }
+  .conf-chip .pulse { width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green-glow); }
+
+  /* ===== MOVE LIST ===== */
+  .movelist { padding: 8px; }
+  .move-row {
+    display: grid;
+    grid-template-columns: 22px 1fr auto;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.13s;
+    border: 1px solid transparent;
+  }
+  .move-row:hover { background: rgba(240,235,220,0.04); }
+  .move-row .rank { font-size: 12px; color: var(--muted-2); font-weight: 600; text-align: center; }
+  .move-row .play {
+    font-size: 14px; font-weight: 600; letter-spacing: 0.2px;
+    font-variant-numeric: tabular-nums; color: var(--text);
+  }
+  .move-row .play .tag { font-size: 10.5px; color: var(--green); font-weight: 600; margin-left: 8px; }
+  .move-row .eq {
+    font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums;
+    text-align: right; color: var(--muted);
+  }
+  .move-row.best {
+    background: var(--green-tint);
+    border-color: rgba(107,191,63,0.28);
+  }
+  .move-row.best .rank { color: var(--green); }
+  .move-row.best .eq { color: var(--green); }
+  .move-row .eq.neg { color: var(--red); }
+
+  .topmove-bars {
+    margin: 6px 12px 14px;
+    padding: 14px 14px 12px;
+    background: var(--bg);
+    border: 1px solid var(--hair);
+    border-radius: 12px;
+  }
+  .tmb-title {
+    font-size: 10.5px; letter-spacing: 0.7px; text-transform: uppercase;
+    color: var(--muted-2); font-weight: 600; margin-bottom: 12px;
+    display: flex; justify-content: space-between;
+  }
+  .tmb-title b { color: var(--text); font-weight: 600; letter-spacing: 0; text-transform: none; font-size: 12px; }
+  .bar-line { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
+  .bar-line .lbl { font-size: 11px; color: var(--muted); width: 92px; flex-shrink: 0; }
+  .bar-track { flex: 1; height: 8px; border-radius: 6px; background: rgba(240,235,220,0.06); overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 6px; }
+  .bar-line .pct { font-size: 11.5px; font-weight: 600; width: 44px; text-align: right; font-variant-numeric: tabular-nums; color: var(--muted); }
+  .bar-fill.win { background: linear-gradient(90deg, var(--green-dim), var(--green)); }
+  .bar-fill.gam { background: linear-gradient(90deg, #b78a2f, var(--gold)); }
+  .bar-fill.bg  { background: linear-gradient(90deg, #8a3f30, var(--red)); }
+
+  /* ===== CUBE ===== */
+  .cube-verdict {
+    display: flex; align-items: center; gap: 12px;
+    padding: 16px 18px;
+  }
+  .cube-icon {
+    width: 42px; height: 42px; border-radius: 10px;
+    background: var(--gold-dim); color: var(--gold);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 15px; flex-shrink: 0;
+    border: 1px solid rgba(211,168,63,0.3);
+  }
+  .cube-verdict .verdict-txt { flex: 1; }
+  .cube-verdict .verdict-txt .big { font-size: 15px; font-weight: 700; }
+  .cube-verdict .verdict-txt .small { font-size: 11.5px; color: var(--muted); }
+  .cube-stats {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    padding: 0 18px 16px;
+  }
+  .cube-stat {
+    background: var(--panel-2); border: 1px solid var(--hair);
+    border-radius: 10px; padding: 11px 13px;
+  }
+  .cube-stat .k { font-size: 10.5px; color: var(--muted); letter-spacing: 0.3px; margin-bottom: 4px; }
+  .cube-stat .v { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .cube-stat .v.g { color: var(--green); }
+  .cube-stat .v.o { color: var(--gold); }
+
+  .cube-actions {
+    display: flex; align-items: center; gap: 10px;
+    padding: 0 18px 18px; flex-wrap: wrap;
+  }
+  .ply-toggle {
+    display: inline-flex; background: var(--bg); border: 1px solid var(--hair);
+    border-radius: 10px; padding: 3px; gap: 2px;
+  }
+  .ply-toggle button {
+    padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600;
+    color: var(--muted); transition: all 0.13s;
+  }
+  .ply-toggle button.active { background: var(--panel-2); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,0.3); }
+  .btn-rollout {
+    margin-left: auto;
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 9px 16px; border-radius: 10px;
+    background: var(--green); color: #10240a; font-weight: 700; font-size: 13px;
+    box-shadow: 0 4px 14px rgba(107,191,63,0.28);
+    transition: transform 0.1s, background 0.15s;
+  }
+  .btn-rollout:hover { background: #7ccc4d; }
+  .btn-rollout:active { transform: translateY(1px); }
+  .btn-rollout svg { width: 15px; height: 15px; }
+
+  .engine-note {
+    padding: 12px 18px; border-top: 1px solid var(--hair);
+    font-size: 11.5px; color: var(--muted-2); display: flex; align-items: center; gap: 8px;
+  }
+  .engine-note svg { width: 14px; height: 14px; color: var(--green); }
+
+  /* mobile */
+  .hamburger { display: none; }
+  @media (max-width: 1024px) {
+    .workspace { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 780px) {
+    .sidebar {
+      position: fixed; z-index: 50; left: 0; top: 0;
+      transform: translateX(-100%); transition: transform 0.22s ease;
+      box-shadow: var(--shadow);
+    }
+    .sidebar.open { transform: translateX(0); }
+    .main { padding: 16px 16px 40px; }
+    .hamburger {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 38px; height: 38px; border-radius: 9px; background: var(--panel);
+      border: 1px solid var(--hair); color: var(--text); margin-right: 4px;
+    }
+    .hamburger svg { width: 18px; height: 18px; }
+    .topbar { align-items: center; }
+  }
+  .scrim { display: none; }
+  @media (max-width: 780px) {
+    .scrim.show { display: block; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 40; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div>
+        <div class="mark">DG</div>
+        <div class="sub">DeepGammon</div>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+        Home
+      </a>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Clubs
+      </a>
+      <a class="nav-item active" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4"/><circle cx="12" cy="13" r="8"/><path d="m9 13 2 2 4-4"/></svg>
+        Practice
+      </a>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m19 8 2 2 4-4" transform="translate(-6,-1)"/></svg>
+        Friends
+      </a>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M8 4v4M16 4v4"/></svg>
+        Matches
+      </a>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9v9M12 5v13M18 12v6"/><path d="M3 21h18"/></svg>
+        Rankings
+      </a>
+    </nav>
+
+    <div class="nav-bottom">
+      <div class="nav-sep"></div>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+        Notifications
+      </a>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
+        Settings
+      </a>
+      <div class="user-row">
+        <div class="avatar">D</div>
+        <div class="name">Dani</div>
+        <div class="dots">⋯</div>
+      </div>
+    </div>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+
+  <!-- ============ MAIN ============ -->
+  <main class="main">
+    <div class="topbar">
+      <h1>
+        <button class="hamburger" id="hamburger" aria-label="Menu">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        </button>
+        <span class="engine-dot"></span>
+        The Engine
+      </h1>
+      <div class="crumb">Analysis · <b>GNUbg-class engine</b> · runs on device</div>
+    </div>
+
+    <div class="workspace">
+
+      <!-- ===== LEFT: BOARD ===== -->
+      <section class="panel">
+        <div class="board-toolbar">
+          <button class="tool-btn active">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+            Edit position
+          </button>
+          <button class="tool-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M7 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
+            Flip
+          </button>
+          <button class="tool-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            Clear
+          </button>
+          <div class="xgid-field">
+            <label>XGID</label>
+            <input id="xgid" value="-b----E-C---eE---c-e----B-:0:0:1:52:0:0:3:0:10" spellcheck="false" />
+          </div>
+        </div>
+
+        <div class="board-wrap">
+          <!-- BACKGAMMON BOARD -->
+          <svg class="board-svg" viewBox="0 0 800 520" xmlns="http://www.w3.org/2000/svg" id="board">
+            <defs>
+              <linearGradient id="felt" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#2c3d25"/>
+                <stop offset="1" stop-color="#1f2c18"/>
+              </linearGradient>
+              <radialGradient id="wchk" cx="0.35" cy="0.3" r="0.9">
+                <stop offset="0" stop-color="#faf6ec"/>
+                <stop offset="1" stop-color="#d9d2c0"/>
+              </radialGradient>
+              <radialGradient id="bchk" cx="0.35" cy="0.3" r="0.9">
+                <stop offset="0" stop-color="#3a3631"/>
+                <stop offset="1" stop-color="#211e1b"/>
+              </radialGradient>
+              <linearGradient id="frame" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#3a332b"/>
+                <stop offset="1" stop-color="#2a251f"/>
+              </linearGradient>
+              <filter id="chkshadow" x="-30%" y="-30%" width="160%" height="160%">
+                <feDropShadow dx="0" dy="1.5" stdDeviation="1.5" flood-color="#000" flood-opacity="0.45"/>
+              </filter>
+            </defs>
+
+            <!-- outer frame -->
+            <rect x="0" y="0" width="800" height="520" rx="14" fill="url(#frame)"/>
+            <!-- felt -->
+            <rect x="18" y="18" width="764" height="484" rx="6" fill="url(#felt)"/>
+            <!-- center bar -->
+            <rect x="381" y="18" width="38" height="484" fill="#2a251f"/>
+            <rect x="381" y="18" width="38" height="484" fill="rgba(0,0,0,0.15)"/>
+            <!-- right tray (bear-off) -->
+            <rect x="748" y="18" width="34" height="484" fill="#241f1a"/>
+
+            <!-- POINTS: 12 top, 12 bottom. Triangles alternate colors. -->
+            <g id="points"></g>
+
+            <!-- point numbers -->
+            <g id="pointnums" font-family="Inter" font-size="11" fill="#7d7a70" font-weight="600" text-anchor="middle"></g>
+
+            <!-- CHECKERS -->
+            <g id="checkers"></g>
+
+            <!-- DICE -->
+            <g id="dice">
+              <rect x="470" y="232" width="46" height="46" rx="9" fill="#efe9db"/>
+              <rect x="470" y="232" width="46" height="46" rx="9" fill="none" stroke="rgba(0,0,0,0.15)"/>
+              <rect x="530" y="232" width="46" height="46" rx="9" fill="#efe9db"/>
+              <rect x="530" y="232" width="46" height="46" rx="9" fill="none" stroke="rgba(0,0,0,0.15)"/>
+              <!-- 5 -->
+              <g fill="#2a251f">
+                <circle cx="481" cy="243" r="3.6"/><circle cx="505" cy="243" r="3.6"/>
+                <circle cx="493" cy="255" r="3.6"/>
+                <circle cx="481" cy="267" r="3.6"/><circle cx="505" cy="267" r="3.6"/>
+              </g>
+              <!-- 2 -->
+              <g fill="#2a251f">
+                <circle cx="541" cy="243" r="3.6"/>
+                <circle cx="565" cy="267" r="3.6"/>
+              </g>
+            </g>
+
+            <!-- CUBE (value 2, centered on bar left side) -->
+            <g id="cube">
+              <rect x="30" y="238" width="40" height="40" rx="8" fill="#efe9db" filter="url(#chkshadow)"/>
+              <rect x="30" y="238" width="40" height="40" rx="8" fill="none" stroke="rgba(0,0,0,0.12)"/>
+              <text x="50" y="264" font-family="Inter" font-size="19" font-weight="800" fill="#2a251f" text-anchor="middle">2</text>
+            </g>
+          </svg>
+        </div>
+
+        <div class="board-footer">
+          <div class="pip-box">
+            <div class="pip-title">Pip Count</div>
+            <div class="pip-rows">
+              <div class="pip-row">
+                <span class="pip-dot white"></span>
+                <span class="who">White</span>
+                <span class="val" style="color:var(--text)">142</span>
+              </div>
+              <div class="pip-row">
+                <span class="pip-dot black"></span>
+                <span class="who">Black</span>
+                <span class="val" style="color:var(--text)">155</span>
+              </div>
+            </div>
+            <div class="pip-diff">
+              <span>Difference</span>
+              <span><b>White −13</b> pips ahead</span>
+            </div>
+          </div>
+
+          <div class="snap" id="snap">
+            <div class="cam">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2Z"/><circle cx="12" cy="13" r="4"/></svg>
+            </div>
+            <div class="snap-title">Snap a photo of the board</div>
+            <div class="snap-sub">Point your camera — we read the position in <b>&lt;1s</b></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== RIGHT: ANALYSIS ===== -->
+      <div class="right-col">
+
+        <!-- MOVE LIST -->
+        <section class="panel">
+          <div class="section-head">
+            <h2>Best Moves</h2>
+            <span class="conf-chip"><span class="pulse"></span>confidence 99.4%</span>
+          </div>
+
+          <div class="movelist" id="movelist">
+            <div class="move-row best">
+              <span class="rank">1.</span>
+              <span class="play">24/18 13/11 <span class="tag">best</span></span>
+              <span class="eq">+0.000</span>
+            </div>
+            <div class="move-row">
+              <span class="rank">2.</span>
+              <span class="play">24/18 24/22</span>
+              <span class="eq neg">−0.014</span>
+            </div>
+            <div class="move-row">
+              <span class="rank">3.</span>
+              <span class="play">13/7</span>
+              <span class="eq neg">−0.061</span>
+            </div>
+            <div class="move-row">
+              <span class="rank">4.</span>
+              <span class="play">13/11 13/7</span>
+              <span class="eq neg">−0.088</span>
+            </div>
+            <div class="move-row">
+              <span class="rank">5.</span>
+              <span class="play">24/22 13/7</span>
+              <span class="eq neg">−0.117</span>
+            </div>
+          </div>
+
+          <div class="topmove-bars">
+            <div class="tmb-title"><span>Top move outlook</span><b>24/18 13/11</b></div>
+            <div class="bar-line">
+              <span class="lbl">Win</span>
+              <div class="bar-track"><div class="bar-fill win" style="width:54%"></div></div>
+              <span class="pct">53.8%</span>
+            </div>
+            <div class="bar-line">
+              <span class="lbl">Gammon win</span>
+              <div class="bar-track"><div class="bar-fill gam" style="width:15%"></div></div>
+              <span class="pct">14.6%</span>
+            </div>
+            <div class="bar-line">
+              <span class="lbl">Backgammon</span>
+              <div class="bar-track"><div class="bar-fill bg" style="width:5%"></div></div>
+              <span class="pct">0.7%</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- CUBE DECISION -->
+        <section class="panel">
+          <div class="section-head">
+            <h2>Cube Decision</h2>
+            <span class="meta" id="plyLabel">2-ply eval</span>
+          </div>
+
+          <div class="cube-verdict">
+            <div class="cube-icon">2</div>
+            <div class="verdict-txt">
+              <div class="big">No double / Take</div>
+              <div class="small">Not yet a double — Black takes if offered</div>
+            </div>
+          </div>
+
+          <div class="cube-stats">
+            <div class="cube-stat">
+              <div class="k">Double point</div>
+              <div class="v o">+0.412</div>
+            </div>
+            <div class="cube-stat">
+              <div class="k">Take point</div>
+              <div class="v g">+0.688</div>
+            </div>
+            <div class="cube-stat">
+              <div class="k">Cubeless equity</div>
+              <div class="v">+0.186</div>
+            </div>
+            <div class="cube-stat">
+              <div class="k">Cubeful equity</div>
+              <div class="v">+0.204</div>
+            </div>
+          </div>
+
+          <div class="cube-actions">
+            <div class="ply-toggle" id="plyToggle">
+              <button data-ply="2-ply">2-ply</button>
+              <button data-ply="3-ply" class="active">3-ply</button>
+              <button data-ply="Rollout">Rollout</button>
+            </div>
+            <button class="btn-rollout" id="rolloutBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              Rollout
+            </button>
+          </div>
+
+          <div class="engine-note">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="m2 17 10 5 10-5M2 12l10 5 10-5"/></svg>
+            Neural engine · 10,368 games rolled · variance-reduced
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </main>
+
+<script>
+(function () {
+  // ---------- Build board points + checkers ----------
+  const BOARD_W = 800;
+  const ptG = document.getElementById('points');
+  const numG = document.getElementById('pointnums');
+  const chkG = document.getElementById('checkers');
+
+  const topY = 18, botY = 502, ptH = 190;
+  const quadGap = 38;           // center bar width
+  const trayW = 34;
+  const playW = (748 - 18);     // 730 usable across (18 -> 748)
+  const halfW = (748 - 18 - quadGap) / 2; // width of one 6-point quadrant
+  const colW = halfW / 6;
+
+  // x-center of point index i (0..11 for a half)
+  function colX(half, i) {
+    // half 'L' = left of bar (x 18..362), half 'R' = right of bar (419..748)
+    const startL = 18, startR = 419;
+    const base = (half === 'L') ? startL : startR;
+    return base + colW * i + colW / 2;
+  }
+
+  // Point layout: XG standard. Top row points 13..24 (left->right), bottom 12..1.
+  // We'll draw 24 triangles. Alternate colors.
+  const pointColors = ['#463f36', '#39332c'];
+
+  // define 24 points with their pixel column + top/bottom
+  // Top-left quadrant: points 13,14,15,16,17,18 ; top-right: 19..24
+  // Bottom-right: 1..6 ; bottom-left: 7..12
+  const points = [];
+  // top row, left half (13-18) then right half (19-24)
+  for (let i = 0; i < 6; i++) points.push({ num: 13 + i, x: colX('L', i), side: 'top' });
+  for (let i = 0; i < 6; i++) points.push({ num: 19 + i, x: colX('R', i), side: 'top' });
+  // bottom row, right half (6..1 left-to-right so 1 is far right) -> we place 1..6 on right, 6 nearest bar
+  for (let i = 0; i < 6; i++) points.push({ num: 6 - i, x: colX('R', i), side: 'bot' });
+  for (let i = 0; i < 6; i++) points.push({ num: 12 - i, x: colX('L', i), side: 'bot' });
+
+  points.forEach((p, idx) => {
+    const w = colW * 0.82;
+    const col = pointColors[(Math.round((p.x)) % 2 === 0) ? (idx % 2) : ((idx + 1) % 2)];
+    const c = pointColors[idx % 2];
+    let pts;
+    if (p.side === 'top') {
+      pts = `${p.x - w/2},${topY} ${p.x + w/2},${topY} ${p.x},${topY + ptH}`;
+    } else {
+      pts = `${p.x - w/2},${botY} ${p.x + w/2},${botY} ${p.x},${botY - ptH}`;
+    }
+    const tri = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+    tri.setAttribute('points', pts);
+    tri.setAttribute('fill', c);
+    tri.setAttribute('opacity', '0.92');
+    ptG.appendChild(tri);
+
+    // number
+    const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    t.setAttribute('x', p.x);
+    t.setAttribute('y', p.side === 'top' ? 12 : 516);
+    t.textContent = p.num;
+    numG.appendChild(t);
+  });
+
+  // ---------- Checkers ----------
+  // A realistic-ish opening-derived position. {point: count, color}
+  // color 'w' white, 'b' black
+  const stacks = {
+    24: { c: 'b', n: 2 },
+    13: { c: 'b', n: 4 },
+    8:  { c: 'w', n: 3 },
+    6:  { c: 'w', n: 5 },
+    19: { c: 'w', n: 2 },  // note: using visual points
+    17: { c: 'b', n: 3 },
+    12: { c: 'w', n: 2 },
+    1:  { c: 'w', n: 2 },
+    11: { c: 'b', n: 2 },
+  };
+
+  const R = colW * 0.40;  // checker radius
+  const step = R * 1.78;
+
+  function pointCenterX(num) {
+    const p = points.find(pp => pp.num === num);
+    return p ? p.x : 0;
+  }
+  function pointSide(num) {
+    const p = points.find(pp => pp.num === num);
+    return p ? p.side : 'top';
+  }
+
+  Object.keys(stacks).forEach(num => {
+    const s = stacks[num];
+    const cx = pointCenterX(+num);
+    const side = pointSide(+num);
+    const show = Math.min(s.n, 5);
+    for (let k = 0; k < show; k++) {
+      let cy;
+      if (side === 'top') cy = topY + R + 2 + k * step;
+      else cy = botY - R - 2 - k * step;
+      const circ = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      circ.setAttribute('cx', cx);
+      circ.setAttribute('cy', cy);
+      circ.setAttribute('r', R);
+      circ.setAttribute('fill', s.c === 'w' ? 'url(#wchk)' : 'url(#bchk)');
+      circ.setAttribute('stroke', s.c === 'w' ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.06)');
+      circ.setAttribute('filter', 'url(#chkshadow)');
+      chkG.appendChild(circ);
+    }
+    if (s.n > 5) {
+      // count badge on top checker
+      let cy = side === 'top' ? topY + R + 2 + 4 * step : botY - R - 2 - 4 * step;
+      const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      t.setAttribute('x', cx);
+      t.setAttribute('y', cy + 4.5);
+      t.setAttribute('text-anchor', 'middle');
+      t.setAttribute('font-family', 'Inter');
+      t.setAttribute('font-size', '13');
+      t.setAttribute('font-weight', '800');
+      t.setAttribute('fill', s.c === 'w' ? '#2a251f' : '#efe9db');
+      t.textContent = s.n;
+      chkG.appendChild(t);
+    }
+  });
+
+  // ---------- Interactivity ----------
+  // ply toggle
+  const plyToggle = document.getElementById('plyToggle');
+  const plyLabel = document.getElementById('plyLabel');
+  const labelMap = { '2-ply': '2-ply eval', '3-ply': '3-ply eval', 'Rollout': 'full rollout' };
+  plyToggle.addEventListener('click', function (e) {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    plyToggle.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    plyLabel.textContent = labelMap[btn.dataset.ply] || btn.dataset.ply;
+  });
+
+  // move rows select
+  document.getElementById('movelist').addEventListener('click', function (e) {
+    const row = e.target.closest('.move-row');
+    if (!row) return;
+    document.querySelectorAll('.move-row').forEach(r => {
+      if (r !== row) r.style.background = '';
+    });
+  });
+
+  // rollout button micro feedback
+  const rb = document.getElementById('rolloutBtn');
+  rb.addEventListener('click', function () {
+    const orig = rb.innerHTML;
+    rb.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.2-8.5"/></svg> Rolling…';
+    rb.style.opacity = '0.85';
+    setTimeout(() => { rb.innerHTML = orig; rb.style.opacity = '1'; }, 1400);
+  });
+
+  // snap
+  document.getElementById('snap').addEventListener('click', function () {
+    const el = this.querySelector('.snap-sub');
+    const old = el.innerHTML;
+    el.innerHTML = 'Reading board… hold steady';
+    setTimeout(() => { el.innerHTML = old; }, 1600);
+  });
+
+  // mobile sidebar
+  const sb = document.getElementById('sidebar');
+  const scrim = document.getElementById('scrim');
+  document.getElementById('hamburger').addEventListener('click', () => {
+    sb.classList.toggle('open'); scrim.classList.toggle('show');
+  });
+  scrim.addEventListener('click', () => { sb.classList.remove('open'); scrim.classList.remove('show'); });
+})();
+</script>
+</body>
+</html>

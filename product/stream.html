@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DeepGammon — Record &amp; Stream</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#161514;
+    --panel:#1e1c1a;
+    --panel-2:#242220;
+    --line:rgba(240,235,220,0.07);
+    --line-strong:rgba(240,235,220,0.13);
+    --green:#6bbf3f;
+    --green-dim:#54992f;
+    --gold:#d3a83f;
+    --red:#e5484d;
+    --text:#f1efe9;
+    --muted:#9a978c;
+    --muted-2:#6f6c64;
+    --radius:13px;
+    --radius-sm:9px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    font-size:14px;
+    -webkit-font-smoothing:antialiased;
+    line-height:1.45;
+  }
+  ::selection{background:rgba(107,191,63,.28);}
+  ::-webkit-scrollbar{width:10px;height:10px;}
+  ::-webkit-scrollbar-thumb{background:rgba(240,235,220,.09);border-radius:20px;}
+  ::-webkit-scrollbar-thumb:hover{background:rgba(240,235,220,.16);}
+  a{color:inherit;text-decoration:none;}
+  button{font-family:inherit;cursor:pointer;color:inherit;border:none;background:none;}
+
+  .app{
+    display:grid;
+    grid-template-columns:240px 1fr;
+    min-height:100vh;
+  }
+
+  /* ============ SIDEBAR ============ */
+  .sidebar{
+    background:var(--panel);
+    border-right:1px solid var(--line);
+    display:flex;
+    flex-direction:column;
+    padding:18px 14px;
+    position:sticky;
+    top:0;
+    height:100vh;
+  }
+  .brand{
+    display:flex;align-items:center;gap:10px;
+    padding:6px 8px 18px;
+  }
+  .brand .logo{
+    width:34px;height:34px;border-radius:9px;
+    background:linear-gradient(150deg,#6bbf3f,#4b8f28);
+    display:flex;align-items:center;justify-content:center;
+    font-weight:800;color:#0f1a08;font-size:15px;letter-spacing:.5px;
+    box-shadow:0 4px 14px rgba(107,191,63,.25);
+  }
+  .brand .word{font-weight:800;font-size:18px;color:var(--green);letter-spacing:.3px;}
+  .brand .word span{color:var(--text);font-weight:700;}
+  .nav-label{
+    font-size:11px;text-transform:uppercase;letter-spacing:.12em;
+    color:var(--muted-2);padding:14px 10px 6px;font-weight:600;
+  }
+  .nav{display:flex;flex-direction:column;gap:2px;}
+  .nav a{
+    display:flex;align-items:center;gap:12px;
+    padding:9px 11px;border-radius:10px;color:var(--muted);
+    font-weight:500;transition:background .15s,color .15s;
+  }
+  .nav a svg{width:19px;height:19px;flex:none;stroke:currentColor;fill:none;stroke-width:1.7;}
+  .nav a:hover{background:rgba(240,235,220,.045);color:var(--text);}
+  .nav a.active{background:rgba(107,191,63,.13);color:var(--text);}
+  .nav a.active svg{stroke:var(--green);}
+  .nav a .badge{
+    margin-left:auto;font-size:10px;font-weight:700;color:#0f1a08;
+    background:var(--red);padding:1px 6px;border-radius:20px;letter-spacing:.3px;
+    color:#fff;
+  }
+  .side-bottom{margin-top:auto;display:flex;flex-direction:column;gap:2px;padding-top:12px;}
+  .userrow{
+    display:flex;align-items:center;gap:10px;margin-top:10px;
+    padding:9px 8px;border-radius:11px;border:1px solid var(--line);
+    background:var(--panel-2);
+  }
+  .avatar{
+    width:32px;height:32px;border-radius:50%;flex:none;
+    background:linear-gradient(140deg,#d3a83f,#a97e26);
+    display:flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:13px;color:#241a05;
+  }
+  .userrow .who{display:flex;flex-direction:column;line-height:1.2;}
+  .userrow .who b{font-size:13px;font-weight:600;}
+  .userrow .who small{color:var(--muted);font-size:11px;}
+  .userrow .dots{margin-left:auto;color:var(--muted);font-size:18px;letter-spacing:1px;}
+
+  /* ============ MAIN ============ */
+  .main{min-width:0;display:flex;flex-direction:column;}
+  .topbar{
+    display:flex;align-items:center;gap:16px;
+    padding:16px 26px;border-bottom:1px solid var(--line);
+    position:sticky;top:0;background:rgba(22,21,20,.86);backdrop-filter:blur(10px);z-index:20;
+  }
+  .topbar h1{font-size:17px;font-weight:700;margin:0;}
+  .topbar .crumb{color:var(--muted);font-size:12.5px;}
+  .topbar .spacer{flex:1;}
+  .searchbox{
+    display:flex;align-items:center;gap:8px;background:var(--panel);
+    border:1px solid var(--line);border-radius:10px;padding:7px 12px;width:250px;color:var(--muted);
+  }
+  .searchbox svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;}
+  .searchbox input{background:none;border:none;outline:none;color:var(--text);width:100%;font-size:13px;}
+  .topbtn{
+    display:flex;align-items:center;gap:7px;padding:8px 13px;border-radius:10px;
+    background:var(--panel);border:1px solid var(--line);color:var(--text);font-weight:600;font-size:13px;
+  }
+  .topbtn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;}
+  .topbtn:hover{border-color:var(--line-strong);}
+
+  .content{
+    padding:22px 26px 40px;
+    display:grid;
+    grid-template-columns:1fr 340px;
+    gap:22px;
+    align-items:start;
+  }
+  .col-main{min-width:0;display:flex;flex-direction:column;gap:22px;}
+
+  /* ---- STREAM STAGE ---- */
+  .stage-wrap{
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    overflow:hidden;
+  }
+  .stage{
+    position:relative;width:100%;aspect-ratio:16/9;
+    background:
+      radial-gradient(120% 90% at 50% 40%, #23201c 0%, #141210 70%, #0d0c0b 100%);
+    overflow:hidden;
+  }
+  /* felt / table hint */
+  .stage .felt{
+    position:absolute;inset:12% 14% 16%;
+    background:
+      radial-gradient(80% 90% at 50% 50%, rgba(60,80,45,.24), rgba(20,26,14,.05) 70%);
+    border-radius:14px;
+    transform:perspective(700px) rotateX(20deg);
+    box-shadow:0 40px 80px rgba(0,0,0,.5) inset;
+  }
+  .stage .grain{
+    position:absolute;inset:0;opacity:.5;pointer-events:none;
+    background-image:radial-gradient(rgba(255,255,255,.025) 1px, transparent 1px);
+    background-size:3px 3px;
+  }
+  .play-tri{
+    position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    width:82px;height:82px;border-radius:50%;
+    background:rgba(20,19,17,.55);backdrop-filter:blur(3px);
+    border:1px solid rgba(240,235,220,.18);
+    display:flex;align-items:center;justify-content:center;
+    transition:transform .18s,background .18s;z-index:6;
+  }
+  .play-tri:hover{transform:translate(-50%,-50%) scale(1.06);background:rgba(107,191,63,.22);}
+  .play-tri svg{width:34px;height:34px;fill:var(--text);margin-left:4px;}
+  .play-tri.paused svg.pause{display:none;}
+  .play-tri.playing svg.play{display:none;}
+  .play-tri.playing{margin-left:0;}
+  .play-tri.playing svg.pause{margin-left:0;}
+
+  /* live badge */
+  .badge-live{
+    position:absolute;top:14px;left:14px;z-index:7;
+    display:flex;align-items:center;gap:7px;
+    background:rgba(229,72,77,.92);color:#fff;font-weight:800;
+    font-size:11px;letter-spacing:.09em;padding:5px 10px;border-radius:7px;
+    box-shadow:0 4px 14px rgba(229,72,77,.35);
+  }
+  .badge-live .dot{width:8px;height:8px;border-radius:50%;background:#fff;animation:pulse 1.4s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+  .watchers{
+    position:absolute;top:14px;left:78px;z-index:7;
+    display:flex;align-items:center;gap:6px;
+    background:rgba(13,12,11,.6);backdrop-filter:blur(6px);
+    color:var(--text);font-weight:600;font-size:11.5px;padding:5px 10px;border-radius:7px;
+    border:1px solid rgba(240,235,220,.09);
+  }
+  .watchers svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:1.9;}
+
+  .stage-title{
+    position:absolute;top:14px;right:14px;z-index:7;text-align:right;
+    background:linear-gradient(90deg,transparent,rgba(13,12,11,.55));
+    padding:4px 4px 4px 30px;border-radius:8px;
+  }
+  .stage-title b{display:block;font-size:13px;font-weight:700;}
+  .stage-title small{color:var(--muted);font-size:11px;}
+
+  /* mini board overlay */
+  .mini-board{
+    position:absolute;bottom:56px;right:14px;z-index:7;
+    width:172px;background:rgba(13,12,11,.72);backdrop-filter:blur(8px);
+    border:1px solid rgba(240,235,220,.1);border-radius:10px;padding:8px;
+  }
+  .mini-board .mb-head{
+    display:flex;justify-content:space-between;align-items:center;
+    font-size:10px;color:var(--muted);margin-bottom:5px;font-weight:600;letter-spacing:.04em;
+  }
+  .mini-board .mb-head .dice{display:flex;gap:3px;}
+  .mini-board .die{
+    width:14px;height:14px;border-radius:3px;background:#f1efe9;color:#161514;
+    font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;
+  }
+  .mini-board svg{display:block;width:100%;border-radius:6px;}
+
+  /* player plates */
+  .plates{
+    position:absolute;bottom:56px;left:14px;z-index:7;
+    display:flex;flex-direction:column;gap:6px;
+  }
+  .plate{
+    display:flex;align-items:center;gap:9px;
+    background:rgba(13,12,11,.72);backdrop-filter:blur(8px);
+    border:1px solid rgba(240,235,220,.09);border-radius:9px;padding:6px 11px 6px 7px;
+    min-width:186px;
+  }
+  .plate .pav{width:26px;height:26px;border-radius:6px;flex:none;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+  .plate.w .pav{background:linear-gradient(140deg,#e9e5da,#b9b4a6);color:#2a2620;}
+  .plate.b .pav{background:linear-gradient(140deg,#3a352e,#1c1a16);color:#e9e5da;border:1px solid rgba(240,235,220,.15);}
+  .plate .pn{display:flex;flex-direction:column;line-height:1.15;}
+  .plate .pn b{font-size:12.5px;font-weight:600;}
+  .plate .pn small{font-size:10px;color:var(--muted);}
+  .plate .score{margin-left:auto;font-size:19px;font-weight:800;font-variant-numeric:tabular-nums;}
+  .plate.onturn{border-color:rgba(107,191,63,.5);box-shadow:0 0 0 1px rgba(107,191,63,.25);}
+  .plate .turnpip{width:6px;height:6px;border-radius:50%;background:var(--green);}
+
+  /* HUD strip */
+  .hud{
+    position:absolute;bottom:14px;left:14px;right:14px;z-index:7;
+    display:flex;align-items:center;gap:0;
+    background:rgba(13,12,11,.72);backdrop-filter:blur(8px);
+    border:1px solid rgba(240,235,220,.09);border-radius:9px;overflow:hidden;
+    height:30px;
+  }
+  .hud .cell{
+    display:flex;align-items:center;gap:6px;padding:0 12px;height:100%;
+    font-size:11px;color:var(--muted);border-right:1px solid rgba(240,235,220,.07);
+  }
+  .hud .cell b{color:var(--text);font-weight:700;font-variant-numeric:tabular-nums;}
+  .hud .cell.green b{color:var(--green);}
+  .hud .cell.gold b{color:var(--gold);}
+  .hud .eqbar{flex:1;height:6px;margin:0 12px;border-radius:20px;background:rgba(240,235,220,.1);position:relative;overflow:hidden;}
+  .hud .eqbar i{position:absolute;left:0;top:0;bottom:0;width:63%;background:linear-gradient(90deg,var(--green),var(--green-dim));border-radius:20px;}
+
+  /* controls under video */
+  .controls{
+    display:flex;align-items:center;gap:14px;padding:12px 16px;border-top:1px solid var(--line);
+  }
+  .ctrl-btn{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;color:var(--text);}
+  .ctrl-btn:hover{background:rgba(240,235,220,.06);}
+  .ctrl-btn svg{width:18px;height:18px;fill:currentColor;stroke:none;}
+  .timeline{flex:1;display:flex;align-items:center;gap:10px;}
+  .tl-time{font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums;}
+  .scrubber{flex:1;height:6px;border-radius:20px;background:rgba(240,235,220,.1);position:relative;cursor:pointer;}
+  .scrubber .buf{position:absolute;left:0;top:0;bottom:0;width:72%;background:rgba(240,235,220,.14);border-radius:20px;}
+  .scrubber .fill{position:absolute;left:0;top:0;bottom:0;width:48%;background:var(--red);border-radius:20px;}
+  .scrubber .knob{position:absolute;left:48%;top:50%;transform:translate(-50%,-50%);width:13px;height:13px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.5);}
+  .ctrl-select{
+    display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);font-weight:600;
+    padding:6px 10px;border-radius:8px;border:1px solid var(--line);
+  }
+  .ctrl-select:hover{border-color:var(--line-strong);color:var(--text);}
+  .ctrl-select .q{color:var(--gold);}
+
+  /* action row */
+  .actions{display:flex;align-items:center;gap:12px;padding:14px 16px;border-top:1px solid var(--line);flex-wrap:wrap;}
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:10px;
+    font-weight:700;font-size:13px;transition:filter .15s,background .15s,border-color .15s;
+  }
+  .btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.9;}
+  .btn.green{background:var(--green);color:#0f1a08;}
+  .btn.green:hover{filter:brightness(1.07);}
+  .btn.green .rec{width:9px;height:9px;border-radius:50%;background:#0f1a08;}
+  .btn.outline{background:transparent;border:1px solid var(--line-strong);color:var(--text);}
+  .btn.outline:hover{border-color:var(--green);color:var(--green);}
+  .btn.ghost{background:rgba(240,235,220,.05);color:var(--text);}
+  .btn.ghost:hover{background:rgba(240,235,220,.09);}
+  .btn.gold svg{stroke:var(--gold);}
+  .actions .grow{flex:1;}
+  .cam-note{
+    display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--muted);
+    background:rgba(211,168,63,.07);border:1px solid rgba(211,168,63,.16);
+    padding:7px 12px;border-radius:9px;
+  }
+  .cam-note svg{width:15px;height:15px;stroke:var(--gold);fill:none;stroke-width:1.7;flex:none;}
+
+  /* ---- RIGHT RAIL ---- */
+  .rail{display:flex;flex-direction:column;gap:18px;position:sticky;top:80px;}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;}
+  .card-head{
+    display:flex;align-items:center;gap:10px;padding:13px 15px;border-bottom:1px solid var(--line);
+  }
+  .card-head h3{margin:0;font-size:13.5px;font-weight:700;}
+  .card-head .live-dot{width:7px;height:7px;border-radius:50%;background:var(--red);animation:pulse 1.4s infinite;}
+  .card-head .spacer{flex:1;}
+  .toggle{
+    display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--muted);font-weight:600;
+  }
+  .switch{width:34px;height:19px;border-radius:20px;background:rgba(240,235,220,.14);position:relative;transition:background .18s;flex:none;}
+  .switch::after{content:"";position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;background:#fff;transition:left .18s;}
+  .switch.on{background:var(--green);}
+  .switch.on::after{left:17px;}
+
+  /* chat */
+  .chat-body{height:290px;overflow-y:auto;padding:12px 15px;display:flex;flex-direction:column;gap:11px;}
+  .msg{font-size:12.5px;line-height:1.4;}
+  .msg .u{font-weight:700;margin-right:5px;}
+  .msg .u.mod{color:var(--green);}
+  .msg .u.gold{color:var(--gold);}
+  .msg .u.reg{color:#8fb4d6;}
+  .msg .u.reg2{color:#c98fd6;}
+  .msg .u.reg3{color:#d69a8f;}
+  .msg .t{color:var(--text);}
+  .msg.sys{color:var(--muted);font-style:italic;font-size:11.5px;}
+  .chat-input{display:flex;gap:8px;padding:11px 12px;border-top:1px solid var(--line);}
+  .chat-input input{
+    flex:1;background:var(--panel-2);border:1px solid var(--line);border-radius:9px;
+    padding:9px 12px;color:var(--text);outline:none;font-size:13px;
+  }
+  .chat-input input:focus{border-color:var(--line-strong);}
+  .chat-input button{
+    width:38px;border-radius:9px;background:var(--green);color:#0f1a08;display:flex;align-items:center;justify-content:center;
+  }
+  .chat-input button svg{width:17px;height:17px;fill:currentColor;}
+
+  /* schedule */
+  .sched-item{display:flex;align-items:center;gap:11px;padding:12px 15px;border-bottom:1px solid var(--line);}
+  .sched-item:last-child{border-bottom:none;}
+  .sched-time{
+    flex:none;width:52px;text-align:center;
+  }
+  .sched-time b{display:block;font-size:14px;font-weight:800;color:var(--gold);font-variant-numeric:tabular-nums;}
+  .sched-time small{font-size:9.5px;color:var(--muted-2);text-transform:uppercase;letter-spacing:.06em;}
+  .sched-mid{flex:1;min-width:0;}
+  .sched-mid b{display:block;font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .sched-mid small{font-size:11px;color:var(--muted);}
+  .bell{
+    flex:none;width:32px;height:32px;border-radius:8px;border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;color:var(--muted);transition:.15s;
+  }
+  .bell svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;}
+  .bell:hover{border-color:var(--gold);color:var(--gold);}
+  .bell.set{background:rgba(211,168,63,.15);border-color:var(--gold);color:var(--gold);}
+  .bell.set svg{fill:var(--gold);}
+
+  /* recordings strip */
+  .section-head{display:flex;align-items:center;gap:12px;margin:2px 0 -6px;}
+  .section-head h2{font-size:15px;font-weight:700;margin:0;}
+  .section-head .spacer{flex:1;}
+  .section-head a{font-size:12.5px;color:var(--green);font-weight:600;}
+  .rec-row{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:16px;
+  }
+  .rec-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;transition:border-color .15s,transform .15s;}
+  .rec-card:hover{border-color:var(--line-strong);transform:translateY(-2px);}
+  .rec-thumb{
+    position:relative;aspect-ratio:16/9;
+    background:radial-gradient(110% 90% at 50% 40%,#26221d,#131210);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .rec-thumb .len{position:absolute;bottom:7px;right:7px;background:rgba(13,12,11,.8);color:var(--text);font-size:10px;font-weight:600;padding:2px 6px;border-radius:5px;font-variant-numeric:tabular-nums;}
+  .rec-thumb .rw{position:absolute;top:7px;left:7px;font-size:9.5px;font-weight:800;letter-spacing:.05em;padding:2px 7px;border-radius:5px;}
+  .rw.win{background:rgba(107,191,63,.9);color:#0f1a08;}
+  .rw.loss{background:rgba(229,72,77,.85);color:#fff;}
+  .rec-thumb .ptri{width:38px;height:38px;border-radius:50%;background:rgba(20,19,17,.55);border:1px solid rgba(240,235,220,.16);display:flex;align-items:center;justify-content:center;}
+  .rec-thumb .ptri svg{width:16px;height:16px;fill:var(--text);margin-left:2px;}
+  .rec-meta{padding:11px 13px;}
+  .rec-meta b{display:block;font-size:12.5px;font-weight:600;}
+  .rec-meta small{font-size:11px;color:var(--muted);}
+  .rec-btns{display:flex;gap:7px;margin-top:9px;}
+  .rec-btns button{
+    flex:1;padding:6px 8px;border-radius:7px;font-size:11px;font-weight:600;border:1px solid var(--line);color:var(--text);
+    display:flex;align-items:center;justify-content:center;gap:5px;
+  }
+  .rec-btns button.pri{background:rgba(107,191,63,.14);border-color:rgba(107,191,63,.3);color:var(--green);}
+  .rec-btns button:hover{border-color:var(--line-strong);}
+  .rec-btns button svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:1.9;}
+
+  /* ============ RESPONSIVE ============ */
+  @media(max-width:1120px){
+    .content{grid-template-columns:1fr;}
+    .rail{position:static;flex-direction:row;flex-wrap:wrap;}
+    .rail .card{flex:1;min-width:280px;}
+    .rec-row{grid-template-columns:repeat(2,1fr);}
+  }
+  @media(max-width:860px){
+    .app{grid-template-columns:66px;}
+    .sidebar{padding:16px 10px;}
+    .brand .word,.nav a span,.nav a .badge,.nav-label,.userrow .who,.userrow .dots{display:none;}
+    .brand{justify-content:center;padding:6px 0 16px;}
+    .nav a{justify-content:center;padding:11px;}
+    .userrow{justify-content:center;padding:8px;}
+    .searchbox{display:none;}
+  }
+  @media(max-width:640px){
+    .content{padding:16px 14px 34px;}
+    .topbar{padding:14px 16px;}
+    .rec-row{grid-template-columns:1fr;}
+    .mini-board{width:130px;}
+    .plate{min-width:150px;}
+    .hud{flex-wrap:nowrap;overflow-x:auto;}
+    .actions{flex-direction:column;align-items:stretch;}
+    .actions .btn{justify-content:center;}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo">DG</div>
+      <div class="word">Deep<span>Gammon</span></div>
+    </div>
+
+    <div class="nav-label">Menu</div>
+    <nav class="nav">
+      <a href="#"><svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg><span>Home</span></a>
+      <a href="#"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.2"/><path d="M4 20c0-3.6 3.6-6 8-6s8 2.4 8 6"/></svg><span>Clubs</span></a>
+      <a href="#"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>Practice</span></a>
+      <a href="#"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M2 20c0-3.3 3-5.5 7-5.5"/><path d="M16 11.5a2.6 2.6 0 1 0 0-5.2"/><path d="M14 20c0-2.6 2.4-4.5 5.5-4.5"/></svg><span>Friends</span></a>
+      <a href="#"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 4v16"/></svg><span>Matches</span></a>
+      <a href="#"><svg viewBox="0 0 24 24"><path d="M6 21V10M12 21V4M18 21v-8"/></svg><span>Rankings</span></a>
+    </nav>
+
+    <div class="nav-label">Broadcast</div>
+    <nav class="nav">
+      <a href="#" class="active"><svg viewBox="0 0 24 24"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z"/><path d="M4.9 4.9a10 10 0 0 0 0 14.2M19.1 4.9a10 10 0 0 1 0 14.2M7.8 7.8a6 6 0 0 0 0 8.4M16.2 7.8a6 6 0 0 1 0 8.4"/></svg><span>Watch &amp; Streams</span><span class="badge">LIVE</span></a>
+      <a href="#"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.4"/></svg><span>Recordings</span></a>
+    </nav>
+
+    <div class="side-bottom">
+      <nav class="nav">
+        <a href="#"><svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8"/><path d="M10.5 20a2 2 0 0 0 3 0"/></svg><span>Notifications</span></a>
+        <a href="#"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.2a1.6 1.6 0 0 0-2.7-1.1l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 4.6 15H4.4a2 2 0 1 1 0-4h.2a1.6 1.6 0 0 0 1.1-2.7l-.1-.1A2 2 0 1 1 8.4 5.4l.1.1a1.6 1.6 0 0 0 2.7-1.1V4.4a2 2 0 1 1 4 0v.2a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-1.1 2.7h.2a2 2 0 1 1 0 4h-.2Z"/></svg><span>Settings</span></a>
+      </nav>
+      <div class="userrow">
+        <div class="avatar">D</div>
+        <div class="who"><b>Dani</b><small>@dani · 1842 ELO</small></div>
+        <div class="dots">⋯</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ===== MAIN ===== -->
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <h1>Watch &amp; Streams</h1>
+        <div class="crumb">Live broadcast · World Series Qualifier</div>
+      </div>
+      <div class="spacer"></div>
+      <div class="searchbox">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
+        <input type="text" placeholder="Search streams, players, clubs…" />
+      </div>
+      <button class="topbtn"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg> History</button>
+    </div>
+
+    <div class="content">
+      <!-- ============ MAIN COLUMN ============ -->
+      <div class="col-main">
+
+        <!-- STREAM STAGE -->
+        <div class="stage-wrap">
+          <div class="stage" id="stage">
+            <div class="felt"></div>
+            <div class="grain"></div>
+
+            <div class="badge-live"><span class="dot"></span> LIVE</div>
+            <div class="watchers">
+              <svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+              <span id="watchers">1,284</span> watching
+            </div>
+
+            <div class="stage-title">
+              <b>World Series Qualifier</b>
+              <small>Table 3 · 11-point match · Round of 16</small>
+            </div>
+
+            <!-- play toggle -->
+            <button class="play-tri paused" id="playBtn" aria-label="Play/Pause">
+              <svg class="play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+              <svg class="pause" viewBox="0 0 24 24"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg>
+            </button>
+
+            <!-- player plates -->
+            <div class="plates">
+              <div class="plate w onturn">
+                <div class="pav">MV</div>
+                <div class="pn"><b>M. Vasquez <span class="turnpip"></span></b><small>1904 ELO · Spain</small></div>
+                <div class="score">7</div>
+              </div>
+              <div class="plate b">
+                <div class="pav">KA</div>
+                <div class="pn"><b>K. Adler</b><small>1888 ELO · Germany</small></div>
+                <div class="score">5</div>
+              </div>
+            </div>
+
+            <!-- mini board -->
+            <div class="mini-board">
+              <div class="mb-head">
+                <span>LIVE BOARD</span>
+                <span class="dice"><span class="die">5</span><span class="die">3</span></span>
+              </div>
+              <svg viewBox="0 0 172 96" preserveAspectRatio="none">
+                <rect x="0" y="0" width="172" height="96" fill="#0f0e0d"/>
+                <rect x="82" y="0" width="8" height="96" fill="#1c1a16"/>
+                <!-- top points -->
+                <g>
+                  <polygon points="4,0 16,0 10,42" fill="#2a2620"/>
+                  <polygon points="18,0 30,0 24,42" fill="#3a352c"/>
+                  <polygon points="32,0 44,0 38,42" fill="#2a2620"/>
+                  <polygon points="46,0 58,0 52,42" fill="#3a352c"/>
+                  <polygon points="60,0 72,0 66,42" fill="#2a2620"/>
+                  <polygon points="90,0 102,0 96,42" fill="#3a352c"/>
+                  <polygon points="104,0 116,0 110,42" fill="#2a2620"/>
+                  <polygon points="118,0 130,0 124,42" fill="#3a352c"/>
+                  <polygon points="132,0 144,0 138,42" fill="#2a2620"/>
+                  <polygon points="146,0 158,0 152,42" fill="#3a352c"/>
+                </g>
+                <!-- bottom points -->
+                <g>
+                  <polygon points="4,96 16,96 10,54" fill="#3a352c"/>
+                  <polygon points="18,96 30,96 24,54" fill="#2a2620"/>
+                  <polygon points="32,96 44,96 38,54" fill="#3a352c"/>
+                  <polygon points="46,96 58,96 52,54" fill="#2a2620"/>
+                  <polygon points="60,96 72,96 66,54" fill="#3a352c"/>
+                  <polygon points="90,96 102,96 96,54" fill="#2a2620"/>
+                  <polygon points="104,96 116,96 110,54" fill="#3a352c"/>
+                  <polygon points="118,96 130,96 124,54" fill="#2a2620"/>
+                  <polygon points="132,96 144,96 138,54" fill="#3a352c"/>
+                  <polygon points="146,96 158,96 152,54" fill="#2a2620"/>
+                </g>
+                <!-- checkers -->
+                <circle cx="10" cy="8" r="5" fill="#e9e5da"/><circle cx="10" cy="18" r="5" fill="#e9e5da"/>
+                <circle cx="152" cy="8" r="5" fill="#2a2620" stroke="#6bbf3f" stroke-width="1"/>
+                <circle cx="152" cy="18" r="5" fill="#2a2620" stroke="#6bbf3f" stroke-width="1"/>
+                <circle cx="66" cy="88" r="5" fill="#e9e5da"/><circle cx="66" cy="78" r="5" fill="#e9e5da"/>
+                <circle cx="24" cy="88" r="5" fill="#2a2620"/><circle cx="24" cy="78" r="5" fill="#2a2620"/>
+                <circle cx="124" cy="8" r="5" fill="#2a2620"/>
+                <circle cx="96" cy="88" r="5" fill="#e9e5da"/>
+                <circle cx="110" cy="88" r="5" fill="#2a2620"/>
+              </svg>
+            </div>
+
+            <!-- HUD strip -->
+            <div class="hud">
+              <div class="cell green">Equity <b>+0.412</b></div>
+              <div class="cell">Pip <b>112</b> / <b>128</b></div>
+              <div class="eqbar"><i></i></div>
+              <div class="cell gold">Cube <b>2</b></div>
+              <div class="cell">Move <b>26</b></div>
+            </div>
+          </div>
+
+          <!-- video controls -->
+          <div class="controls">
+            <button class="ctrl-btn" id="playBtn2" aria-label="play">
+              <svg class="play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+              <svg class="pause" viewBox="0 0 24 24" style="display:none"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg>
+            </button>
+            <button class="ctrl-btn" aria-label="live"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="3"/></svg></button>
+            <div class="timeline">
+              <span class="tl-time">1:42:07</span>
+              <div class="scrubber" id="scrubber"><div class="buf"></div><div class="fill" id="tlFill"></div><div class="knob" id="tlKnob"></div></div>
+              <span class="tl-time" style="color:var(--red);font-weight:700">● LIVE</span>
+            </div>
+            <button class="ctrl-select" id="qualityBtn">Quality <span class="q" id="qVal">1080p</span></button>
+            <button class="ctrl-btn" aria-label="volume"><svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16 8c1.5 1 1.5 7 0 8" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>
+            <button class="ctrl-btn" aria-label="fullscreen"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>
+          </div>
+
+          <!-- action buttons -->
+          <div class="actions">
+            <button class="btn green" id="goLive"><span class="rec"></span> Go Live</button>
+            <button class="btn outline"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.4"/></svg> Record a match</button>
+            <button class="btn ghost gold" id="clipBtn"><svg viewBox="0 0 24 24"><path d="M6 4v16M18 4v16M4 8h16M4 16h16"/></svg> Clip</button>
+            <div class="grow"></div>
+            <div class="cam-note">
+              <svg viewBox="0 0 24 24"><path d="M15 8h4a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h4l1.5-2h3L15 8Z"/><circle cx="12" cy="14" r="3.2"/></svg>
+              Wide-angle camera + auto board-recognition capture
+            </div>
+          </div>
+        </div>
+
+        <!-- YOUR RECORDINGS -->
+        <div class="section-head">
+          <h2>Your recordings</h2>
+          <div class="spacer"></div>
+          <a href="#">View all (37) →</a>
+        </div>
+        <div class="rec-row">
+          <div class="rec-card">
+            <div class="rec-thumb">
+              <span class="rw win">WIN</span>
+              <div class="ptri"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+              <span class="len">42:18</span>
+            </div>
+            <div class="rec-meta">
+              <b>vs. L. Okoye</b><small>7–4 · 7-pt match · 2 days ago</small>
+              <div class="rec-btns">
+                <button class="pri"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg> Watch</button>
+                <button><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg> .mat</button>
+              </div>
+            </div>
+          </div>
+          <div class="rec-card">
+            <div class="rec-thumb">
+              <span class="rw loss">LOSS</span>
+              <div class="ptri"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+              <span class="len">1:08:52</span>
+            </div>
+            <div class="rec-meta">
+              <b>vs. R. Bianchi</b><small>9–11 · 11-pt match · 5 days ago</small>
+              <div class="rec-btns">
+                <button class="pri"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg> Watch</button>
+                <button><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg> .mat</button>
+              </div>
+            </div>
+          </div>
+          <div class="rec-card">
+            <div class="rec-thumb">
+              <span class="rw win">WIN</span>
+              <div class="ptri"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+              <span class="len">28:41</span>
+            </div>
+            <div class="rec-meta">
+              <b>vs. S. Tanaka</b><small>5–2 · 5-pt match · 1 week ago</small>
+              <div class="rec-btns">
+                <button class="pri"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg> Watch</button>
+                <button><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg> .mat</button>
+              </div>
+            </div>
+          </div>
+          <div class="rec-card">
+            <div class="rec-thumb">
+              <span class="rw win">WIN</span>
+              <div class="ptri"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+              <span class="len">51:07</span>
+            </div>
+            <div class="rec-meta">
+              <b>vs. A. Petrov</b><small>7–6 · 7-pt match · 2 weeks ago</small>
+              <div class="rec-btns">
+                <button class="pri"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg> Watch</button>
+                <button><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg> .mat</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ RIGHT RAIL ============ -->
+      <div class="rail">
+
+        <!-- LIVE CHAT -->
+        <div class="card">
+          <div class="card-head">
+            <span class="live-dot"></span>
+            <h3>Live chat</h3>
+            <div class="spacer"></div>
+            <button class="toggle" id="commToggle">Commentary <span class="switch on" id="commSwitch"></span></button>
+          </div>
+          <div class="chat-body" id="chatBody">
+            <div class="msg sys">Broadcast started · commentary by GM_Petra</div>
+            <div class="msg"><span class="u mod">GM_Petra</span><span class="t">Vasquez holding a beautiful back game here, watch the cube.</span></div>
+            <div class="msg"><span class="u reg">dice_wizard</span><span class="t">that 5-3 is huge, makes the 3-point 🔥</span></div>
+            <div class="msg"><span class="u gold">TableHost</span><span class="t">Reminder: R16 winner faces Nakamura next round.</span></div>
+            <div class="msg"><span class="u reg2">blitz_ana</span><span class="t">Adler needs to double soon or he loses market</span></div>
+            <div class="msg"><span class="u reg3">jasper_09</span><span class="t">equity +0.41 wow the bot loves white</span></div>
+            <div class="msg"><span class="u reg">dice_wizard</span><span class="t">pip count is deceiving, timing matters</span></div>
+            <div class="msg"><span class="u mod">GM_Petra</span><span class="t">Exactly — this is a classic holding position.</span></div>
+          </div>
+          <div class="chat-input">
+            <input type="text" id="chatInput" placeholder="Send a message…" />
+            <button id="chatSend" aria-label="send"><svg viewBox="0 0 24 24"><path d="M4 12l16-8-6 8 6 8-16-8z"/></svg></button>
+          </div>
+        </div>
+
+        <!-- UP NEXT / SCHEDULE -->
+        <div class="card">
+          <div class="card-head">
+            <h3>Up next · Schedule</h3>
+          </div>
+          <div class="sched-item">
+            <div class="sched-time"><b>18:30</b><small>CEST</small></div>
+            <div class="sched-mid"><b>Qualifier — Table 3 Final</b><small>Vasquez / Adler winner · 11-pt</small></div>
+            <button class="bell set" aria-label="reminder set"><svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8"/><path d="M10.5 20a2 2 0 0 0 3 0"/></svg></button>
+          </div>
+          <div class="sched-item">
+            <div class="sched-time"><b>20:00</b><small>CEST</small></div>
+            <div class="sched-mid"><b>Nakamura vs. Rossi</b><small>Invitational · 13-pt showcase</small></div>
+            <button class="bell" aria-label="set reminder"><svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8"/><path d="M10.5 20a2 2 0 0 0 3 0"/></svg></button>
+          </div>
+          <div class="sched-item">
+            <div class="sched-time"><b>21:15</b><small>CEST</small></div>
+            <div class="sched-mid"><b>Club Night — Berlin GC</b><small>Casual room · open tables</small></div>
+            <button class="bell" aria-label="set reminder"><svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8"/><path d="M10.5 20a2 2 0 0 0 3 0"/></svg></button>
+          </div>
+          <div class="sched-item">
+            <div class="sched-time"><b>Tue</b><small>10:00</small></div>
+            <div class="sched-mid"><b>World Series — Day 2</b><small>Quarterfinals · all tables</small></div>
+            <button class="bell" aria-label="set reminder"><svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8"/><path d="M10.5 20a2 2 0 0 0 3 0"/></svg></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ---- play/pause toggle (both big triangle + control bar) ----
+  const stagePlay = document.getElementById('playBtn');
+  const barPlay = document.getElementById('playBtn2');
+  let playing = false;
+  function renderPlay(){
+    // big overlay
+    stagePlay.classList.toggle('paused', !playing);
+    stagePlay.classList.toggle('playing', playing);
+    stagePlay.querySelector('svg.play').style.display  = playing ? 'none' : '';
+    stagePlay.querySelector('svg.pause').style.display = playing ? '' : 'none';
+    stagePlay.style.opacity = playing ? '0' : '1';
+    stagePlay.style.pointerEvents = playing ? 'none' : 'auto';
+    // bar
+    barPlay.querySelector('svg.play').style.display  = playing ? 'none' : '';
+    barPlay.querySelector('svg.pause').style.display = playing ? '' : 'none';
+  }
+  function toggle(){ playing = !playing; renderPlay(); }
+  stagePlay.addEventListener('click', toggle);
+  barPlay.addEventListener('click', toggle);
+  document.getElementById('stage').addEventListener('click', function(e){
+    if(e.target.closest('.play-tri')||e.target.closest('.mini-board')||e.target.closest('.hud')) return;
+    if(!playing) toggle();
+  });
+  renderPlay();
+
+  // ---- commentary toggle ----
+  document.getElementById('commToggle').addEventListener('click', function(){
+    document.getElementById('commSwitch').classList.toggle('on');
+  });
+
+  // ---- quality cycle ----
+  const qualities = ['1080p','720p','480p','Auto'];
+  let qi = 0;
+  document.getElementById('qualityBtn').addEventListener('click', function(){
+    qi = (qi+1)%qualities.length;
+    document.getElementById('qVal').textContent = qualities[qi];
+  });
+
+  // ---- scrubber drag ----
+  const scrub = document.getElementById('scrubber');
+  const fill = document.getElementById('tlFill');
+  const knob = document.getElementById('tlKnob');
+  function setScrub(x){
+    const r = scrub.getBoundingClientRect();
+    let p = Math.max(0, Math.min(1,(x-r.left)/r.width));
+    fill.style.width = (p*100)+'%';
+    knob.style.left = (p*100)+'%';
+  }
+  let dragging=false;
+  scrub.addEventListener('mousedown', e=>{dragging=true;setScrub(e.clientX);});
+  window.addEventListener('mousemove', e=>{if(dragging)setScrub(e.clientX);});
+  window.addEventListener('mouseup', ()=>dragging=false);
+  scrub.addEventListener('click', e=>setScrub(e.clientX));
+
+  // ---- chat send ----
+  const chatBody = document.getElementById('chatBody');
+  const chatInput = document.getElementById('chatInput');
+  function sendChat(){
+    const v = chatInput.value.trim();
+    if(!v) return;
+    const m = document.createElement('div');
+    m.className='msg';
+    m.innerHTML = '<span class="u" style="color:var(--green)">Dani</span><span class="t"></span>';
+    m.querySelector('.t').textContent = v;
+    chatBody.appendChild(m);
+    chatBody.scrollTop = chatBody.scrollHeight;
+    chatInput.value='';
+  }
+  document.getElementById('chatSend').addEventListener('click', sendChat);
+  chatInput.addEventListener('keydown', e=>{ if(e.key==='Enter') sendChat(); });
+
+  // ---- bells ----
+  document.querySelectorAll('.bell').forEach(b=>{
+    b.addEventListener('click', ()=>b.classList.toggle('set'));
+  });
+
+  // ---- clip flash ----
+  document.getElementById('clipBtn').addEventListener('click', function(){
+    const o = this.innerHTML;
+    this.innerHTML = '<svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg> Clip saved';
+    setTimeout(()=>{ this.innerHTML = o; }, 1600);
+  });
+
+  // ---- go live toggle ----
+  document.getElementById('goLive').addEventListener('click', function(){
+    if(this.dataset.on){
+      this.dataset.on='';
+      this.innerHTML='<span class="rec"></span> Go Live';
+      this.classList.add('green'); this.classList.remove('outline');
+    }else{
+      this.dataset.on='1';
+      this.innerHTML='<span class="rec" style="background:#e5484d;animation:pulse 1.2s infinite"></span> End broadcast';
+      this.classList.remove('green'); this.classList.add('outline');
+    }
+  });
+
+  // ---- live watcher count drift ----
+  let watchers = 1284;
+  const wEl = document.getElementById('watchers');
+  setInterval(()=>{
+    watchers += Math.floor(Math.random()*17)-7;
+    if(watchers<900) watchers=900;
+    wEl.textContent = watchers.toLocaleString();
+  }, 3200);
+
+  // ---- ambient chat drip ----
+  const drip = [
+    ['reg','q_the_kid','nice anchor on the ace point'],
+    ['reg2','mira_bg','doubling window is closing fast'],
+    ['gold','TableHost','40 seconds on Adler\'s clock'],
+    ['reg3','owen_v','GG whatever happens, great match'],
+    ['reg','dice_wizard','if he rolls doubles it\'s over'],
+    ['mod','GM_Petra','textbook priming battle, folks']
+  ];
+  let di=0;
+  setInterval(()=>{
+    const [cls,u,t] = drip[di%drip.length]; di++;
+    const m=document.createElement('div'); m.className='msg';
+    m.innerHTML='<span class="u '+cls+'"></span><span class="t"></span>';
+    m.querySelector('.u').textContent=u; m.querySelector('.t').textContent=t;
+    chatBody.appendChild(m);
+    if(chatBody.children.length>40) chatBody.removeChild(chatBody.firstChild);
+    chatBody.scrollTop = chatBody.scrollHeight;
+  }, 5200);
+</script>
+</body>
+</html>
